@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/360EntSecGroup-Skylar/excelize"
+	"strconv"
 	"time"
 )
 
@@ -12,35 +13,36 @@ type Sale struct {
 	name      string
 	price     float64
 }
+var f, err = excelize.OpenFile("AppData.xlsx")
+
 var shoppingCart []Sale
 //var totalInventory int
 
 //Add a total for all sales
 
 func main(){
-	red := Sale{
-		id:1,
-		name: "Hoe",
-		price: 50,
-	}
-	UpdateLog(red)
+	UpdateLog(Sale{
+		id:7,
+		name: "Test",
+		price: 2,
+	})
 	ReadVal()
+	f.Save()
 }
 
 func CreateNewFile(){
-	f := excelize.NewFile()
-	idx := f.NewSheet("Detection Data")
-	f.SetCellValue("Detection Data", "A1", "ID")
-	f.SetCellValue("Long Data", "A2", 100)
-	f.SetActiveSheet(idx)
+	nf := excelize.NewFile()
+	idx := nf.NewSheet("Detection Data")
+	nf.SetCellValue("Detection Data", "A1", "ID")
+	nf.SetCellValue("Long Data", "A2", 100)
+	nf.SetActiveSheet(idx)
 
-	if err := f.SaveAs("LTAppData.xlsx"); err != nil{
+	if err := f.SaveAs("AppData.xlsx"); err != nil{
 		fmt.Println(err)
 	}
 }
 
 func ReadVal(){
-	f, err := excelize.OpenFile("LTAppData.xlsx")
 	if err != nil{
 		fmt.Println(err)
 		return
@@ -57,64 +59,86 @@ func ReadVal(){
 	}
 }
 
-func BuyItems(){
-	f, err := excelize.OpenFile("LTAppData.xlsx")
+func BuyCart(){
 	if err != nil{
 		fmt.Println(err)
 		return
 	}
-	cell := f.GetCellValue("Report Data", "H2")
 
-	for  i := 2; cell != "";{
-		cell := f.GetCellValue("Log", "D" + string(i))
-		if cell == ""{
-			for x := 0; x < len(shoppingCart);{
-				f.SetCellValue("Report Data", "A"+ string(i), shoppingCart[x].id)
-				f.SetCellValue("Report Data", "B"+ string(i), shoppingCart[x].name)
-				f.SetCellValue("Report Data", "C"+ string(i), shoppingCart[x].price)
-				f.SetCellValue("Report Data", "D"+ string(i), ConvertNowDate())
-/*
-				f.SetCellValue("Report Data", "E"+ string(i), shoppingCart[x])
-				f.SetCellValue("Report Data", "F"+ string(i), shoppingCart[x])
-				f.SetCellValue("Report Data", "G"+ string(i), shoppingCart[x])
-				f.SetCellValue("Report Data", "H"+ string(i), shoppingCart[x])
- */
-			}
-		}
-	}
+	//Cycle through and check if there is an open space
+	//When finding an empty space start unloading the contents of the cart into each cell
+	//Until the cart's info is fully displayed
 
 	//Clear cart
-	//shoppingCart = nil
+	ClearCart()
+}
+
+func AddToCart(id int){
+	//Check the "Detection Data" for the specified ID
+	//Grab the row of data
+	//Convert the row data to a Sale variable
+	//Add the sale variable to the ShoppingCart array
+}
+
+// RemoveFromCart [Untested]
+func RemoveFromCart(id int){
+	//Cycle through the cart to find the item id
+	//If the id doesn't exist; display error
+	//Otherwise; Remove the specified item from the cart
+	for i := 0; i != len(shoppingCart);{
+		if shoppingCart[i].id == id{
+			shoppingCart[i] = shoppingCart[len(shoppingCart)-1] // Copy last element to index i.
+			shoppingCart[len(shoppingCart)-1] = Sale{}   // Erase last element (write zero value).
+			shoppingCart = shoppingCart[:len(shoppingCart)-1]   // Truncate slice.
+			break
+		}
+		fmt.Println("Not this one...")
+		i++
+	}
+}
+
+
+func ClearCart(){
+	shoppingCart = shoppingCart[:0]
 }
 
 func UpdateLog(item Sale) {
-	f, err := excelize.OpenFile("LTAppData.xlsx")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	i := 2
-	cell := f.GetCellValue("Log", "A" + string(i))
-	/*
+	cell := f.GetCellValue("Log", "A1")
+	targetSheet := "Log"
+	/*i := 1
 	for {
-		i := 2
-		cell = f.GetCellValue("Log", "A"+string(i))
+		cell = f.GetCellValue("Log", "A"+strconv.Itoa(i))
 		if cell == "" {
-			f.SetCellValue("Report Data", "A"+string(i), item.id)
-			f.SetCellValue("Report Data", "B"+string(i), item.name)
-			f.SetCellValue("Report Data", "C"+string(i), item.price)
-			f.SetCellValue("Report Data", "D"+string(i), ConvertNowDate())
+			fmt.Println("A" + strconv.Itoa(i))
+			f.SetCellValue(targetSheet, "A"+strconv.Itoa(i), item.id)
+			f.SetCellValue(targetSheet, "B"+strconv.Itoa(i), item.name)
+			f.SetCellValue(targetSheet, "C"+strconv.Itoa(i), item.price)
+			f.SetCellValue(targetSheet, "D"+strconv.Itoa(i), time.Now())
 			break
 		}
+		fmt.Println("No")
+		i++
 	}
+
 	 */
-	if cell == ""{
-		f.SetCellValue("Report Data", "A"+string(i), item.id)
-		f.SetCellValue("Report Data", "B"+string(i), item.name)
-		f.SetCellValue("Report Data", "C"+string(i), item.price)
-		f.SetCellValue("Report Data", "D"+string(i), ConvertNowDate())
-	}else{i++}
+
+	for idx := 1; cell != ""; idx++{
+		cell = f.GetCellValue("Log", "A"+strconv.Itoa(idx))
+		if cell == "" {
+			fmt.Println("A" + strconv.Itoa(idx))
+			f.SetCellValue(targetSheet, "A"+strconv.Itoa(idx), item.id)
+			f.SetCellValue(targetSheet, "B"+strconv.Itoa(idx), item.name)
+			f.SetCellValue(targetSheet, "C"+strconv.Itoa(idx), item.price)
+			f.SetCellValue(targetSheet, "D"+strconv.Itoa(idx), time.Now())
+			break
+		}
+		fmt.Println("Not: " + strconv.Itoa(idx))
+	}
 }
 
 func ConvertNowDate() string{

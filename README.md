@@ -1,2 +1,2 @@
 # Bronze_Hermes
- A business app.
+ The source code for a small business app.

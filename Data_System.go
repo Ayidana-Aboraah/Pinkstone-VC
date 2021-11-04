@@ -15,7 +15,7 @@ type Sale struct {
 }
 var f, err = excelize.OpenFile("AppData.xlsx")
 
-var shoppingCart []Sale
+var shoppingCart []*Sale
 //var totalInventory int
 
 //Add a total for all sales
@@ -68,6 +68,26 @@ func BuyCart(){
 	//Cycle through and check if there is an open space
 	//When finding an empty space start unloading the contents of the cart into each cell
 	//Until the cart's info is fully displayed
+	targetSheet := "Report Data"
+	cell := f.GetCellValue(targetSheet, "A1")
+
+	for idx := 1; cell != ""; idx++{
+		cell = f.GetCellValue(targetSheet, "A"+strconv.Itoa(idx))
+		if cell == "" {
+			fmt.Println("Staring at A" + strconv.Itoa(idx))
+			for i := 0; i <= len(shoppingCart);{
+				f.SetCellValue(targetSheet, "A"+strconv.Itoa(idx), shoppingCart[i].id)
+				f.SetCellValue(targetSheet, "B"+strconv.Itoa(idx), shoppingCart[i].name)
+				f.SetCellValue(targetSheet, "C"+strconv.Itoa(idx), shoppingCart[i].price)
+				//Place the cost of the product(for the seller)
+				//Place the profit made from the item (revenue - cost)
+				//Show the decrease in inventory
+				f.SetCellValue(targetSheet, "F"+strconv.Itoa(idx), time.Now())
+				i++
+			}
+		}
+		fmt.Println("Not: " + strconv.Itoa(idx))
+	}
 
 	//Clear cart
 	ClearCart()
@@ -78,6 +98,23 @@ func AddToCart(id int){
 	//Grab the row of data
 	//Convert the row data to a Sale variable
 	//Add the sale variable to the ShoppingCart array
+	targetSheet := "Detection Data"
+	cell := f.GetCellValue(targetSheet, "A1")
+	for idx := 1; strconv.Itoa(id) != cell; idx++{
+		cell = f.GetCellValue("Detection Data", "A"+strconv.Itoa(idx))
+		if strconv.Itoa(id) == cell {
+			fmt.Println("A" + strconv.Itoa(idx))
+			if p, err := strconv.ParseFloat(f.GetCellValue(targetSheet, "B" + strconv.Itoa(idx)), 64); err == nil{
+				temp := Sale{
+					id: id,
+					name: f.GetCellValue(targetSheet, "B" + strconv.Itoa(idx)),
+					price: p,
+				}
+				shoppingCart = append(shoppingCart, &temp)
+			}
+		}
+		fmt.Println("Not: " + strconv.Itoa(idx))
+	}
 }
 
 // RemoveFromCart [Untested]
@@ -88,7 +125,7 @@ func RemoveFromCart(id int){
 	for i := 0; i != len(shoppingCart);{
 		if shoppingCart[i].id == id{
 			shoppingCart[i] = shoppingCart[len(shoppingCart)-1] // Copy last element to index i.
-			shoppingCart[len(shoppingCart)-1] = Sale{}   // Erase last element (write zero value).
+			shoppingCart[len(shoppingCart)-1] = &Sale{}   // Erase last element (write zero value).
 			shoppingCart = shoppingCart[:len(shoppingCart)-1]   // Truncate slice.
 			break
 		}

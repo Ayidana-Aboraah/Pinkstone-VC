@@ -16,40 +16,27 @@ type Sale struct {
 var f, err = excelize.OpenFile("AppData.xlsx")
 
 var shoppingCart []*Sale
-//var totalInventory int
-
-//Add a total for all sales
+//Create a total profit for a specified period of time
 
 func main(){
 	UpdateLog(Sale{
-		id:7,
-		name: "Test",
-		price: 2,
-	})
-	ReadVal()
+		id:0,
+		name: "Null",
+		price: 0,
+	},
+	"Log")
+	ReadVal("Log")
 	f.Save()
 }
 
-func CreateNewFile(){
-	nf := excelize.NewFile()
-	idx := nf.NewSheet("Detection Data")
-	nf.SetCellValue("Detection Data", "A1", "ID")
-	nf.SetCellValue("Long Data", "A2", 100)
-	nf.SetActiveSheet(idx)
-
-	if err := f.SaveAs("AppData.xlsx"); err != nil{
-		fmt.Println(err)
-	}
-}
-
-func ReadVal(){
+func ReadVal(sheet string){
 	if err != nil{
 		fmt.Println(err)
 		return
 	}
 
 	//Getting a row
-	rows := f.GetRows("Log")
+	rows := f.GetRows(sheet)
 
 	for _, row := range rows{
 		for _, colCell := range row {
@@ -83,6 +70,7 @@ func BuyCart(){
 				//Place the profit made from the item (revenue - cost)
 				//Show the decrease in inventory
 				f.SetCellValue(targetSheet, "F"+strconv.Itoa(idx), time.Now())
+				UpdateLog(*shoppingCart[i], "Log")
 				i++
 			}
 		}
@@ -134,19 +122,17 @@ func RemoveFromCart(id int){
 	}
 }
 
-
 func ClearCart(){
 	shoppingCart = shoppingCart[:0]
 }
 
-func UpdateLog(item Sale) {
+func UpdateLog(item Sale, targetSheet string) {
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
 	cell := f.GetCellValue("Log", "A1")
-	targetSheet := "Log"
 	/*i := 1
 	for {
 		cell = f.GetCellValue("Log", "A"+strconv.Itoa(i))
@@ -165,7 +151,7 @@ func UpdateLog(item Sale) {
 	 */
 
 	for idx := 1; cell != ""; idx++{
-		cell = f.GetCellValue("Log", "A"+strconv.Itoa(idx))
+		cell = f.GetCellValue(targetSheet, "A"+strconv.Itoa(idx))
 		if cell == "" {
 			fmt.Println("A" + strconv.Itoa(idx))
 			f.SetCellValue(targetSheet, "A"+strconv.Itoa(idx), item.id)
@@ -182,5 +168,11 @@ func ConvertNowDate() string{
 	day := time.Now().Day()
 	month := time.Now().Month()
 	year := time.Now().Year()
-	return string(day) + "/" + string(month) + "/" + string(year)
+	return strconv.Itoa(day) + "/" + string(month) + "/" + strconv.Itoa(year)
+}
+
+//Changes
+func NewPrice(newPrice float64, item Sale){
+	item.price = newPrice
+	UpdateLog(item, "Price Data")
 }

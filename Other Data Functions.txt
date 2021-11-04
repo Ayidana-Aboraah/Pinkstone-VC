@@ -1,0 +1,13 @@
+func CreateNewFile(){
+	nf := excelize.NewFile()
+	idx := nf.NewSheet("Detection Data")
+	nf.SetCellValue("Detection Data", "A1", "ID")
+	nf.SetCellValue("Long Data", "A2", 100)
+	nf.SetActiveSheet(idx)
+
+	if err := f.SaveAs("AppData.xlsx"); err != nil{
+		fmt.Println(err)
+	}
+}
+
+s

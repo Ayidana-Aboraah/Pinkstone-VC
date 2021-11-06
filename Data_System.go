@@ -23,8 +23,8 @@ func main(){
 		id:0,
 		name: "Null",
 		price: 0,
-	},
-	"Log")
+	},	"Log")
+
 	ReadVal("Log")
 	f.Save()
 }
@@ -67,10 +67,12 @@ func BuyCart(){
 				f.SetCellValue(targetSheet, "B"+strconv.Itoa(idx), shoppingCart[i].name)
 				f.SetCellValue(targetSheet, "C"+strconv.Itoa(idx), shoppingCart[i].price)
 				//Place the cost of the product(for the seller)
+				f.SetCellValue(targetSheet, "G"+strconv.Itoa(idx), time.Now())
+				UpdateLog(*shoppingCart[i], "Log")
 				//Place the profit made from the item (revenue - cost)
 				//Show the decrease in inventory
-				f.SetCellValue(targetSheet, "F"+strconv.Itoa(idx), time.Now())
-				UpdateLog(*shoppingCart[i], "Log")
+				newInven := UpdateInvenotry(shoppingCart[i].id)
+				f.SetCellValue(targetSheet, "F"+strconv.Itoa(idx), strconv.Itoa(newInven - 1))
 				i++
 			}
 		}
@@ -132,24 +134,7 @@ func UpdateLog(item Sale, targetSheet string) {
 		return
 	}
 
-	cell := f.GetCellValue("Log", "A1")
-	/*i := 1
-	for {
-		cell = f.GetCellValue("Log", "A"+strconv.Itoa(i))
-		if cell == "" {
-			fmt.Println("A" + strconv.Itoa(i))
-			f.SetCellValue(targetSheet, "A"+strconv.Itoa(i), item.id)
-			f.SetCellValue(targetSheet, "B"+strconv.Itoa(i), item.name)
-			f.SetCellValue(targetSheet, "C"+strconv.Itoa(i), item.price)
-			f.SetCellValue(targetSheet, "D"+strconv.Itoa(i), time.Now())
-			break
-		}
-		fmt.Println("No")
-		i++
-	}
-
-	 */
-
+	cell := f.GetCellValue(targetSheet, "A1")
 	for idx := 1; cell != ""; idx++{
 		cell = f.GetCellValue(targetSheet, "A"+strconv.Itoa(idx))
 		if cell == "" {
@@ -164,6 +149,29 @@ func UpdateLog(item Sale, targetSheet string) {
 	}
 }
 
+func UpdateInvenotry(id int) int{
+	//Check the Detection data for the item
+	//pull the inventory data from one of the cells
+	//Convert the inventory data to a number
+	//take the number and subtract by one
+	//Return the result number
+	targetSheet := "Detection Data"
+	cell := f.GetCellValue(targetSheet, "A1")
+
+	for idx := 1; cell != ""; idx++{
+		cell = f.GetCellValue(targetSheet, "A"+strconv.Itoa(idx))
+		if cell == strconv.Itoa(id) {
+			res := f.GetCellValue(targetSheet, "F" + strconv.Itoa(idx))
+
+			if inven, err := strconv.Atoi(res); err == nil{
+				return inven
+				}
+		}
+	}
+	fmt.Println("Error: No id found")
+	return 0
+}
+
 func ConvertNowDate() string{
 	day := time.Now().Day()
 	month := time.Now().Month()
@@ -174,5 +182,5 @@ func ConvertNowDate() string{
 //Changes
 func NewPrice(newPrice float64, item Sale){
 	item.price = newPrice
-	UpdateLog(item, "Price Data")
+	UpdateLog(item, "Price Log")
 }

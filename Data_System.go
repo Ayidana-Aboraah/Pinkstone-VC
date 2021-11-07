@@ -172,13 +172,6 @@ func UpdateInvenotry(id int) int{
 	return 0
 }
 
-func ConvertNowDate() string{
-	day := time.Now().Day()
-	month := time.Now().Month()
-	year := time.Now().Year()
-	return strconv.Itoa(day) + "/" + string(month) + "/" + strconv.Itoa(year)
-}
-
 //Changes
 func NewPrice(newPrice float64, item Sale){
 	item.price = newPrice

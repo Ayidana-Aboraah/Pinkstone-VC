@@ -1,9 +1,9 @@
-package main
+package UI
 
 import (
-	"image"
 	"github.com/blizzy78/ebitenui/widget"
 	"github.com/hajimehoshi/ebiten/v2"
+	"image"
 )
 
 type sizedPanel struct {

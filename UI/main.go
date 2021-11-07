@@ -1,13 +1,12 @@
-package main
+package UI
 
 import (
+	"github.com/hajimehoshi/ebiten/v2"
 	"log"
 	"sort"
 
 	"golang.org/x/text/collate"
 	"golang.org/x/text/language"
-
-	"github.com/hajimehoshi/ebiten/v2"
 
 	_ "image/png"
 

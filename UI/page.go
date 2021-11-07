@@ -1,13 +1,13 @@
-package main
+package UI
 
 import (
 	"fmt"
+	"github.com/hajimehoshi/ebiten/v2"
 	"image"
 	"time"
 
 	"github.com/blizzy78/ebitenui"
 	"github.com/blizzy78/ebitenui/widget"
-	"github.com/hajimehoshi/ebiten/v2"
 )
 
 type page struct {

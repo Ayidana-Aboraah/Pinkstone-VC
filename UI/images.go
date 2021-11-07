@@ -1,4 +1,4 @@
-package main
+package UI
 
 import (
 	"github.com/blizzy78/ebitenui/image"

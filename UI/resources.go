@@ -35,7 +35,7 @@ const (
 	separatorColor = listDisabledSelectedBackground
 )
 
-type uiResources struct {
+type UiResources struct {
 	fonts *fonts
 
 	background *image.NineSlice
@@ -142,7 +142,7 @@ type toolTipResources struct {
 	color      color.Color
 }
 
-func newUIResources() (*uiResources, error) {
+func newUIResources() (*UiResources, error) {
 	background := image.NewNineSliceColor(hexToColor(backgroundColor))
 
 	fonts, err := loadFonts()
@@ -200,7 +200,7 @@ func newUIResources() (*uiResources, error) {
 		return nil, err
 	}
 
-	return &uiResources{
+	return &UiResources{
 		fonts: fonts,
 
 		background: background,
@@ -680,7 +680,7 @@ func newToolTipResources(fonts *fonts) (*toolTipResources, error) {
 	}, nil
 }
 
-func (u *uiResources) close() {
+func (u *UiResources) close() {
 	u.fonts.close()
 }
 

@@ -115,7 +115,7 @@ func createUI() (*ebitenui.UI, func(), error) {
 	}, nil
 }
 
-func headerContainer(res *uiResources) widget.PreferredSizeLocateableWidget {
+func headerContainer(res *UiResources) widget.PreferredSizeLocateableWidget {
 	c := widget.NewContainer(
 		widget.ContainerOpts.Layout(widget.NewRowLayout(
 			widget.RowLayoutOpts.Direction(widget.DirectionVertical),
@@ -145,7 +145,7 @@ func headerContainer(res *uiResources) widget.PreferredSizeLocateableWidget {
 	return c
 }
 
-func header(label string, res *uiResources, opts ...widget.ContainerOpt) widget.PreferredSizeLocateableWidget {
+func header(label string, res *UiResources, opts ...widget.ContainerOpt) widget.PreferredSizeLocateableWidget {
 	c := widget.NewContainer(append(opts, []widget.ContainerOpt{
 		widget.ContainerOpts.BackgroundImage(res.header.background),
 		widget.ContainerOpts.Layout(widget.NewAnchorLayout(widget.AnchorLayoutOpts.Padding(res.header.padding))),
@@ -163,7 +163,7 @@ func header(label string, res *uiResources, opts ...widget.ContainerOpt) widget.
 	return c
 }
 
-func demoContainer(res *uiResources, toolTips *toolTipContents, toolTip *widget.ToolTip, dnd *widget.DragAndDrop, drag *dragContents,
+func demoContainer(res *UiResources, toolTips *toolTipContents, toolTip *widget.ToolTip, dnd *widget.DragAndDrop, drag *dragContents,
 	ui func() *ebitenui.UI) widget.PreferredSizeLocateableWidget {
 
 	demoContainer := widget.NewContainer(
@@ -231,7 +231,7 @@ func demoContainer(res *uiResources, toolTips *toolTipContents, toolTip *widget.
 	return demoContainer
 }
 
-func newPageContainer(res *uiResources) *pageContainer {
+func newPageContainer(res *UiResources) *pageContainer {
 	c := widget.NewContainer(
 		widget.ContainerOpts.BackgroundImage(res.panel.image),
 		widget.ContainerOpts.Layout(widget.NewRowLayout(
@@ -267,7 +267,7 @@ func (p *pageContainer) setPage(page *page) {
 	p.flipBook.RequestRelayout()
 }
 
-func newCheckbox(label string, changedHandler widget.CheckboxChangedHandlerFunc, res *uiResources) *widget.LabeledCheckbox {
+func newCheckbox(label string, changedHandler widget.CheckboxChangedHandlerFunc, res *UiResources) *widget.LabeledCheckbox {
 	return widget.NewLabeledCheckbox(
 		widget.LabeledCheckboxOpts.Spacing(res.checkbox.spacing),
 		widget.LabeledCheckboxOpts.CheckboxOpts(
@@ -281,7 +281,7 @@ func newCheckbox(label string, changedHandler widget.CheckboxChangedHandlerFunc,
 		widget.LabeledCheckboxOpts.LabelOpts(widget.LabelOpts.Text(label, res.label.face, res.label.text)))
 }
 
-func newPageContentContainer() *widget.Container {
+func NewPageContentContainer() *widget.Container {
 	return widget.NewContainer(
 		widget.ContainerOpts.WidgetOpts(widget.WidgetOpts.LayoutData(widget.AnchorLayoutData{
 			StretchHorizontal: true,
@@ -293,7 +293,7 @@ func newPageContentContainer() *widget.Container {
 }
 
 func newListComboButton(entries []interface{}, buttonLabel widget.SelectComboButtonEntryLabelFunc, entryLabel widget.ListEntryLabelFunc,
-	entrySelectedHandler widget.ListComboButtonEntrySelectedHandlerFunc, res *uiResources) *widget.ListComboButton {
+	entrySelectedHandler widget.ListComboButtonEntrySelectedHandlerFunc, res *UiResources) *widget.ListComboButton {
 
 	return widget.NewListComboButton(
 		widget.ListComboButtonOpts.SelectComboButtonOpts(
@@ -322,7 +322,7 @@ func newListComboButton(entries []interface{}, buttonLabel widget.SelectComboBut
 		widget.ListComboButtonOpts.EntrySelectedHandler(entrySelectedHandler))
 }
 
-func newList(entries []interface{}, res *uiResources, widgetOpts ...widget.WidgetOpt) *widget.List {
+func newList(entries []interface{}, res *UiResources, widgetOpts ...widget.WidgetOpt) *widget.List {
 	return widget.NewList(
 		widget.ListOpts.ContainerOpts(widget.ContainerOpts.WidgetOpts(widgetOpts...)),
 		widget.ListOpts.ScrollContainerOpts(widget.ScrollContainerOpts.Image(res.list.image)),
@@ -342,7 +342,7 @@ func newList(entries []interface{}, res *uiResources, widgetOpts ...widget.Widge
 	)
 }
 
-func newSeparator(res *uiResources, ld interface{}) widget.PreferredSizeLocateableWidget {
+func newSeparator(res *UiResources, ld interface{}) widget.PreferredSizeLocateableWidget {
 	c := widget.NewContainer(
 		widget.ContainerOpts.Layout(widget.NewRowLayout(
 			widget.RowLayoutOpts.Direction(widget.DirectionVertical),

@@ -11,7 +11,7 @@ type toolTipContents struct {
 	widgetsWithTime []widget.HasWidget
 	showTime        bool
 
-	res *uiResources
+	res *UiResources
 
 	text     *widget.TextToolTip
 	timeText *widget.TextToolTip

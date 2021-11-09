@@ -15,8 +15,8 @@ type page struct {
 	content widget.PreferredSizeLocateableWidget
 }
 
-func buttonPage(res *uiResources) *page {
-	c := newPageContentContainer()
+func buttonPage(res *UiResources) *page {
+	c := NewPageContentContainer()
 
 	bs := []*widget.Button{}
 	for i := 0; i < 3; i++ {
@@ -48,8 +48,8 @@ func buttonPage(res *uiResources) *page {
 	}
 }
 
-func checkboxPage(res *uiResources) *page {
-	c := newPageContentContainer()
+func checkboxPage(res *UiResources) *page {
+	c := NewPageContentContainer()
 
 	cb1 := newCheckbox("Two-State Checkbox", nil, res)
 	c.AddChild(cb1)
@@ -78,8 +78,8 @@ func checkboxPage(res *uiResources) *page {
 	}
 }
 
-func listPage(res *uiResources) *page {
-	c := newPageContentContainer()
+func listPage(res *UiResources) *page {
+	c := NewPageContentContainer()
 
 	listsContainer := widget.NewContainer(
 		widget.ContainerOpts.WidgetOpts(widget.WidgetOpts.LayoutData(widget.RowLayoutData{
@@ -141,8 +141,8 @@ func listPage(res *uiResources) *page {
 	}
 }
 
-func comboButtonPage(res *uiResources) *page {
-	c := newPageContentContainer()
+func comboButtonPage(res *UiResources) *page {
+	c := NewPageContentContainer()
 
 	entries := []interface{}{}
 	for i := 1; i <= 20; i++ {
@@ -177,8 +177,8 @@ func comboButtonPage(res *uiResources) *page {
 	}
 }
 
-func tabBookPage(res *uiResources) *page {
-	c := newPageContentContainer()
+func tabBookPage(res *UiResources) *page {
+	c := NewPageContentContainer()
 
 	tabs := []*widget.TabBookTab{}
 
@@ -228,8 +228,8 @@ func tabBookPage(res *uiResources) *page {
 	}
 }
 
-func gridLayoutPage(res *uiResources) *page {
-	c := newPageContentContainer()
+func gridLayoutPage(res *UiResources) *page {
+	c := NewPageContentContainer()
 
 	bc := widget.NewContainer(
 		widget.ContainerOpts.WidgetOpts(widget.WidgetOpts.LayoutData(widget.RowLayoutData{
@@ -259,8 +259,8 @@ func gridLayoutPage(res *uiResources) *page {
 	}
 }
 
-func rowLayoutPage(res *uiResources) *page {
-	c := newPageContentContainer()
+func rowLayoutPage(res *UiResources) *page {
+	c := NewPageContentContainer()
 
 	c.AddChild(widget.NewText(
 		widget.TextOpts.Text("Horizontal", res.text.face, res.text.idleColor)))
@@ -305,8 +305,8 @@ func rowLayoutPage(res *uiResources) *page {
 	}
 }
 
-func sliderPage(res *uiResources) *page {
-	c := newPageContentContainer()
+func sliderPage(res *UiResources) *page {
+	c := NewPageContentContainer()
 
 	pageSizes := []int{3, 10}
 	sliders := []*widget.Slider{}
@@ -365,8 +365,8 @@ func sliderPage(res *uiResources) *page {
 	}
 }
 
-func toolTipPage(res *uiResources, toolTips *toolTipContents, toolTip *widget.ToolTip) *page {
-	c := newPageContentContainer()
+func toolTipPage(res *UiResources, toolTips *toolTipContents, toolTip *widget.ToolTip) *page {
+	c := NewPageContentContainer()
 
 	c.AddChild(widget.NewText(
 		widget.TextOpts.Text("Hover over these buttons to see their tool tips.", res.text.face, res.text.idleColor)))
@@ -419,8 +419,8 @@ func toolTipPage(res *uiResources, toolTips *toolTipContents, toolTip *widget.To
 	}
 }
 
-func dragAndDropPage(res *uiResources, dnd *widget.DragAndDrop, drag *dragContents) *page {
-	c := newPageContentContainer()
+func dragAndDropPage(res *UiResources, dnd *widget.DragAndDrop, drag *dragContents) *page {
+	c := NewPageContentContainer()
 
 	dndContainer := widget.NewContainer(
 		widget.ContainerOpts.Layout(widget.NewRowLayout(
@@ -484,8 +484,8 @@ func dragAndDropPage(res *uiResources, dnd *widget.DragAndDrop, drag *dragConten
 	}
 }
 
-func textInputPage(res *uiResources) *page {
-	c := newPageContentContainer()
+func textInputPage(res *UiResources) *page {
+	c := NewPageContentContainer()
 
 	tOpts := []widget.TextInputOpt{
 		widget.TextInputOpts.WidgetOpts(widget.WidgetOpts.LayoutData(widget.RowLayoutData{
@@ -533,8 +533,8 @@ func textInputPage(res *uiResources) *page {
 	}
 }
 
-func radioGroupPage(res *uiResources) *page {
-	c := newPageContentContainer()
+func radioGroupPage(res *UiResources) *page {
+	c := NewPageContentContainer()
 
 	var cbs []*widget.Checkbox
 	for i := 0; i < 5; i++ {
@@ -551,8 +551,8 @@ func radioGroupPage(res *uiResources) *page {
 	}
 }
 
-func windowPage(res *uiResources, ui func() *ebitenui.UI) *page {
-	c := newPageContentContainer()
+func windowPage(res *UiResources, ui func() *ebitenui.UI) *page {
+	c := NewPageContentContainer()
 
 	b := widget.NewButton(
 		widget.ButtonOpts.Image(res.button.image),
@@ -570,7 +570,7 @@ func windowPage(res *uiResources, ui func() *ebitenui.UI) *page {
 	}
 }
 
-func openWindow(res *uiResources, ui func() *ebitenui.UI) {
+func openWindow(res *UiResources, ui func() *ebitenui.UI) {
 	var rw ebitenui.RemoveWindowFunc
 
 	c := widget.NewContainer(
@@ -630,7 +630,7 @@ func openWindow(res *uiResources, ui func() *ebitenui.UI) {
 	rw = ui().AddWindow(w)
 }
 
-func openWindow2(res *uiResources, ui func() *ebitenui.UI) {
+func openWindow2(res *UiResources, ui func() *ebitenui.UI) {
 	var rw ebitenui.RemoveWindowFunc
 
 	c := widget.NewContainer(
@@ -669,8 +669,8 @@ func openWindow2(res *uiResources, ui func() *ebitenui.UI) {
 	rw = ui().AddWindow(w)
 }
 
-func anchorLayoutPage(res *uiResources) *page {
-	c := newPageContentContainer()
+func anchorLayoutPage(res *UiResources) *page {
+	c := NewPageContentContainer()
 
 	p := newSizedPanel(300, 220,
 		widget.ContainerOpts.BackgroundImage(res.panel.image),

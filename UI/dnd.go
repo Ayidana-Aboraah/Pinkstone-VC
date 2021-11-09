@@ -5,7 +5,7 @@ import (
 )
 
 type dragContents struct {
-	res *uiResources
+	res *UiResources
 
 	sources []*widget.Widget
 	targets []*widget.Widget

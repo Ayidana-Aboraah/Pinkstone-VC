@@ -1,4 +1,4 @@
-package main
+package UI
 
 import (
 	"github.com/therecipe/qt/widgets"

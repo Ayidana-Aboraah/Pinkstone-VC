@@ -100,7 +100,7 @@ func createUI() (*ebitenui.UI, func(), error) {
 	rootContainer.AddChild(urlContainer)
 
 	urlContainer.AddChild(widget.NewText(
-		widget.TextOpts.Text("github.com/blizzy78/ebitenui", res.text.smallFace, res.text.disabledColor)))
+		widget.TextOpts.Text("Red", res.text.smallFace, res.text.disabledColor)))
 
 	ui = &ebitenui.UI{
 		Container: rootContainer,

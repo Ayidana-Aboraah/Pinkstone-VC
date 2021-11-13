@@ -11,7 +11,7 @@ import (
 func main() {
 	// Generate a barcode image (*BitMatrix)
 	enc := oned.NewCode128Writer()
-	img, _ := enc.Encode("Muda!", gozxing.BarcodeFormat_CODE_128, 250, 50, nil)
+	img, _ := enc.Encode("1", gozxing.BarcodeFormat_CODE_128, 250, 50, nil)
 
 	file, _ := os.Create("barcodes [test]/barcode.png")
 	defer file.Close()

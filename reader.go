@@ -17,14 +17,21 @@ func main() {
 	//path := "barcode.png"
 	file, _ := os.Open(path + "Online Test.png")
 	img, _, _ := image.Decode(file)
+	ReadImage(img)
+}
 
+func ReadImage(img image.Image) *gozxing.Result{
 	// prepare BinaryBitmap
 	bmp, _ := gozxing.NewBinaryBitmapFromImage(img)
 
 	// decode image
-	//barReader := oned.NewCode128Reader()
 	barReader := oned.NewUPCAReader()
 	result, _ := barReader.Decode(bmp, nil)
 
 	fmt.Println(result)
+	return result
+}
+
+func AddNewStoreItem(){
+	
 }

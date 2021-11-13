@@ -1,34 +1,31 @@
 package main
 
 import (
-	"github.com/hajimehoshi/ebiten/v2"
-	"log"
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/app"
+	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/widget"
 )
 
-type Game struct{}
+func main() {
+	a := app.New()
+	w := a.NewWindow("Bronze Hermes")
+	//a.SetIcon(icon)
 
-func NewGame() *Game{
-	g := &Game{}
-	return g
-}
-
-func (g *Game) Update() error{
-	//If camera is active, update camera
-	//
-	return nil
-}
-
-func (g *Game) Layout(int, int)(screenWidth, screenLength int){
-	return 600, 800
-}
-
-func (g *Game) Draw(screen *ebiten.Image){}
-
-func main(){
-	g := NewGame()
-	ebiten.SetWindowResizable(true)
-	ebiten.SetWindowTitle("App")
-	if err := ebiten.RunGame(g); err != nil {
-		log.Fatal(err)
-	}
+	title := widget.NewLabel("Welcome!")
+	title.Alignment = fyne.TextAlign(1)
+	w.SetContent(container.NewVBox(
+		title,
+		widget.NewButton("Data", func() {
+			title.SetText("Welcome :)")
+			//Change To Data Menu
+		}),
+		widget.NewButton("Camera", func(){
+			//StartCam()
+		}),
+		widget.NewButton("Quit", func(){
+			w.Close()
+		}),
+	))
+	w.ShowAndRun()
 }

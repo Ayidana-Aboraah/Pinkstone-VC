@@ -7,6 +7,7 @@ import (
 )
 
 //Create a total profit for a specified period of time
+var tempIndex int
 
 func ReadVal(sheet string) {
 	if err != nil {
@@ -83,7 +84,7 @@ func NewProfit(variant int, newValue float64, item Sale) {
 	UpdateLog(item, "Items")
 }
 
-func NewAppItem(){
+func NewAppItem() {
 	//Make Sure Camera App is open
 	//Check id against database
 	//if id is in the database, ask to override
@@ -93,26 +94,29 @@ func NewAppItem(){
 	//paste the temp sale into the rows in items sheet (use the index used to find the last row before it was empty
 	//Close when and the user it's done
 
-	cell := f.GetCellValue("Items", "A1")
-		//Convert res to int first
-		i := GetIndex("Items", res, 2)
-		if strconv.Atoi(cell) == res{
-			//Ask user to override,
-			//if cancel then close camera
-			//if override then open change menu
-		}
-		if cell == ""{
-			//Open New Item menu
-			//Open temp and save the id as res
-			//Save the index for the cell for later placement of a new id
-			break
-		}
+	//Insert image from cam for this.
+	r := res.GetNumBits()
+	//Convert res to int first
+	ix := GetIndex("Items", r, 0)
+	iy := GetIndex("Items", r, 1)
+
+	//(if)Checking if the id needs to be overwritten
+	//(else)Checking if a new id needs to be made
+	if ix > 1 {
+		//Ask user to override,
+		//if cancel then close camera
+		//if override then open change menu
+	} else {
+		//Open New Item menu
+		//Open temp and save the id as res
+		//Save the index for the cell for later placement of a new id
+		tempIndex = iy
 	}
 }
 
 //Specify the time as a parameter
 func GetTotalProfit(selectionType int) (revenue, cost, profit float64){
-	targetSheet := "Report Data"
+	//targetSheet := "Report Data"
 	return 0, 0, 0
 }
 
@@ -123,6 +127,7 @@ func GetIndex(targetSheet string, id, searchType int) int{
 		cell = f.GetCellValue(targetSheet, "A"+strconv.Itoa(i))
 		conCell, _ := strconv.Atoi(cell)
 		switch searchType {
+		/*
 		case 2:
 			if conCell == id{
 				return i
@@ -131,6 +136,7 @@ func GetIndex(targetSheet string, id, searchType int) int{
 				return i
 			}
 			break
+		 */
 		case 1:
 			if conCell == id{
 				return i
@@ -145,6 +151,7 @@ func GetIndex(targetSheet string, id, searchType int) int{
 
 		i++
 	}
+	return 0
 }
 
 func ConvertDate(date time.Time) string{

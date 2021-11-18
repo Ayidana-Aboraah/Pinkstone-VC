@@ -1,4 +1,4 @@
-package main
+package Data
 
 import (
 	"fmt"
@@ -16,7 +16,7 @@ type Sale struct {
 	quantity int
 }
 
-var f, err = excelize.OpenFile("AppData.xlsx")
+var f, err = excelize.OpenFile("Appxlsx")
 
 var shoppingCart []*Sale
 
@@ -29,7 +29,7 @@ func main() {
 	}, "Log")
 
 	ReadVal("Log")
-	f.Save()
+	_ = f.Save()
 }
 
 func BuyCart() {
@@ -43,20 +43,21 @@ func BuyCart() {
 	//Until the cart's info is fully displayed
 
 	targetSheet := "Report Data"
-
 	//Gets the index of a free slot in the sheet
 	idx := GetIndex(targetSheet, 0, 0)
 
 	//Loops through to fill each item on the cart to the stuff
 	for i := 0; i <= len(shoppingCart); {
 		newInven := GetInventory(shoppingCart[i].id) - 1
+		quantity := float64(shoppingCart[i].quantity)
 		f.SetCellValue(targetSheet, "A"+strconv.Itoa(idx), shoppingCart[i].id)
 		f.SetCellValue(targetSheet, "B"+strconv.Itoa(idx), shoppingCart[i].name)
-		f.SetCellValue(targetSheet, "C"+strconv.Itoa(idx), shoppingCart[i].quantity)
-		f.SetCellValue(targetSheet, "D"+strconv.Itoa(idx), shoppingCart[i].price*float64(shoppingCart[i].quantity))
-		f.SetCellValue(targetSheet, "E"+strconv.Itoa(idx), newInven)
-		f.SetCellValue(targetSheet, "F"+strconv.Itoa(idx), ConvertDate(time.Now()))
-		f.SetCellValue(targetSheet, "G"+strconv.Itoa(idx), ConvertClock())
+		f.SetCellValue(targetSheet, "C"+strconv.Itoa(idx), quantity)
+		f.SetCellValue(targetSheet, "D"+strconv.Itoa(idx), shoppingCart[i].price*quantity)
+		f.SetCellValue(targetSheet, "E"+strconv.Itoa(idx), shoppingCart[i].cost*quantity)
+		f.SetCellValue(targetSheet, "F"+strconv.Itoa(idx), newInven)
+		f.SetCellValue(targetSheet, "G"+strconv.Itoa(idx), ConvertDate(time.Now()))
+		f.SetCellValue(targetSheet, "H"+strconv.Itoa(idx), ConvertClock(time.Now()))
 		UpdateLog(*shoppingCart[i], "Log")
 		i++
 	}

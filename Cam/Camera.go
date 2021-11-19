@@ -1,4 +1,5 @@
-package main
+package Cam
+/*
 
 import (
 	"github.com/makiuchi-d/gozxing"
@@ -26,3 +27,5 @@ func OpenCam() {
 		window.WaitKey(1)
 	}
 }
+
+ */

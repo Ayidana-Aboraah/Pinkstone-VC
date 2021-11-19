@@ -1,4 +1,4 @@
-package main
+package Cam
 
 import (
 	"fmt"
@@ -10,12 +10,12 @@ import (
 	"github.com/makiuchi-d/gozxing"
 )
 
-var path = "barcodes [test]/"
+var Path = "barcodes [test]/"
 
 func main() {
 	// open and decode image file
 	//path := "barcode.png"
-	file, _ := os.Open(path + "Online Test.png")
+	file, _ := os.Open(Path + "barcode.png")
 	img, _, _ := image.Decode(file)
 	ReadImage(img)
 }

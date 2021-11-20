@@ -16,12 +16,13 @@ type Sale struct {
 	quantity int
 }
 
-var f, err = excelize.OpenFile("Appxlsx")
+//var f, err = excelize.OpenFile("AppData.xlsx")
+var f, err = excelize.OpenFile("TestAppData.xlsx")
 
 var shoppingCart []*Sale
 
 //A test Main
-func main() {
+func TestMain() {
 	UpdateLog(Sale{
 		id:    0,
 		name:  "Null",

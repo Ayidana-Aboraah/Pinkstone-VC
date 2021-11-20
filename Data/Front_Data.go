@@ -1,6 +1,7 @@
 package Data
 
 import (
+	"github.com/makiuchi-d/gozxing"
 	"strconv"
 	"time"
 )
@@ -22,8 +23,7 @@ func NewProfit(variant int, newValue float64, item Sale) {
 	UpdateLog(item, "Items")
 }
 
-/*
-func NewAppItem() {
+func NewAppItem(res gozxing.Result) {
 	//Make Sure Camera App is open
 	//Check id against database
 	//if id is in the database, ask to override
@@ -54,8 +54,6 @@ func NewAppItem() {
 		tempIndex = iy
 	}
 }
-
- */
 
 //Specify the time as a parameter
 func GetTotalProfit(selectionType int) (revenue, cost, profit float64){

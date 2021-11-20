@@ -3,6 +3,7 @@ package main
 import (
 	"business.go/Cam"
 	"business.go/Data"
+	"fmt"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
@@ -82,32 +83,87 @@ func CreateWindow(a fyne.App) {
 	testTitle := widget.NewLabel("Test 2")
 	testMenu = container.NewVBox(
 		container.NewAppTabs(container.NewTabItem("Shop", container.NewVBox(
-			widget.NewLabel("Test"),
-			widget.NewButton("Blue", func() {
+			widget.NewLabel("Shopping"),
+			widget.NewButton("Time", func() {
 				a.SendNotification(fyne.NewNotification(Data.ConvertDate(time.Now()), Data.ConvertClock(time.Now())))
 			}),
+			widget.NewButton("", func() {
+
+			}),
 		)),
-			container.NewTabItem("Camera", container.NewVBox(
+		
+			container.NewTabItem("Barcodes", container.NewVBox(
 				testTitle,
-				widget.NewButton("Test Image 1", func (){
-					file, _ := os.Open(Cam.Path + "Online Test.png")
-					img, _, _ := image.Decode(file)
-					id := Cam.ReadImage(img).String()
-					testTitle.SetText(id)
+				//widget.NewCard("Homies", "You Thought...", widget.NewEntry()),
+				widget.NewButton("Camera", func(){
+					//Cam.OpenCam()
 				}),
-				widget.NewButton("Test Image 2", func (){
-					file, _ := os.Open(Cam.Path + "test 1.png")
+				widget.NewButton("Barcode 01", func (){
+					file, _ := os.Open(Cam.Path + "Online Test 01.png")
 					img, _, _ := image.Decode(file)
 					id := Cam.ReadImage(img).String()
-					testTitle.SetText(id)
+					testTitle.SetText("ID: " + id)
+				}),
+				widget.NewButton("Barcode 02", func (){
+					file, _ := os.Open(Cam.Path + "Online Test 02.png")
+					img, _, _ := image.Decode(file)
+					id := Cam.ReadImage(img).String()
+					testTitle.SetText("ID: " + id)
+				}),
+				widget.NewButton("Barcode 03", func (){
+					file, _ := os.Open(Cam.Path + "Online Test 03.png")
+					img, _, _ := image.Decode(file)
+					id := Cam.ReadImage(img).String()
+					testTitle.SetText("ID: " + id)
+				}),
+				widget.NewButton("Barcode 04", func (){
+					file, _ := os.Open(Cam.Path + "Test01.png")
+					img, _, _ := image.Decode(file)
+					id := Cam.ReadImage(img).String()
+					testTitle.SetText("ID: " + id)
+				}),
+				widget.NewButton("Barcode 05", func (){
+					file, _ := os.Open(Cam.Path + "Online Test 05.png")
+					img, _, _ := image.Decode(file)
+					id := Cam.ReadImage(img).String()
+					testTitle.SetText("ID: " + id)
+				}),
+				widget.NewButton("Add Barcode 05 To DataBase", func() {
+					file, _ := os.Open(Cam.Path + "Online Test 05.png")
+					img, _, _ := image.Decode(file)
+					id := Cam.ReadImage(img).GetText()
+
+					fmt.Println(id)
+					//Add this to the pop up menu when I can do that
+					//testTitle.SetText("ID: " + id + " added to Test Data Base")
 				}),
 			)),
+			
 			container.NewTabItem("Info", container.NewVBox(
-				widget.NewLabel("Test 3"),
+
+				container.NewHSplit(
+					widget.NewLabel("Test 3"),
+					container.NewVScroll(
+						widget.NewButton("Test 01", func() {
+							//
+						}),
+					)),
+
+					widget.NewForm(
+						widget.NewFormItem("Id", widget.NewLabel("ID")),
+						widget.NewFormItem("Price", widget.NewEntry()),
+						widget.NewFormItem("Cost", widget.NewEntry()),
+						widget.NewFormItem("Inventory", widget.NewEntry()),
+					),
 			)),
+
 		),
 	)
 
 	w.SetContent(mainMenu)
 	w.ShowAndRun()
+}
+
+func CreateNewItem(){
+
 }

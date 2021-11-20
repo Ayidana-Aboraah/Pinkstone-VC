@@ -89,7 +89,6 @@ func GetIndex(targetSheet string, id, searchType int) int{
 
 		i++
 	}
-	return 0
 }
 
 func GetIndexStr(targetSheet, id string, searchType int) int{
@@ -123,7 +122,6 @@ func GetIndexStr(targetSheet, id string, searchType int) int{
 
 		i++
 	}
-	return 0
 }
 
 func ConvertDate(date time.Time) string{

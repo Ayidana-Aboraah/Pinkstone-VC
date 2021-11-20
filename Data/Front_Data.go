@@ -1,14 +1,11 @@
 package Data
 
 import (
-	"github.com/makiuchi-d/gozxing"
 	"strconv"
 	"time"
 )
 
 //Create a total profit for a specified period of time
-var tempIndex int
-var tempSale *Sale
 
 func NewProfit(variant int, newValue float64, item Sale) {
 	switch variant {
@@ -19,40 +16,8 @@ func NewProfit(variant int, newValue float64, item Sale) {
 		item.cost = newValue
 		break
 	}
-	UpdateLog(item, "Price Log")
-	UpdateLog(item, "Items")
-}
-
-func NewAppItem(res gozxing.Result) {
-	//Make Sure Camera App is open
-	//Check id against database
-	//if id is in the database, ask to override
-	//else open up new item menu
-	//store id in temp sale
-	//each box fills in a variable in the temp sale
-	//paste the temp sale into the rows in items sheet use the index used to find the last row before it was empty
-	//Close when and the user it's done
-
-	//Insert image from cam for this.
-	convRes := res.GetNumBits()
-	//Convert res to int first
-	ix := GetIndex("Items", convRes, 0)
-	iy := GetIndex("Items", convRes, 1)
-
-	//(if)Checking if the id needs to be overwritten
-	//(else)Checking if a new id needs to be made
-	if ix > 1 {
-		//Ask user to override,
-		//if cancel then close camera
-		//if override then open change menu
-	} else {
-		//Open New Item menu
-		//OpenItem()
-		//Open temp and save the id as res
-		tempSale.id = convRes
-		//Save the index for the cell for later placement of a new id
-		tempIndex = iy
-	}
+	UpdateData(item, "Price Log", 0)
+	UpdateData(item, "Items", 0)
 }
 
 //Specify the time as a parameter

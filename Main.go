@@ -3,14 +3,18 @@ package main
 import (
 	"business.go/Cam"
 	"business.go/Data"
+	"business.go/UI"
 	"fmt"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/data/validation"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
 	"image"
 	_ "image/png"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -81,13 +85,17 @@ func CreateWindow(a fyne.App) {
 	)
 
 	testTitle := widget.NewLabel("Test 2")
+	//testItemForm := dialog.NewForm("New Item", "Done", "Cancel", []*widget.FormItem ,confirmCallback(), w)
 	testMenu = container.NewVBox(
 		container.NewAppTabs(container.NewTabItem("Shop", container.NewVBox(
 			widget.NewLabel("Shopping"),
 			widget.NewButton("Time", func() {
 				a.SendNotification(fyne.NewNotification(Data.ConvertDate(time.Now()), Data.ConvertClock(time.Now())))
 			}),
-			widget.NewButton("", func() {
+			widget.NewButton("Run Test Main", func() {
+				Data.TestMain()
+			}),
+			widget.NewButton("Add Cart", func() {
 
 			}),
 		)),
@@ -125,17 +133,16 @@ func CreateWindow(a fyne.App) {
 				widget.NewButton("Barcode 05", func (){
 					file, _ := os.Open(Cam.Path + "Online Test 05.png")
 					img, _, _ := image.Decode(file)
-					id := Cam.ReadImage(img).String()
-					testTitle.SetText("ID: " + id)
+					id := Cam.ReadImage(img).GetNumBits()
+					testTitle.SetText("ID: " + strconv.Itoa(id))
 				}),
 				widget.NewButton("Add Barcode 05 To DataBase", func() {
 					file, _ := os.Open(Cam.Path + "Online Test 05.png")
 					img, _, _ := image.Decode(file)
-					id := Cam.ReadImage(img).GetText()
+					id := Cam.ReadImage(img).String()
+					newId, _ := strconv.Atoi(id)
 
-					fmt.Println(id)
-					//Add this to the pop up menu when I can do that
-					//testTitle.SetText("ID: " + id + " added to Test Data Base")
+					CreateNewItem(newId, w)
 				}),
 			)),
 			
@@ -164,6 +171,48 @@ func CreateWindow(a fyne.App) {
 	w.ShowAndRun()
 }
 
-func CreateNewItem(){
+func CreateNewItem(id int, w fyne.Window){
+	//password := widget.NewPasswordEntry()
+	//password.Validator = validation.NewRegexp(`^[A-Za-z0-9_-]+$`, "password can only contain letters, numbers, '_', and '-'")
+	idLabel := widget.NewLabel(strconv.Itoa(id))
 
+	nameEntry := widget.NewEntry()
+	nameEntry.SetPlaceHolder("The Name of the Product")
+	nameEntry.Validator = validation.NewRegexp(`^[A-Za-z0-9_-]+$`, "username can only contain letters, numbers, '_', and '-'")
+
+	priceEntry := UI.NewNumEntry()
+	priceEntry.SetPlaceHolder("The Price it will be sold.")
+
+	costEntry := UI.NewNumEntry()
+	costEntry.SetPlaceHolder("The Cost of buying this item.")
+
+	inventoryEntry := UI.NewNumEntry()
+	inventoryEntry.SetPlaceHolder("The Amount currently in inventory.")
+
+	items := []*widget.FormItem{
+		widget.NewFormItem("ID", idLabel),
+		widget.NewFormItem("Name", nameEntry),
+		widget.NewFormItem("Price", priceEntry),
+		widget.NewFormItem("Cost", costEntry),
+		widget.NewFormItem("Inventory", inventoryEntry),
+	}
+
+	dialog.ShowForm("New Item", "Add", "Cancel", items, func(b bool) {
+		if !b {
+			return
+		}
+
+		//log.Println("Please Check the Price, cost, or the amount in inventory")
+		fmt.Println("Name, Price, Cost and Inventory have all been Authenticated...")
+		fmt.Println("Adding to the database")
+		//Call a sort of save method that will take the data and save it to the item data
+		//Data.SaveNewItem(id, Data.NewSale(0, "Blue balls", 5.5, 1.25, 2))
+		price, cost, inventory := Data.ConvertStringToSale(priceEntry.Text, costEntry.Text, inventoryEntry.Text)
+		Data.UpdateData(Data.NewSale(id, nameEntry.Text, price, cost, inventory), "Items", 2)
+		Data.ReadVal("Items")
+		Data.SaveFile()
+	}, w)
+}
+func confirmCallback(response bool) {
+	fmt.Println("Responded with", response)
 }

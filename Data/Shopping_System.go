@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/360EntSecGroup-Skylar/excelize"
 	"strconv"
-	"time"
 )
 
 // Defining the info used later
@@ -16,6 +15,16 @@ type Sale struct {
 	quantity int
 }
 
+func NewSale(id int, name string, price, cost float64, quantity int) Sale{
+	return Sale{
+		id: id,
+		name: name,
+		price: price,
+		cost: cost,
+		quantity: quantity,
+	}
+}
+
 //var f, err = excelize.OpenFile("AppData.xlsx")
 var f, err = excelize.OpenFile("TestAppData.xlsx")
 
@@ -23,14 +32,14 @@ var shoppingCart []*Sale
 
 //A test Main
 func TestMain() {
-	UpdateLog(Sale{
+	UpdateData(Sale{
 		id:    0,
 		name:  "Null",
 		price: 0,
-	}, "Log")
+	}, "Log", 0)
 
 	ReadVal("Log")
-	_ = f.Save()
+	//_ = f.Save()
 }
 
 func BuyCart() {
@@ -45,10 +54,12 @@ func BuyCart() {
 
 	targetSheet := "Report Data"
 	//Gets the index of a free slot in the sheet
-	idx := GetIndex(targetSheet, 0, 0)
+	//idx := GetIndex(targetSheet, 0, 0)
 
 	//Loops through to fill each item on the cart to the stuff
 	for i := 0; i <= len(shoppingCart); {
+		UpdateData(*shoppingCart[i], targetSheet, 1)
+		/*
 		newInven := GetInventory(shoppingCart[i].id) - 1
 		quantity := float64(shoppingCart[i].quantity)
 		f.SetCellValue(targetSheet, "A"+strconv.Itoa(idx), shoppingCart[i].id)
@@ -60,6 +71,7 @@ func BuyCart() {
 		f.SetCellValue(targetSheet, "G"+strconv.Itoa(idx), ConvertDate(time.Now()))
 		f.SetCellValue(targetSheet, "H"+strconv.Itoa(idx), ConvertClock(time.Now()))
 		UpdateLog(*shoppingCart[i], "Log")
+		 */
 		i++
 	}
 
@@ -131,4 +143,11 @@ func GetCartTotal() float64{
 
 func ClearCart() {
 	shoppingCart = shoppingCart[:0]
+}
+
+func ConvertStringToSale(price, cost, quantity string) (float64, float64, int){
+	newPrice, _ := strconv.ParseFloat(price, 64)
+	newCost, _ := strconv.ParseFloat(cost, 64)
+	newQuantity, _ := strconv.Atoi(quantity)
+	return newPrice, newCost, newQuantity
 }

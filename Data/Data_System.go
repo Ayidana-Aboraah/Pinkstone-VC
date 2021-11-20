@@ -23,25 +23,40 @@ func ReadVal(sheet string) {
 	}
 }
 
-func UpdateLog(item Sale, targetSheet string) {
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+func SaveFile(){f.Save()}
 
-	cell := f.GetCellValue(targetSheet, "A1")
-	for idx := 1; cell != ""; idx++ {
-		cell = f.GetCellValue(targetSheet, "A"+strconv.Itoa(idx))
-		if cell == "" {
-			fmt.Println("A" + strconv.Itoa(idx))
-			f.SetCellValue(targetSheet, "A"+strconv.Itoa(idx), item.id)
-			f.SetCellValue(targetSheet, "B"+strconv.Itoa(idx), item.name)
-			f.SetCellValue(targetSheet, "C"+strconv.Itoa(idx), item.price)
-			f.SetCellValue(targetSheet, "D"+strconv.Itoa(idx), item.cost)
-			f.SetCellValue(targetSheet, "E"+strconv.Itoa(idx), time.Now())
-			break
-		}
-		fmt.Println("Not: " + strconv.Itoa(idx))
+func UpdateData(item Sale, targetSheet string, variant int){
+	idx := GetIndex(targetSheet, 0, 0)
+	switch variant {
+	//Update Items [Add]
+	case 2:
+		f.SetCellValue(targetSheet, "A"+strconv.Itoa(idx), item.id)
+		f.SetCellValue(targetSheet, "B"+strconv.Itoa(idx), item.name)
+		f.SetCellValue(targetSheet, "C"+strconv.Itoa(idx), item.price)
+		f.SetCellValue(targetSheet, "D"+strconv.Itoa(idx), item.cost)
+		f.SetCellValue(targetSheet, "E"+strconv.Itoa(idx), item.quantity)
+		break
+	//Update Report function
+	case 1:
+		newInven := GetInventory(item.id) - 1
+		f.SetCellValue(targetSheet, "A"+strconv.Itoa(idx), item.id)
+		f.SetCellValue(targetSheet, "B"+strconv.Itoa(idx), item.name)
+		f.SetCellValue(targetSheet, "C"+strconv.Itoa(idx), item.quantity)
+		f.SetCellValue(targetSheet, "D"+strconv.Itoa(idx), item.price)
+		f.SetCellValue(targetSheet, "E"+strconv.Itoa(idx), item.cost)
+		f.SetCellValue(targetSheet, "F"+strconv.Itoa(idx), newInven)
+		f.SetCellValue(targetSheet, "G"+strconv.Itoa(idx), ConvertDate(time.Now()))
+		f.SetCellValue(targetSheet, "H"+strconv.Itoa(idx), ConvertClock(time.Now()))
+		break
+		//Update Log function
+	default:
+		fmt.Println("A" + strconv.Itoa(idx))
+		f.SetCellValue(targetSheet, "A"+strconv.Itoa(idx), item.id)
+		f.SetCellValue(targetSheet, "B"+strconv.Itoa(idx), item.name)
+		f.SetCellValue(targetSheet, "C"+strconv.Itoa(idx), item.price)
+		f.SetCellValue(targetSheet, "D"+strconv.Itoa(idx), item.cost)
+		f.SetCellValue(targetSheet, "E"+strconv.Itoa(idx), time.Now())
+		break
 	}
 }
 
@@ -52,20 +67,13 @@ func GetInventory(id int) int {
 	//take the number and subtract by one
 	//Return the result number
 	targetSheet := "Detection Data"
-	cell := f.GetCellValue(targetSheet, "A1")
 
-	for idx := 1; cell != ""; idx++ {
-		cell = f.GetCellValue(targetSheet, "A"+strconv.Itoa(idx))
-		if cell == strconv.Itoa(id) {
-			res := f.GetCellValue(targetSheet, "F"+strconv.Itoa(idx))
+	idx := GetIndex(targetSheet, id, 1)
 
-			if inven, err := strconv.Atoi(res); err == nil {
-				return inven
-			}
-		}
-	}
-	fmt.Println("Error: No id found")
-	return 0
+	res := f.GetCellValue(targetSheet, "F"+strconv.Itoa(idx))
+
+	inven, _ := strconv.Atoi(res)
+	return inven
 }
 
 func GetIndex(targetSheet string, id, searchType int) int{
@@ -79,6 +87,11 @@ func GetIndex(targetSheet string, id, searchType int) int{
 			if conCell == id{
 				return i
 			}
+			/*
+			if cell == ""{
+				return 0
+			}
+			*/
 			break
 		default:
 			if cell == ""{

@@ -99,38 +99,38 @@ func CreateWindow(a fyne.App) {
 
 			}),
 		)),
-		
+
 			container.NewTabItem("Barcodes", container.NewVBox(
 				testTitle,
 				//widget.NewCard("Homies", "You Thought...", widget.NewEntry()),
-				widget.NewButton("Camera", func(){
+				widget.NewButton("Camera", func() {
 					//Cam.OpenCam()
 				}),
-				widget.NewButton("Barcode 01", func (){
+				widget.NewButton("Barcode 01", func() {
 					file, _ := os.Open(Cam.Path + "Online Test 01.png")
 					img, _, _ := image.Decode(file)
 					id := Cam.ReadImage(img).String()
 					testTitle.SetText("ID: " + id)
 				}),
-				widget.NewButton("Barcode 02", func (){
+				widget.NewButton("Barcode 02", func() {
 					file, _ := os.Open(Cam.Path + "Online Test 02.png")
 					img, _, _ := image.Decode(file)
 					id := Cam.ReadImage(img).String()
 					testTitle.SetText("ID: " + id)
 				}),
-				widget.NewButton("Barcode 03", func (){
+				widget.NewButton("Barcode 03", func() {
 					file, _ := os.Open(Cam.Path + "Online Test 03.png")
 					img, _, _ := image.Decode(file)
 					id := Cam.ReadImage(img).String()
 					testTitle.SetText("ID: " + id)
 				}),
-				widget.NewButton("Barcode 04", func (){
+				widget.NewButton("Barcode 04", func() {
 					file, _ := os.Open(Cam.Path + "Test01.png")
 					img, _, _ := image.Decode(file)
 					id := Cam.ReadImage(img).String()
 					testTitle.SetText("ID: " + id)
 				}),
-				widget.NewButton("Barcode 05", func (){
+				widget.NewButton("Barcode 05", func() {
 					file, _ := os.Open(Cam.Path + "Online Test 05.png")
 					img, _, _ := image.Decode(file)
 					id := Cam.ReadImage(img).GetNumBits()
@@ -145,24 +145,32 @@ func CreateWindow(a fyne.App) {
 					CreateNewItem(newId, w)
 				}),
 			)),
-			
+
 			container.NewTabItem("Info", container.NewVBox(
-
+				widget.NewLabel("Editing Code Info"),
 				container.NewHSplit(
-					widget.NewLabel("Test 3"),
 					container.NewVScroll(
-						widget.NewButton("Test 01", func() {
-							//
-						}),
-					)),
+						container.NewVBox(
+							widget.NewButton("Barcode 01", func() {
+								//Get the Index of the barcode in the data
+								//Fill the menu's placeholders with data from the original id
+							}),
+							widget.NewButton("Barcode 02", func() {
 
+							}),
+						)),
 					widget.NewForm(
 						widget.NewFormItem("Id", widget.NewLabel("ID")),
-						widget.NewFormItem("Price", widget.NewEntry()),
-						widget.NewFormItem("Cost", widget.NewEntry()),
-						widget.NewFormItem("Inventory", widget.NewEntry()),
-					),
+						widget.NewFormItem("Name", widget.NewEntry()),
+						widget.NewFormItem("Price", UI.NewNumEntry()),
+						widget.NewFormItem("Cost", UI.NewNumEntry()),
+						widget.NewFormItem("Inventory", UI.NewNumEntry()),
+					)),
 			)),
+
+			container.NewTabItem("Stats", container.NewVBox(
+
+				)),
 
 		),
 	)
@@ -172,6 +180,7 @@ func CreateWindow(a fyne.App) {
 }
 
 func CreateNewItem(id int, w fyne.Window){
+
 	//password := widget.NewPasswordEntry()
 	//password.Validator = validation.NewRegexp(`^[A-Za-z0-9_-]+$`, "password can only contain letters, numbers, '_', and '-'")
 	idLabel := widget.NewLabel(strconv.Itoa(id))
@@ -213,6 +222,7 @@ func CreateNewItem(id int, w fyne.Window){
 		Data.SaveFile()
 	}, w)
 }
-func confirmCallback(response bool) {
-	fmt.Println("Responded with", response)
+
+func ModifyItem(){
+
 }

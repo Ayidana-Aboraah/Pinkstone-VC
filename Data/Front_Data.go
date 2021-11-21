@@ -2,22 +2,16 @@ package Data
 
 import (
 	"strconv"
+	"strings"
 	"time"
 )
 
 //Create a total profit for a specified period of time
 
-func NewProfit(variant int, newValue float64, item Sale) {
-	switch variant {
-	case 0:
-		item.price = newValue
-		break
-	case 1:
-		item.cost = newValue
-		break
-	}
+//Probably going to be removed and just put in functions in a later thing
+func UpdateProfit(item Sale) {
 	UpdateData(item, "Price Log", 0)
-	UpdateData(item, "Items", 0)
+	ModifyItem(item, "Items")
 }
 
 //Specify the time as a parameter
@@ -25,7 +19,16 @@ func GetTotalProfit(selectionType int) (revenue, cost, profit float64){
 	targetSheet := "Report Data"
 	total_revenue := 0.0
 	total_cost := 0.0
+
 	switch selectionType {
+	//The Month's profit
+	case 1:
+		conDate := ConvertDate(time.Now())
+		strings.Contains(conDate, strconv.Itoa(int(time.Now().Month())) + "/" + strconv.Itoa(time.Now().Year()))
+
+
+		return total_revenue,total_cost, total_profit
+		break
 	//The Day's profit
 	default:
 		conDate := ConvertDate(time.Now())

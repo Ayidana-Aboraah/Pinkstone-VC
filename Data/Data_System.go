@@ -7,11 +7,6 @@ import (
 )
 
 func ReadVal(sheet string) {
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
 	//Getting a row
 	rows := f.GetRows(sheet)
 
@@ -58,6 +53,15 @@ func UpdateData(item Sale, targetSheet string, variant int){
 		f.SetCellValue(targetSheet, "E"+strconv.Itoa(idx), time.Now())
 		break
 	}
+}
+
+func ModifyItem(item Sale, targetSheet string){
+	idx := GetIndex(targetSheet, item.id, 1)
+
+	f.SetCellValue(targetSheet, "B"+strconv.Itoa(idx), item.name)
+	f.SetCellValue(targetSheet, "C"+strconv.Itoa(idx), item.price)
+	f.SetCellValue(targetSheet, "D"+strconv.Itoa(idx), item.cost)
+	f.SetCellValue(targetSheet, "E"+strconv.Itoa(idx), item.quantity)
 }
 
 func GetInventory(id int) int {

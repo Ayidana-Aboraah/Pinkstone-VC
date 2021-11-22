@@ -65,11 +65,6 @@ func ModifyItem(item Sale, targetSheet string){
 }
 
 func GetInventory(id int) int {
-	//Check the Detection data for the item
-	//pull the inventory data from one of the cells
-	//Convert the inventory data to a number
-	//take the number and subtract by one
-	//Return the result number
 	targetSheet := "Detection Data"
 
 	idx := GetIndex(targetSheet, id, 1)
@@ -91,11 +86,6 @@ func GetIndex(targetSheet string, id, searchType int) int{
 			if conCell == id{
 				return i
 			}
-			/*
-			if cell == ""{
-				return 0
-			}
-			*/
 			break
 		default:
 			if cell == ""{

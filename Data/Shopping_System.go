@@ -41,28 +41,17 @@ func TestMain() {
 }
 
 func BuyCart() {
-	//Cycle through and check if there is an open space
-	//When finding an empty space start unloading the contents of the cart into each cell
-	//Until the cart's info is fully displayed
-
 	targetSheet := "Report Data"
-
-	//Loops through to fill each item on the cart to the stuff
-	for i := 0; i <= len(ShoppingCart); {
+	for i := 0; i < len(ShoppingCart); {
 		UpdateData(*ShoppingCart[i], targetSheet, 1)
 		i++
 	}
-
 	//Clear cart
 	ClearCart()
 }
 
 //[Untested]
 func AddToCart(id int) {
-	//Check the "Detection Data" for the specified ID
-	//Grab the row of data
-	//Convert the row data to a Sale variable
-	//Add the sale variable to the ShoppingCart array
 	i := 0
 	for {
 		if i < len(ShoppingCart) {
@@ -72,7 +61,7 @@ func AddToCart(id int) {
 			}
 			i++
 		} else {
-			targetSheet := "Detection Data"
+			targetSheet := "Items"
 			idx := GetIndex(targetSheet, id, 1)
 			p, _ := strconv.ParseFloat(f.GetCellValue(targetSheet, "B"+strconv.Itoa(idx)), 64)
 
@@ -104,10 +93,6 @@ func DecreaseFromCart(id int){
 
 // RemoveFromCart [Untested]
 func RemoveFromCart(i int) {
-	//Cycle through the cart to find the item id
-	//If the id doesn't exist; display error
-	//Otherwise; Remove the specified item from the cart
-
 	ShoppingCart[i] = ShoppingCart[len(ShoppingCart)-1] // Copy last element to index i.
 	ShoppingCart[len(ShoppingCart)-1] = &Sale{}         // Erase last element (write zero value).
 	ShoppingCart = ShoppingCart[:len(ShoppingCart)-1]   // Truncate slice.

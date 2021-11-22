@@ -31,7 +31,3 @@ func ReadImage(img image.Image) *gozxing.Result{
 	fmt.Println(result)
 	return result
 }
-
-func AddNewStoreItem(){
-	
-}

@@ -11,6 +11,7 @@ import (
 	"fyne.io/fyne/v2/data/validation"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
+	"golang.org/x/text/unicode/cldr"
 	"image"
 	_ "image/png"
 	"os"
@@ -133,8 +134,8 @@ func CreateWindow(a fyne.App) {
 				widget.NewButton("Barcode 05", func() {
 					file, _ := os.Open(Cam.Path + "Online Test 05.png")
 					img, _, _ := image.Decode(file)
-					id := Cam.ReadImage(img).GetNumBits()
-					testTitle.SetText("ID: " + strconv.Itoa(id))
+					id := Cam.ReadImage(img).String()
+					testTitle.SetText("ID: " + id)
 				}),
 				widget.NewButton("Add Barcode 05 To DataBase", func() {
 					file, _ := os.Open(Cam.Path + "Online Test 05.png")
@@ -151,11 +152,19 @@ func CreateWindow(a fyne.App) {
 				container.NewHSplit(
 					container.NewVScroll(
 						container.NewVBox(
-							widget.NewButton("Barcode 01", func() {
+							widget.NewButton("Barcode 05", func() {
 								//Get the Index of the barcode in the data
 								//Fill the menu's placeholders with data from the original id
+								file, _ := os.Open(Cam.Path + "Online Test 05.png")
+								img, _, _ := image.Decode(file)
+								id := Cam.ReadImage(img).String()
+
+								idx := Data.GetIndexStr("Items", id, 1)
+
+								//Grab and display the data from the cells in that row
+								//
 							}),
-							widget.NewButton("Barcode 02", func() {
+							widget.NewButton("Barcode 05", func() {
 
 							}),
 						)),

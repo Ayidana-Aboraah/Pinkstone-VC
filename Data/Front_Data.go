@@ -3,10 +3,7 @@ package Data
 import (
 	"strconv"
 	"strings"
-	"time"
 )
-
-//Create a total profit for a specified period of time
 
 //Probably going to be removed and just put in functions in a later thing
 func UpdateProfit(item Sale) {
@@ -14,38 +11,35 @@ func UpdateProfit(item Sale) {
 	ModifyItem(item, "Items")
 }
 
-//Specify the time as a parameter
-func GetTotalProfit(selectionType int) (revenue, cost, profit float64){
+func GetTotalProfit(selectionStr string) (revenue, cost, profit float64){
 	targetSheet := "Report Data"
-	total_revenue := 0.0
-	total_cost := 0.0
+	totalRevenue := 0.0
+	totalCost := 0.0
 
-	switch selectionType {
-	//The Month's profit
-	case 1:
-		conDate := ConvertDate(time.Now())
-		strings.Contains(conDate, strconv.Itoa(int(time.Now().Month())) + "/" + strconv.Itoa(time.Now().Year()))
+	results := FindAll(targetSheet, "G", selectionStr)
+	for i := 0; i < len(results); {
+		rev := f.GetCellValue(targetSheet, "D" + strconv.Itoa(results[i]))
+		cos := f.GetCellValue(targetSheet, "E" + strconv.Itoa(results[i]))
+		conRev, _ :=  strconv.ParseFloat(rev, 64)
+		conCos, _ := strconv.ParseFloat(cos, 64)
 
-
-		return total_revenue,total_cost, total_profit
-		break
-	//The Day's profit
-	default:
-		conDate := ConvertDate(time.Now())
-		startIdx := GetIndexStr(targetSheet, conDate, 1)
-		endIdx := GetIndexStr(targetSheet, conDate, 2)
-		for idx := startIdx; idx < endIdx;{
-			rev := f.GetCellValue(targetSheet, "D" + strconv.Itoa(idx))
-			cos := f.GetCellValue(targetSheet, "E" + strconv.Itoa(idx))
-
-			conRev, _ :=  strconv.ParseFloat(rev, 64)
-			conCos, _ := strconv.ParseFloat(cos, 64)
-
-			total_revenue += conRev
-			total_cost += conCos
-			idx++
-		}
-		total_profit := total_revenue - total_cost
-		return total_revenue,total_cost, total_profit
+		totalRevenue += conRev
+		totalCost += conCos
 	}
+
+	totalProfit := totalRevenue - totalCost
+	return totalRevenue, totalCost, totalProfit
+}
+
+func FindAll(targetSheet, targetAxis, subStr string) []int {
+	var idxes []int
+	cell := f.GetCellValue(targetSheet, targetAxis + "1")
+	for i := 1; cell != "";  {
+		if strings.Contains(cell, subStr) {
+			idxes = append(idxes, i)
+		}
+		i++
+		cell = f.GetCellValue(targetSheet, targetAxis+strconv.Itoa(i))
+	}
+	return idxes
 }

@@ -1,39 +1,35 @@
 package Data
 
 import (
-	"github.com/360EntSecGroup-Skylar/excelize"
+	"fmt"
 	"strconv"
 )
 
 // Defining the info used later
 type Sale struct {
-	id       int
-	name     string
-	price    float64
-	cost 	 float64
-	quantity int
+	ID       int
+	Name     string
+	Price    float64
+	Cost 	 float64
+	Quantity int
 }
 
-func NewSale(id int, name string, price, cost float64, quantity int) Sale{
+func NewSale(ID int, Name string, Price, Cost float64, Quantity int) Sale{
 	return Sale{
-		id: id,
-		name: name,
-		price: price,
-		cost: cost,
-		quantity: quantity,
+		ID: ID,
+		Name: Name,
+		Price: Price,
+		Cost: Cost,
+		Quantity: Quantity,
 	}
 }
-
-//var f, err = excelize.OpenFile("AppData.xlsx")
-var f, _ = excelize.OpenFile("TestAppData.xlsx")
-
 
 //A test Main
 func TestMain() {
 	UpdateData(Sale{
-		id:    0,
-		name:  "Null",
-		price: 0,
+		ID:    0,
+		Name:  "Null",
+		Price: 0,
 	}, "Log", 0)
 
 	ReadVal("Log")
@@ -50,37 +46,38 @@ func BuyCart(ShoppingCart []*Sale) {
 }
 
 //[Untested]
-func AddToCart(id int, ShoppingCart []*Sale) {
+func AddToCart(ID int, ShoppingCart []*Sale) []*Sale{
 	targetSheet := "Items"
 	i := 0
 	for {
 		if i < len(ShoppingCart) {
-			if ShoppingCart[i].id == id {
-				ShoppingCart[i].quantity++
+			if ShoppingCart[i].ID == ID {
+				ShoppingCart[i].Quantity++
 				break
 			}
 			i++
 		}
-		idx := GetIndex(targetSheet, id, 1)
+		idx := GetIndex(targetSheet, ID, 1)
 		p, _ := strconv.ParseFloat(f.GetCellValue(targetSheet, "B"+strconv.Itoa(idx)), 64)
 
-		temp := Sale{
-			id:    id,
-			name:  f.GetCellValue(targetSheet, "B"+strconv.Itoa(idx)),
-			price: p,
+		temp := &Sale{
+			ID:    ID,
+			Name:  f.GetCellValue(targetSheet, "B"+strconv.Itoa(idx)),
+			Price: p,
 		}
-
-		ShoppingCart = append(ShoppingCart, &temp)
-		break
+		fmt.Println(temp)
+		ShoppingCart = append(ShoppingCart, temp)
+		return ShoppingCart
 	}
+	return ShoppingCart
 }
 
 //[Untested]
-func DecreaseFromCart(id int, ShoppingCart []*Sale){
+func DecreaseFromCart(ID int, ShoppingCart []*Sale){
 	for i := 0; i < len(ShoppingCart); {
-		if ShoppingCart[i].id == id {
-			if		ShoppingCart[i].quantity- 1 > 0{
-				ShoppingCart[i].quantity--
+		if ShoppingCart[i].ID == ID {
+			if		ShoppingCart[i].Quantity- 1 > 0{
+				ShoppingCart[i].Quantity--
 			}else{
 				RemoveFromCart(i, ShoppingCart)
 			}
@@ -99,7 +96,7 @@ func RemoveFromCart(i int, ShoppingCart []*Sale) {
 func GetCartTotal(ShoppingCart []*Sale) float64 {
 	total := 0.0
 	for i := 0; i < len(ShoppingCart); {
-		total += ShoppingCart[i].price * float64(ShoppingCart[i].quantity)
+		total += ShoppingCart[i].Price * float64(ShoppingCart[i].Quantity)
 	}
 	return total
 }
@@ -108,9 +105,9 @@ func ClearCart(ShoppingCart []*Sale) {
 	ShoppingCart = ShoppingCart[:0]
 }
 
-func ConvertStringToSale(price, cost, quantity string) (float64, float64, int){
-	newPrice, _ := strconv.ParseFloat(price, 64)
-	newCost, _ := strconv.ParseFloat(cost, 64)
-	newQuantity, _ := strconv.Atoi(quantity)
+func ConvertStringToSale(Price, Cost, Quantity string) (float64, float64, int){
+	newPrice, _ := strconv.ParseFloat(Price, 64)
+	newCost, _ := strconv.ParseFloat(Cost, 64)
+	newQuantity, _ := strconv.Atoi(Quantity)
 	return newPrice, newCost, newQuantity
 }

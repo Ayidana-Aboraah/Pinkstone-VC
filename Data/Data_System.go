@@ -2,9 +2,14 @@ package Data
 
 import (
 	"fmt"
+	"github.com/360EntSecGroup-Skylar/excelize"
 	"strconv"
 	"time"
 )
+
+//var f, err = excelize.OpenFile("AppData.xlsx")
+var f, _ = excelize.OpenFile("TestAppData.xlsx")
+
 
 func ReadVal(sheet string) {
 	//Getting a row
@@ -26,29 +31,29 @@ func UpdateData(item Sale, targetSheet string, variant int){
 	switch variant {
 	//Update Items [Add]
 	case 2:
-		checker := GetIndex(targetSheet, item.id, 1)
+		checker := GetIndex(targetSheet, item.ID, 1)
 		if checker == 0{
-			f.SetCellValue(targetSheet, "A"+strconv.Itoa(idx), item.id)
-			f.SetCellValue(targetSheet, "B"+strconv.Itoa(idx), item.name)
-			f.SetCellValue(targetSheet, "C"+strconv.Itoa(idx), item.price)
-			f.SetCellValue(targetSheet, "D"+strconv.Itoa(idx), item.cost)
-			f.SetCellValue(targetSheet, "E"+strconv.Itoa(idx), item.quantity)
+			f.SetCellValue(targetSheet, "A"+strconv.Itoa(idx), item.ID)
+			f.SetCellValue(targetSheet, "B"+strconv.Itoa(idx), item.Name)
+			f.SetCellValue(targetSheet, "C"+strconv.Itoa(idx), item.Price)
+			f.SetCellValue(targetSheet, "D"+strconv.Itoa(idx), item.Cost)
+			f.SetCellValue(targetSheet, "E"+strconv.Itoa(idx), item.Quantity)
 		}else{
-			f.SetCellValue(targetSheet, "A"+strconv.Itoa(checker), item.id)
-			f.SetCellValue(targetSheet, "B"+strconv.Itoa(checker), item.name)
-			f.SetCellValue(targetSheet, "C"+strconv.Itoa(checker), item.price)
-			f.SetCellValue(targetSheet, "D"+strconv.Itoa(checker), item.cost)
-			f.SetCellValue(targetSheet, "E"+strconv.Itoa(checker), item.quantity)
+			f.SetCellValue(targetSheet, "A"+strconv.Itoa(checker), item.ID)
+			f.SetCellValue(targetSheet, "B"+strconv.Itoa(checker), item.Name)
+			f.SetCellValue(targetSheet, "C"+strconv.Itoa(checker), item.Price)
+			f.SetCellValue(targetSheet, "D"+strconv.Itoa(checker), item.Cost)
+			f.SetCellValue(targetSheet, "E"+strconv.Itoa(checker), item.Quantity)
 		}
 		break
 	//Update Report function
 	case 1:
-		newInven := GetInventory(item.id) - 1
-		f.SetCellValue(targetSheet, "A"+strconv.Itoa(idx), item.id)
-		f.SetCellValue(targetSheet, "B"+strconv.Itoa(idx), item.name)
-		f.SetCellValue(targetSheet, "C"+strconv.Itoa(idx), item.quantity)
-		f.SetCellValue(targetSheet, "D"+strconv.Itoa(idx), item.price)
-		f.SetCellValue(targetSheet, "E"+strconv.Itoa(idx), item.cost)
+		newInven := GetInventory(item.ID) - 1
+		f.SetCellValue(targetSheet, "A"+strconv.Itoa(idx), item.ID)
+		f.SetCellValue(targetSheet, "B"+strconv.Itoa(idx), item.Name)
+		f.SetCellValue(targetSheet, "C"+strconv.Itoa(idx), item.Quantity)
+		f.SetCellValue(targetSheet, "D"+strconv.Itoa(idx), item.Price)
+		f.SetCellValue(targetSheet, "E"+strconv.Itoa(idx), item.Cost)
 		f.SetCellValue(targetSheet, "F"+strconv.Itoa(idx), newInven)
 		f.SetCellValue(targetSheet, "G"+strconv.Itoa(idx), ConvertDate(time.Now()))
 		f.SetCellValue(targetSheet, "H"+strconv.Itoa(idx), ConvertClock(time.Now()))
@@ -56,28 +61,28 @@ func UpdateData(item Sale, targetSheet string, variant int){
 		//Update Log function
 	default:
 		fmt.Println("A" + strconv.Itoa(idx))
-		f.SetCellValue(targetSheet, "A"+strconv.Itoa(idx), item.id)
-		f.SetCellValue(targetSheet, "B"+strconv.Itoa(idx), item.name)
-		f.SetCellValue(targetSheet, "C"+strconv.Itoa(idx), item.price)
-		f.SetCellValue(targetSheet, "D"+strconv.Itoa(idx), item.cost)
+		f.SetCellValue(targetSheet, "A"+strconv.Itoa(idx), item.ID)
+		f.SetCellValue(targetSheet, "B"+strconv.Itoa(idx), item.Name)
+		f.SetCellValue(targetSheet, "C"+strconv.Itoa(idx), item.Price)
+		f.SetCellValue(targetSheet, "D"+strconv.Itoa(idx), item.Cost)
 		f.SetCellValue(targetSheet, "E"+strconv.Itoa(idx), time.Now())
 		break
 	}
 }
 
 func ModifyItem(item Sale, targetSheet string){
-	idx := GetIndex(targetSheet, item.id, 1)
+	idx := GetIndex(targetSheet, item.ID, 1)
 
-	f.SetCellValue(targetSheet, "B"+strconv.Itoa(idx), item.name)
-	f.SetCellValue(targetSheet, "C"+strconv.Itoa(idx), item.price)
-	f.SetCellValue(targetSheet, "D"+strconv.Itoa(idx), item.cost)
-	f.SetCellValue(targetSheet, "E"+strconv.Itoa(idx), item.quantity)
+	f.SetCellValue(targetSheet, "B"+strconv.Itoa(idx), item.Name)
+	f.SetCellValue(targetSheet, "C"+strconv.Itoa(idx), item.Price)
+	f.SetCellValue(targetSheet, "D"+strconv.Itoa(idx), item.Cost)
+	f.SetCellValue(targetSheet, "E"+strconv.Itoa(idx), item.Quantity)
 }
 
-func GetInventory(id int) int {
+func GetInventory(ID int) int {
 	targetSheet := "Detection Data"
 
-	idx := GetIndex(targetSheet, id, 1)
+	idx := GetIndex(targetSheet, ID, 1)
 
 	res := f.GetCellValue(targetSheet, "F"+strconv.Itoa(idx))
 
@@ -85,7 +90,7 @@ func GetInventory(id int) int {
 	return inven
 }
 
-func GetIndex(targetSheet string, id, searchType int) int{
+func GetIndex(targetSheet string, ID, searchType int) int{
 	i:= 1
 	cell := f.GetCellValue(targetSheet, "A"+strconv.Itoa(i))
 	for  {
@@ -93,7 +98,7 @@ func GetIndex(targetSheet string, id, searchType int) int{
 		conCell, _ := strconv.Atoi(cell)
 		switch searchType {
 		case 1:
-			if conCell == id{
+			if conCell == ID{
 				return i
 			}
 			if cell == ""{
@@ -111,7 +116,7 @@ func GetIndex(targetSheet string, id, searchType int) int{
 	}
 }
 
-func GetIndexStr(targetSheet, id string, searchType int) int{
+func GetIndexStr(targetSheet, ID string, searchType int) int{
 	i:= 1
 	found := false
 	cell := f.GetCellValue(targetSheet, "A"+strconv.Itoa(i))
@@ -119,17 +124,17 @@ func GetIndexStr(targetSheet, id string, searchType int) int{
 		cell = f.GetCellValue(targetSheet, "A"+strconv.Itoa(i))
 		switch searchType {
 		case 2:
-			if cell == id{
+			if cell == ID{
 				found = true
 			}
 			if found{
-				if cell != id{
+				if cell != ID{
 					return i
 				}
 			}
 			break
 		case 1:
-			if cell == id{
+			if cell == ID{
 				return i
 			}
 			break

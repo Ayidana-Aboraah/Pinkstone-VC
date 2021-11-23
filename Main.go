@@ -27,10 +27,12 @@ var (
 	itemMenu = fyne.NewContainer()
 
 	testMenu = fyne.NewContainer()
+	appIcon,_ = fyne.LoadResourceFromPath("Assets/icon")
 )
 
 func main() {
 	a := app.NewWithID("Bronze Hermes")
+	a.SetIcon(appIcon)
 	CreateWindow(a)
 }
 
@@ -71,7 +73,7 @@ func CreateWindow(a fyne.App) {
 	)
 
 	itemMenu = container.NewVBox(
-		widget.NewLabelWithStyle("", fyne.TextAlign(1), fyne.TextStyle{Italic: true}),
+		widget.NewLabelWithStyle("Item Menu", fyne.TextAlign(1), fyne.TextStyle{Italic: true}),
 		//widget.NewLabel(strconv.Itoa(tempSale.id)),
 		widget.NewEntry(), //Name
 		widget.NewEntry(), //Price
@@ -115,6 +117,10 @@ func CreateWindow(a fyne.App) {
 				widget.NewButton("New Cart Cart", func() {
 					Data.ClearCart(ShoppingCart)
 				}),
+				widget.NewButton("Show Cart Contents", func() {
+					ShoppingCart = Data.AddToCart(13000006057, ShoppingCart)
+					fmt.Println(ShoppingCart)
+				}),
 				widget.NewButton("Add B1 To Cart", func() {
 					file, _ := os.Open(Cam.Path + "Online Test 01.png")
 					img, _, _ := image.Decode(file)
@@ -136,39 +142,46 @@ func CreateWindow(a fyne.App) {
 					file, _ := os.Open(Cam.Path + "Online Test 01.png")
 					img, _, _ := image.Decode(file)
 					id := Cam.ReadImage(img).String()
+					newId, _ := strconv.Atoi(id)
+
+					CreateNewItem(newId, w)
 					testTitle.SetText("ID: " + id)
 				}),
 				widget.NewButton("Barcode 02", func() {
 					file, _ := os.Open(Cam.Path + "Online Test 02.png")
 					img, _, _ := image.Decode(file)
 					id := Cam.ReadImage(img).String()
+					newId, _ := strconv.Atoi(id)
+
+					CreateNewItem(newId, w)
 					testTitle.SetText("ID: " + id)
 				}),
 				widget.NewButton("Barcode 03", func() {
 					file, _ := os.Open(Cam.Path + "Online Test 03.png")
 					img, _, _ := image.Decode(file)
 					id := Cam.ReadImage(img).String()
+					newId, _ := strconv.Atoi(id)
+
+					CreateNewItem(newId, w)
 					testTitle.SetText("ID: " + id)
 				}),
 				widget.NewButton("Barcode 04", func() {
 					file, _ := os.Open(Cam.Path + "Test01.png")
 					img, _, _ := image.Decode(file)
 					id := Cam.ReadImage(img).String()
+					newId, _ := strconv.Atoi(id)
+
+					CreateNewItem(newId, w)
 					testTitle.SetText("ID: " + id)
 				}),
 				widget.NewButton("Barcode 05", func() {
 					file, _ := os.Open(Cam.Path + "Online Test 05.png")
 					img, _, _ := image.Decode(file)
 					id := Cam.ReadImage(img).String()
-					testTitle.SetText("ID: " + id)
-				}),
-				widget.NewButton("Add Barcode 05 To DataBase", func() {
-					file, _ := os.Open(Cam.Path + "Online Test 05.png")
-					img, _, _ := image.Decode(file)
-					id := Cam.ReadImage(img).String()
 					newId, _ := strconv.Atoi(id)
 
 					CreateNewItem(newId, w)
+					testTitle.SetText("ID: " + id)
 				}),
 			)),
 

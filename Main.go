@@ -11,13 +11,14 @@ import (
 	"fyne.io/fyne/v2/data/validation"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
-	"golang.org/x/text/unicode/cldr"
 	"image"
 	_ "image/png"
 	"os"
 	"strconv"
 	"time"
 )
+
+var ShoppingCart []*Data.Sale
 
 var (
 	mainMenu = fyne.NewContainer()
@@ -88,22 +89,46 @@ func CreateWindow(a fyne.App) {
 	testTitle := widget.NewLabel("Test 2")
 	//testItemForm := dialog.NewForm("New Item", "Done", "Cancel", []*widget.FormItem ,confirmCallback(), w)
 	testMenu = container.NewVBox(
-		container.NewAppTabs(container.NewTabItem("Shop", container.NewVBox(
-			widget.NewLabel("Shopping"),
-			widget.NewButton("Time", func() {
-				a.SendNotification(fyne.NewNotification(Data.ConvertDate(time.Now()), Data.ConvertClock(time.Now())))
-			}),
-			widget.NewButton("Run Test Main", func() {
-				Data.TestMain()
-			}),
-			widget.NewButton("Add Cart", func() {
+		container.NewAppTabs(
+			container.NewTabItem("Misc", container.NewVBox(
+				widget.NewButton("Back", func() {
+					w.SetContent(mainMenu)
+				}),
+				widget.NewButton("Time", func() {
+					a.SendNotification(fyne.NewNotification(Data.ConvertDate(time.Now()), Data.ConvertClock(time.Now())))
+				}),
+				widget.NewButton("Test Notifcation", func() {
+					a.SendNotification(fyne.NewNotification("Tree", "I am the lorax, I speak for the tress."))
+				}),
+				widget.NewButton("Run Test Main", func() {
+					Data.TestMain()
+				}),
+				widget.NewCard("Homies", "You Thought...", widget.NewEntry()),
+			)),
 
-			}),
-		)),
+			//Shop still not completely
+			container.NewTabItem("Shop", container.NewVBox(
+				widget.NewLabel("Shopping"),
+				//Put code for a binded cart total
+				testTitle,
+				//Put code for a binded list
+				widget.NewButton("New Cart Cart", func() {
+					Data.ClearCart(ShoppingCart)
+				}),
+				widget.NewButton("Add B1 To Cart", func() {
+					file, _ := os.Open(Cam.Path + "Online Test 01.png")
+					img, _, _ := image.Decode(file)
+					id := Cam.ReadImage(img).String()
+					conID, _ := strconv.Atoi(id)
+					//Data.AddToCart(conID, ShoppingCart)
+					total := fmt.Sprint(Data.GetCartTotal(ShoppingCart))
+					fmt.Println(total, conID)
+					testTitle.SetText(total)
+				}),
+			)),
 
 			container.NewTabItem("Barcodes", container.NewVBox(
 				testTitle,
-				//widget.NewCard("Homies", "You Thought...", widget.NewEntry()),
 				widget.NewButton("Camera", func() {
 					//Cam.OpenCam()
 				}),
@@ -158,17 +183,14 @@ func CreateWindow(a fyne.App) {
 								file, _ := os.Open(Cam.Path + "Online Test 05.png")
 								img, _, _ := image.Decode(file)
 								id := Cam.ReadImage(img).String()
+								conID, _ := strconv.Atoi(id)
 
-								idx := Data.GetIndexStr("Items", id, 1)
-
+								ModifyItem(conID, w)
 								//Grab and display the data from the cells in that row
-								//
-							}),
-							widget.NewButton("Barcode 05", func() {
-
 							}),
 						)),
 					widget.NewForm(
+						widget.NewFormItem("PlaceHolder", widget.NewLabel("Probably going to replace the data displays binded to the data")),
 						widget.NewFormItem("Id", widget.NewLabel("ID")),
 						widget.NewFormItem("Name", widget.NewEntry()),
 						widget.NewFormItem("Price", UI.NewNumEntry()),
@@ -178,8 +200,10 @@ func CreateWindow(a fyne.App) {
 			)),
 
 			container.NewTabItem("Stats", container.NewVBox(
-
-				)),
+				widget.NewAccordion(widget.NewAccordionItem("Today", widget.NewButton("Today", func() {
+					a.SendNotification(fyne.NewNotification("Hello", ""))
+				}))),
+			)),
 
 		),
 	)
@@ -189,7 +213,6 @@ func CreateWindow(a fyne.App) {
 }
 
 func CreateNewItem(id int, w fyne.Window){
-
 	//password := widget.NewPasswordEntry()
 	//password.Validator = validation.NewRegexp(`^[A-Za-z0-9_-]+$`, "password can only contain letters, numbers, '_', and '-'")
 	idLabel := widget.NewLabel(strconv.Itoa(id))
@@ -232,6 +255,47 @@ func CreateNewItem(id int, w fyne.Window){
 	}, w)
 }
 
-func ModifyItem(){
+func ModifyItem(id int, w fyne.Window){
+	//password := widget.NewPasswordEntry()
+	//password.Validator = validation.NewRegexp(`^[A-Za-z0-9_-]+$`, "password can only contain letters, numbers, '_', and '-'")
+	idLabel := widget.NewLabel(strconv.Itoa(id))
 
+	nameEntry := widget.NewEntry()
+	nameEntry.SetPlaceHolder("The Name of the Product")
+	nameEntry.Validator = validation.NewRegexp(`^[A-Za-z0-9_-]+$`, "username can only contain letters, numbers, '_', and '-'")
+
+	priceEntry := UI.NewNumEntry()
+	priceEntry.SetPlaceHolder("The Price it will be sold.")
+
+	costEntry := UI.NewNumEntry()
+	costEntry.SetPlaceHolder("The Cost of buying this item.")
+
+	inventoryEntry := UI.NewNumEntry()
+	inventoryEntry.SetPlaceHolder("The Amount currently in inventory.")
+
+	items := []*widget.FormItem{
+		widget.NewFormItem("ID", idLabel),
+		widget.NewFormItem("Name", nameEntry),
+		widget.NewFormItem("Price", priceEntry),
+		widget.NewFormItem("Cost", costEntry),
+		widget.NewFormItem("Inventory", inventoryEntry),
+	}
+
+	dialog.ShowForm("Modify Item", "Change", "Cancel", items, func(b bool) {
+		if !b {
+			fmt.Println("Doesn't work.")
+			return
+		}
+
+		//log.Println("Please Check the Price, cost, or the amount in inventory")
+		fmt.Println("Name, Price, Cost and Inventory have all been Authenticated...")
+		fmt.Println("Adding to the database")
+		//Call a sort of save method that will take the data and save it to the item data
+		//Data.SaveNewItem(id, Data.NewSale(0, "Blue balls", 5.5, 1.25, 2))
+		price, cost, inventory := Data.ConvertStringToSale(priceEntry.Text, costEntry.Text, inventoryEntry.Text)
+		//Data.UpdateData(Data.NewSale(id, nameEntry.Text, price, cost, inventory), "Items", 2)
+		Data.ModifyItem(Data.NewSale(id, nameEntry.Text, price, cost, inventory), "Items")
+		Data.ReadVal("Items")
+		Data.SaveFile()
+	}, w)
 }

@@ -22,14 +22,24 @@ func SaveFile(){f.Save()}
 
 func UpdateData(item Sale, targetSheet string, variant int){
 	idx := GetIndex(targetSheet, 0, 0)
+
 	switch variant {
 	//Update Items [Add]
 	case 2:
-		f.SetCellValue(targetSheet, "A"+strconv.Itoa(idx), item.id)
-		f.SetCellValue(targetSheet, "B"+strconv.Itoa(idx), item.name)
-		f.SetCellValue(targetSheet, "C"+strconv.Itoa(idx), item.price)
-		f.SetCellValue(targetSheet, "D"+strconv.Itoa(idx), item.cost)
-		f.SetCellValue(targetSheet, "E"+strconv.Itoa(idx), item.quantity)
+		checker := GetIndex(targetSheet, item.id, 1)
+		if checker == 0{
+			f.SetCellValue(targetSheet, "A"+strconv.Itoa(idx), item.id)
+			f.SetCellValue(targetSheet, "B"+strconv.Itoa(idx), item.name)
+			f.SetCellValue(targetSheet, "C"+strconv.Itoa(idx), item.price)
+			f.SetCellValue(targetSheet, "D"+strconv.Itoa(idx), item.cost)
+			f.SetCellValue(targetSheet, "E"+strconv.Itoa(idx), item.quantity)
+		}else{
+			f.SetCellValue(targetSheet, "A"+strconv.Itoa(checker), item.id)
+			f.SetCellValue(targetSheet, "B"+strconv.Itoa(checker), item.name)
+			f.SetCellValue(targetSheet, "C"+strconv.Itoa(checker), item.price)
+			f.SetCellValue(targetSheet, "D"+strconv.Itoa(checker), item.cost)
+			f.SetCellValue(targetSheet, "E"+strconv.Itoa(checker), item.quantity)
+		}
 		break
 	//Update Report function
 	case 1:
@@ -85,6 +95,9 @@ func GetIndex(targetSheet string, id, searchType int) int{
 		case 1:
 			if conCell == id{
 				return i
+			}
+			if cell == ""{
+				return 0
 			}
 			break
 		default:

@@ -27,7 +27,6 @@ func NewSale(id int, name string, price, cost float64, quantity int) Sale{
 //var f, err = excelize.OpenFile("AppData.xlsx")
 var f, _ = excelize.OpenFile("TestAppData.xlsx")
 
-var ShoppingCart []*Sale
 
 //A test Main
 func TestMain() {
@@ -40,18 +39,19 @@ func TestMain() {
 	ReadVal("Log")
 }
 
-func BuyCart() {
+func BuyCart(ShoppingCart []*Sale) {
 	targetSheet := "Report Data"
 	for i := 0; i < len(ShoppingCart); {
 		UpdateData(*ShoppingCart[i], targetSheet, 1)
 		i++
 	}
 	//Clear cart
-	ClearCart()
+	ClearCart(ShoppingCart)
 }
 
 //[Untested]
-func AddToCart(id int) {
+func AddToCart(id int, ShoppingCart []*Sale) {
+	targetSheet := "Items"
 	i := 0
 	for {
 		if i < len(ShoppingCart) {
@@ -60,31 +60,29 @@ func AddToCart(id int) {
 				break
 			}
 			i++
-		} else {
-			targetSheet := "Items"
-			idx := GetIndex(targetSheet, id, 1)
-			p, _ := strconv.ParseFloat(f.GetCellValue(targetSheet, "B"+strconv.Itoa(idx)), 64)
-
-			temp := Sale{
-				id:    id,
-				name:  f.GetCellValue(targetSheet, "B"+strconv.Itoa(idx)),
-				price: p,
-			}
-
-			ShoppingCart = append(ShoppingCart, &temp)
-			break
 		}
+		idx := GetIndex(targetSheet, id, 1)
+		p, _ := strconv.ParseFloat(f.GetCellValue(targetSheet, "B"+strconv.Itoa(idx)), 64)
+
+		temp := Sale{
+			id:    id,
+			name:  f.GetCellValue(targetSheet, "B"+strconv.Itoa(idx)),
+			price: p,
+		}
+
+		ShoppingCart = append(ShoppingCart, &temp)
+		break
 	}
 }
 
 //[Untested]
-func DecreaseFromCart(id int){
+func DecreaseFromCart(id int, ShoppingCart []*Sale){
 	for i := 0; i < len(ShoppingCart); {
 		if ShoppingCart[i].id == id {
 			if		ShoppingCart[i].quantity- 1 > 0{
 				ShoppingCart[i].quantity--
 			}else{
-				RemoveFromCart(i)
+				RemoveFromCart(i, ShoppingCart)
 			}
 		}
 		i++
@@ -92,13 +90,13 @@ func DecreaseFromCart(id int){
 }
 
 // RemoveFromCart [Untested]
-func RemoveFromCart(i int) {
+func RemoveFromCart(i int, ShoppingCart []*Sale) {
 	ShoppingCart[i] = ShoppingCart[len(ShoppingCart)-1] // Copy last element to index i.
 	ShoppingCart[len(ShoppingCart)-1] = &Sale{}         // Erase last element (write zero value).
 	ShoppingCart = ShoppingCart[:len(ShoppingCart)-1]   // Truncate slice.
 }
 
-func GetCartTotal() float64{
+func GetCartTotal(ShoppingCart []*Sale) float64 {
 	total := 0.0
 	for i := 0; i < len(ShoppingCart); {
 		total += ShoppingCart[i].price * float64(ShoppingCart[i].quantity)
@@ -106,7 +104,7 @@ func GetCartTotal() float64{
 	return total
 }
 
-func ClearCart() {
+func ClearCart(ShoppingCart []*Sale) {
 	ShoppingCart = ShoppingCart[:0]
 }
 

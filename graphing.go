@@ -1,10 +1,16 @@
 package main
 
 import (
+	"bytes"
+	"fmt"
 	"github.com/go-echarts/go-echarts/v2/types"
+	"io"
+	"io/ioutil"
 	"math/rand"
+	"mime/multipart"
 	"net/http"
 	"os"
+	"path/filepath"
 
 	"github.com/go-echarts/go-echarts/v2/charts"
 	"github.com/go-echarts/go-echarts/v2/opts"
@@ -42,7 +48,7 @@ func CreateFileGraph(){
 		AddSeries("Category A", generateBarItems()).
 		AddSeries("Category B", generateBarItems())
 	// Where the magic happens
-	r, _ := os.Create("html [test]/bar.html")
+	r, _ := os.Create("Assets/graph.html")
 	bar.Render(r)
 }
 
@@ -65,6 +71,48 @@ func httpserver(w http.ResponseWriter, _ *http.Request) {
 	line.Render(w)
 }
 
+func ConvertFile(){
+	url := "https://api.cloudmersive.com/convert/html/to/png"
+	method := "POST"
+	payload := &bytes.Buffer{}
+	writer := multipart.NewWriter(payload)
+	file, errFile1 := os.Open("/path/to/file")
+	defer file.Close()
+	part1,
+	errFile1 := writer.CreateFormFile("inputFile",filepath.Base("/path/to/file"))
+	_, errFile1 = io.Copy(part1, file)
+	if errFile1 != nil {
+		fmt.Println(errFile1)
+		return
+	}
+	err := writer.Close()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	client := &http.Client {
+	}
+	req, err := http.NewRequest(method, url, payload)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	req.Header.Add("Content-Type", "multipart/form-data")
+	req.Header.Add("Apikey", "YOUR-API-KEY-HERE")
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	res, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer res.Body.Close()
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(string(body))
+}
 
 func main() {
 	http.HandleFunc("/", httpserver)

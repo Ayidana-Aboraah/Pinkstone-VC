@@ -8,8 +8,9 @@ import (
 )
 
 //var f, err = excelize.OpenFile("AppData.xlsx")
-var f, _ = excelize.OpenFile("TestAppData.xlsx")
-
+var f, err = excelize.OpenFile("TestAppData.xlsx")
+//save a back-up.
+//if an error with reading the file is met; save the back up as the file and try reading again.
 
 func ReadVal(sheet string) {
 	//Getting a row
@@ -38,13 +39,13 @@ func UpdateData(item Sale, targetSheet string, variant int){
 			f.SetCellValue(targetSheet, "C"+strconv.Itoa(idx), item.Price)
 			f.SetCellValue(targetSheet, "D"+strconv.Itoa(idx), item.Cost)
 			f.SetCellValue(targetSheet, "E"+strconv.Itoa(idx), item.Quantity)
-		}else{
+			break
+		}
 			f.SetCellValue(targetSheet, "A"+strconv.Itoa(checker), item.ID)
 			f.SetCellValue(targetSheet, "B"+strconv.Itoa(checker), item.Name)
 			f.SetCellValue(targetSheet, "C"+strconv.Itoa(checker), item.Price)
 			f.SetCellValue(targetSheet, "D"+strconv.Itoa(checker), item.Cost)
 			f.SetCellValue(targetSheet, "E"+strconv.Itoa(checker), item.Quantity)
-		}
 		break
 	//Update Report function
 	case 1:
@@ -116,6 +117,7 @@ func GetIndex(targetSheet string, ID, searchType int) int{
 	}
 }
 
+/*
 func GetIndexStr(targetSheet, ID string, searchType int) int{
 	i:= 1
 	found := false
@@ -148,6 +150,7 @@ func GetIndexStr(targetSheet, ID string, searchType int) int{
 		i++
 	}
 }
+ */
 
 func ConvertDate(date time.Time) string{
 	day, month, year := date.Date()

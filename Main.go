@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
+	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/validation"
 	"fyne.io/fyne/v2/dialog"
@@ -27,7 +28,8 @@ var (
 	itemMenu = fyne.NewContainer()
 
 	testMenu = fyne.NewContainer()
-	appIcon,_ = fyne.LoadResourceFromPath("Assets/icon")
+	appIcon,_ = fyne.LoadResourceFromPath("Assets/icon.png")
+	profitGraph = canvas.NewImageFromFile("Assets/graph.png")
 )
 
 func main() {
@@ -45,6 +47,8 @@ func CreateWindow(a fyne.App) {
 
 	mainMenu = container.NewVBox(
 		title,
+		profitGraph,
+		canvas.NewImageFromFile("Assets"),
 		widget.NewButton("Checkout", func() {
 			w.SetContent(shopMenu)
 		}),
@@ -126,11 +130,22 @@ func CreateWindow(a fyne.App) {
 					img, _, _ := image.Decode(file)
 					id := Cam.ReadImage(img).String()
 					conID, _ := strconv.Atoi(id)
-					//Data.AddToCart(conID, ShoppingCart)
+					ShoppingCart = Data.AddToCart(conID, ShoppingCart)
 					total := fmt.Sprint(Data.GetCartTotal(ShoppingCart))
-					fmt.Println(total, conID)
-					testTitle.SetText(total)
+					fmt.Println(ShoppingCart, total)
+					testTitle.SetText(id)
 				}),
+			)),
+
+			//Shop still not completely
+			container.NewTabItem("Shop 2", container.NewVSplit(
+				container.NewVBox(
+					container.NewVBox(
+						widget.NewLabel("Shopping")),
+				),
+				container.NewVBox(
+					),
+				//Put code for a binded cart total
 			)),
 
 			container.NewTabItem("Barcodes", container.NewVBox(

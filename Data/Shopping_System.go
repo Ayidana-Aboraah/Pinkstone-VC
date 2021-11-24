@@ -5,7 +5,7 @@ import (
 	"strconv"
 )
 
-// Defining the info used later
+// Defining the Sale info used later
 type Sale struct {
 	ID       int
 	Name     string
@@ -14,6 +14,7 @@ type Sale struct {
 	Quantity int
 }
 
+//A constructor for a NewSale
 func NewSale(ID int, Name string, Price, Cost float64, Quantity int) Sale{
 	return Sale{
 		ID: ID,
@@ -37,25 +38,41 @@ func TestMain() {
 
 func BuyCart(ShoppingCart []*Sale) {
 	targetSheet := "Report Data"
+
+	/*
 	for i := 0; i < len(ShoppingCart); {
 		UpdateData(*ShoppingCart[i], targetSheet, 1)
 		i++
+	}
+	 */
+
+	for _, v := range ShoppingCart {
+		UpdateData(*v, targetSheet, 1)
 	}
 	//Clear cart
 	ClearCart(ShoppingCart)
 }
 
-//[Untested]
+//Must pass as the new value of Shopping Cart similar to appending to an array
 func AddToCart(ID int, ShoppingCart []*Sale) []*Sale{
 	targetSheet := "Items"
-	i := 0
+	//i := 0
 	for {
+		/*
 		if i < len(ShoppingCart) {
 			if ShoppingCart[i].ID == ID {
 				ShoppingCart[i].Quantity++
 				break
 			}
 			i++
+		}
+		 */
+
+		for _, v := range ShoppingCart{
+			if v.ID == ID {
+				v.Quantity++
+				break
+			}
 		}
 		idx := GetIndex(targetSheet, ID, 1)
 		p, _ := strconv.ParseFloat(f.GetCellValue(targetSheet, "B"+strconv.Itoa(idx)), 64)
@@ -73,16 +90,28 @@ func AddToCart(ID int, ShoppingCart []*Sale) []*Sale{
 }
 
 //[Untested]
-func DecreaseFromCart(ID int, ShoppingCart []*Sale){
+func DecreaseFromCart(ID int, ShoppingCart []*Sale) {
+	/*
 	for i := 0; i < len(ShoppingCart); {
 		if ShoppingCart[i].ID == ID {
-			if		ShoppingCart[i].Quantity- 1 > 0{
+			if ShoppingCart[i].Quantity-1 > 0 {
 				ShoppingCart[i].Quantity--
-			}else{
+			} else {
 				RemoveFromCart(i, ShoppingCart)
 			}
 		}
 		i++
+	}
+	 */
+
+	for i, v := range ShoppingCart {
+		if v.ID == ID {
+			if v.Quantity-1 > 0 {
+				v.Quantity--
+			} else {
+				RemoveFromCart(i, ShoppingCart)
+			}
+		}
 	}
 }
 
@@ -95,12 +124,13 @@ func RemoveFromCart(i int, ShoppingCart []*Sale) {
 
 func GetCartTotal(ShoppingCart []*Sale) float64 {
 	total := 0.0
-	for i := 0; i < len(ShoppingCart); {
-		total += ShoppingCart[i].Price * float64(ShoppingCart[i].Quantity)
+	for _, v := range ShoppingCart{
+		total += v.Price * float64(v.Quantity)
 	}
 	return total
 }
 
+//Removes all items from the shopping cart
 func ClearCart(ShoppingCart []*Sale) {
 	ShoppingCart = ShoppingCart[:0]
 }

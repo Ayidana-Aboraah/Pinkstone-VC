@@ -9,7 +9,8 @@ import (
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
-	//"fyne.io/fyne/v2/data/binding"
+
+	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/data/validation"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
@@ -126,31 +127,7 @@ func CreateWindow(a fyne.App) {
 			)),
 
 			//Shop still not completely
-			container.NewTabItem("Shop 2", container.NewVSplit(
-				container.NewVScroll(
-					//Put code for a binded cart total
-					container.NewGridWithColumns(2,
-						widget.NewButtonWithIcon("Cart Item 0", closeIcon, func() {
-							fmt.Println()
-						}),
-					),
-				),
-				container.NewHBox(
-					widget.NewButton("Buy Cart", func() {
-						Data.BuyCart(ShoppingCart)
-						//Show a dialog box talking about the confirmed purchese
-						//If failed, show an error message and a possible fix
-					}),
-					widget.NewButton("Clear Cart", func(){
-						ShoppingCart = Data.ClearCart(ShoppingCart)
-						//Remove the buttons somehow
-					}),
-					widget.NewButton("Scan To Cart", func() {
-						//Open camera
-						//Camera should open dialog box about
-					}),
-				),
-			)),
+			container.NewTabItem("Shop 2", makeShoppingMenu(w)),
 
 			container.NewTabItem("Barcodes", container.NewVBox(
 				testTitle,
@@ -330,9 +307,11 @@ func ModifyItem(id int, w fyne.Window){
 /*
 func makeBindedList(){
 	dataList := binding.BindFloatList(&[]float64{0.1, 0.2, 0.3})
+	//cartList := binding.BindSaleList(&[]Data.Sale{})
 
 	button := widget.NewButton("Append", func() {
 		dataList.Append(float64(dataList.Length()+1) / 10)
+		//cartList.Append(Data.Sale{ID: 0, Name: "", Price: 0.5, Cost: 0.5, Quantity: 2})
 	})
 
 	list := widget.NewListWithData(dataList,
@@ -351,6 +330,63 @@ func makeBindedList(){
 				_ = f.Set(val + 1)
 			}
 		})
+
 	return
 }
  */
+
+func makeShoppingMenu(w fyne.Window) fyne.CanvasObject{
+	cartList := binding.BindSaleList(&[]Data.Sale{})
+
+	button := widget.NewButton("New Item", func() {
+		//dataList.Append(float64(dataList.Length()+1) / 10)
+		cartList.Append(Data.Sale{ID: 0, Name: "", Price: 0.5, Cost: 0.5, Quantity: 2})
+	})
+
+	list := widget.NewListWithData(cartList,
+		func() fyne.CanvasObject {
+			return container.NewBorder(nil, nil, nil, widget.NewButton("X", nil),
+				widget.NewLabel("item x.y"))
+		},
+		func(item binding.DataItem, obj fyne.CanvasObject) {
+			f := item.(binding.Sale)
+			text := obj.(*fyne.Container).Objects[0].(*widget.Label)
+			i, _ := f.Get()
+			text.SetText(i.Name)
+
+			btn := obj.(*fyne.Container).Objects[1].(*widget.Button)
+			btn.OnTapped = func() {
+				val, _ := f.Get()
+				fmt.Println(val)
+			}
+		})
+
+	split := container.NewVSplit(
+		container.NewVScroll(
+			//Put code for a binded cart total
+			container.NewGridWithColumns(1,
+				widget.NewButtonWithIcon("Cart Item 0", closeIcon, func() {
+					fmt.Println()
+				}),
+				list,
+			),
+		),
+		container.NewHBox(
+			widget.NewButton("Buy Cart", func() {
+				Data.BuyCart(ShoppingCart)
+				//Show a dialog box talking about the confirmed purchese
+				//If failed, show an error message and a possible fix
+			}),
+			widget.NewButton("Clear Cart", func(){
+				ShoppingCart = Data.ClearCart(ShoppingCart)
+				//Remove the buttons somehow
+			}),
+			widget.NewButton("Scan To Cart", func() {
+				//Open camera
+				//Camera should open dialog box about
+			}),
+			button,
+		),
+	)
+	return split
+}

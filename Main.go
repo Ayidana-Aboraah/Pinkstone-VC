@@ -9,6 +9,7 @@ import (
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
+	//"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/data/validation"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
@@ -30,17 +31,18 @@ var (
 	testMenu = fyne.NewContainer()
 	appIcon,_ = fyne.LoadResourceFromPath("Assets/icon.png")
 	profitGraph = canvas.NewImageFromFile("Assets/graph.png")
+	closeIcon,_ = fyne.LoadResourceFromPath("Assets/close.png")
 )
 
 func main() {
 	a := app.NewWithID("Bronze Hermes")
 	a.SetIcon(appIcon)
+
 	CreateWindow(a)
 }
 
 func CreateWindow(a fyne.App) {
 	w := a.NewWindow("Bronze Hermes")
-	//a.SetIcon(icon)
 
 	title := widget.NewLabel("Welcome!")
 	title.Alignment = fyne.TextAlign(1)
@@ -49,16 +51,14 @@ func CreateWindow(a fyne.App) {
 		title,
 		profitGraph,
 		canvas.NewImageFromFile("Assets"),
-		widget.NewButton("Checkout", func() {
+		widget.NewButton("Shopping", func() {
 			w.SetContent(shopMenu)
 		}),
-		widget.NewButton("Data", func() {
-			title.SetText("Data")
-			//Change To Data Menu
+		widget.NewButton("Statistics", func() {
 			w.SetContent(dataMenu)
 		}),
-		widget.NewButton("Camera", func() {
-			//OpenCam()
+		widget.NewButton("Settings", func() {
+			//w.SetContent(settingsMenu)
 		}),
 		widget.NewButton("Test", func() {
 			w.SetContent(testMenu)
@@ -69,7 +69,7 @@ func CreateWindow(a fyne.App) {
 	)
 
 	dataMenu = container.NewVBox(
-		title,
+		widget.NewLabelWithStyle("Data", 1, fyne.TextStyle{}),
 		widget.NewButton("Back", func() {
 			title.SetText("Bronze Hermes")
 			w.SetContent(mainMenu)
@@ -77,19 +77,6 @@ func CreateWindow(a fyne.App) {
 	)
 
 	itemMenu = container.NewVBox(
-		widget.NewLabelWithStyle("Item Menu", fyne.TextAlign(1), fyne.TextStyle{Italic: true}),
-		//widget.NewLabel(strconv.Itoa(tempSale.id)),
-		widget.NewEntry(), //Name
-		widget.NewEntry(), //Price
-		widget.NewEntry(), //Cost
-		widget.NewEntry(), //Inventory
-		widget.NewButton("Submit", func() {
-			//Do what ever submitting data does
-		}),
-		widget.NewButton("Cancel", func() {
-			//tempSale = nil
-			w.SetContent(mainMenu)
-		}),
 	)
 
 	testTitle := widget.NewLabel("Test 2")
@@ -103,19 +90,20 @@ func CreateWindow(a fyne.App) {
 				widget.NewButton("Time", func() {
 					a.SendNotification(fyne.NewNotification(Data.ConvertDate(time.Now()), Data.ConvertClock(time.Now())))
 				}),
-				widget.NewButton("Test Notifcation", func() {
+				widget.NewButton("Notification", func() {
 					a.SendNotification(fyne.NewNotification("Tree", "I am the lorax, I speak for the tress."))
 				}),
 				widget.NewButton("Run Test Main", func() {
 					Data.TestMain()
 				}),
-				widget.NewCard("Homies", "You Thought...", widget.NewEntry()),
+				widget.NewCard("Trash Afton", "You wish", widget.NewIcon(closeIcon)),
 			)),
 
 			//Shop still not completely
 			container.NewTabItem("Shop", container.NewVBox(
 				widget.NewLabel("Shopping"),
 				//Put code for a binded cart total
+				//widget.NewLabelWithData(),
 				testTitle,
 				//Put code for a binded list
 				widget.NewButton("New Cart Cart", func() {
@@ -131,21 +119,37 @@ func CreateWindow(a fyne.App) {
 					id := Cam.ReadImage(img).String()
 					conID, _ := strconv.Atoi(id)
 					ShoppingCart = Data.AddToCart(conID, ShoppingCart)
-					total := fmt.Sprint(Data.GetCartTotal(ShoppingCart))
+					total, strtotal := Data.GetCartTotal(ShoppingCart)
 					fmt.Println(ShoppingCart, total)
-					testTitle.SetText(id)
+					testTitle.SetText(strtotal)
 				}),
 			)),
 
 			//Shop still not completely
 			container.NewTabItem("Shop 2", container.NewVSplit(
-				container.NewVBox(
-					container.NewVBox(
-						widget.NewLabel("Shopping")),
-				),
-				container.NewVBox(
+				container.NewVScroll(
+					//Put code for a binded cart total
+					container.NewGridWithColumns(2,
+						widget.NewButtonWithIcon("Cart Item 0", closeIcon, func() {
+							fmt.Println()
+						}),
 					),
-				//Put code for a binded cart total
+				),
+				container.NewHBox(
+					widget.NewButton("Buy Cart", func() {
+						Data.BuyCart(ShoppingCart)
+						//Show a dialog box talking about the confirmed purchese
+						//If failed, show an error message and a possible fix
+					}),
+					widget.NewButton("Clear Cart", func(){
+						ShoppingCart = Data.ClearCart(ShoppingCart)
+						//Remove the buttons somehow
+					}),
+					widget.NewButton("Scan To Cart", func() {
+						//Open camera
+						//Camera should open dialog box about
+					}),
+				),
 			)),
 
 			container.NewTabItem("Barcodes", container.NewVBox(
@@ -241,8 +245,6 @@ func CreateWindow(a fyne.App) {
 }
 
 func CreateNewItem(id int, w fyne.Window){
-	//password := widget.NewPasswordEntry()
-	//password.Validator = validation.NewRegexp(`^[A-Za-z0-9_-]+$`, "password can only contain letters, numbers, '_', and '-'")
 	idLabel := widget.NewLabel(strconv.Itoa(id))
 
 	nameEntry := widget.NewEntry()
@@ -271,13 +273,12 @@ func CreateNewItem(id int, w fyne.Window){
 			return
 		}
 
-		//log.Println("Please Check the Price, cost, or the amount in inventory")
 		fmt.Println("Name, Price, Cost and Inventory have all been Authenticated...")
 		fmt.Println("Adding to the database")
-		//Call a sort of save method that will take the data and save it to the item data
-		//Data.SaveNewItem(id, Data.NewSale(0, "Blue balls", 5.5, 1.25, 2))
+
 		price, cost, inventory := Data.ConvertStringToSale(priceEntry.Text, costEntry.Text, inventoryEntry.Text)
 		Data.UpdateData(Data.NewSale(id, nameEntry.Text, price, cost, inventory), "Items", 2)
+
 		Data.ReadVal("Items")
 		Data.SaveFile()
 	}, w)
@@ -311,19 +312,45 @@ func ModifyItem(id int, w fyne.Window){
 
 	dialog.ShowForm("Modify Item", "Change", "Cancel", items, func(b bool) {
 		if !b {
-			fmt.Println("Doesn't work.")
+			fmt.Println("Item could not be modified, check if it exists.")
 			return
 		}
 
-		//log.Println("Please Check the Price, cost, or the amount in inventory")
 		fmt.Println("Name, Price, Cost and Inventory have all been Authenticated...")
 		fmt.Println("Adding to the database")
-		//Call a sort of save method that will take the data and save it to the item data
-		//Data.SaveNewItem(id, Data.NewSale(0, "Blue balls", 5.5, 1.25, 2))
+
 		price, cost, inventory := Data.ConvertStringToSale(priceEntry.Text, costEntry.Text, inventoryEntry.Text)
-		//Data.UpdateData(Data.NewSale(id, nameEntry.Text, price, cost, inventory), "Items", 2)
 		Data.ModifyItem(Data.NewSale(id, nameEntry.Text, price, cost, inventory), "Items")
+
 		Data.ReadVal("Items")
 		Data.SaveFile()
 	}, w)
 }
+
+/*
+func makeBindedList(){
+	dataList := binding.BindFloatList(&[]float64{0.1, 0.2, 0.3})
+
+	button := widget.NewButton("Append", func() {
+		dataList.Append(float64(dataList.Length()+1) / 10)
+	})
+
+	list := widget.NewListWithData(dataList,
+		func() fyne.CanvasObject {
+			return container.NewBorder(nil, nil, nil, widget.NewButton("+", nil),
+				widget.NewLabel("item x.y"))
+		},
+		func(item binding.DataItem, obj fyne.CanvasObject) {
+			f := item.(binding.Float)
+			text := obj.(*fyne.Container).Objects[0].(*widget.Label)
+			text.Bind(binding.FloatToStringWithFormat(f, "item %0.1f"))
+
+			btn := obj.(*fyne.Container).Objects[1].(*widget.Button)
+			btn.OnTapped = func() {
+				val, _ := f.Get()
+				_ = f.Set(val + 1)
+			}
+		})
+	return
+}
+ */

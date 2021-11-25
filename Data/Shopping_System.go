@@ -122,17 +122,18 @@ func RemoveFromCart(i int, ShoppingCart []*Sale) {
 	ShoppingCart = ShoppingCart[:len(ShoppingCart)-1]   // Truncate slice.
 }
 
-func GetCartTotal(ShoppingCart []*Sale) float64 {
+func GetCartTotal(ShoppingCart []*Sale) (float64 , string) {
 	total := 0.0
 	for _, v := range ShoppingCart{
 		total += v.Price * float64(v.Quantity)
 	}
-	return total
+	strTotal := fmt.Sprint(total)
+	return total, strTotal
 }
 
 //Removes all items from the shopping cart
-func ClearCart(ShoppingCart []*Sale) {
-	ShoppingCart = ShoppingCart[:0]
+func ClearCart(ShoppingCart []*Sale) []*Sale {
+	return ShoppingCart[:0]
 }
 
 func ConvertStringToSale(Price, Cost, Quantity string) (float64, float64, int){

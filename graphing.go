@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/go-echarts/go-echarts/v2/types"
+	"github.com/pdfcrowd/pdfcrowd-go"
 	"io"
 	"io/ioutil"
 	"math/rand"
@@ -72,14 +73,14 @@ func httpserver(w http.ResponseWriter, _ *http.Request) {
 }
 
 func ConvertFile(){
-	url := "https://api.cloudmersive.com/convert/html/to/png"
+	url := "http://localhost:8081/"
 	method := "POST"
 	payload := &bytes.Buffer{}
 	writer := multipart.NewWriter(payload)
-	file, errFile1 := os.Open("/path/to/file")
+	file, errFile1 := os.Open("Assets/graph.html")
 	defer file.Close()
 	part1,
-	errFile1 := writer.CreateFormFile("inputFile",filepath.Base("/path/to/file"))
+	errFile1 := writer.CreateFormFile("graph.html",filepath.Base("Assets/"))
 	_, errFile1 = io.Copy(part1, file)
 	if errFile1 != nil {
 		fmt.Println(errFile1)
@@ -114,7 +115,40 @@ func ConvertFile(){
 	fmt.Println(string(body))
 }
 
+func ConvertHtml(){
+	// create the API client instance
+	client := pdfcrowd.NewHtmlToImageClient("demo", "ce544b6ea52a5621fb9d55f8b542d14d")
+
+	// configure the conversion
+	client.SetOutputFormat("png")
+
+	// run the conversion and write the result to a file
+	//err := client.ConvertUrlToFile("http://www.example.com", "example.png")
+	//err := client.ConvertUrlToFile("http://localhost:8081/", "graphing.png")
+	err := client.ConvertFileToFile("Assets/graph.html", "Assets/graphing.png")
+
+	// check for the conversion error
+	handleError(err)
+}
+
+func handleError(err error) {
+	if err != nil {
+		// report the error
+		why, ok := err.(pdfcrowd.Error)
+		if ok {
+			os.Stderr.WriteString(fmt.Sprintf("Pdfcrowd Error: %s\n", why))
+		} else {
+			os.Stderr.WriteString(fmt.Sprintf("Generic Error: %s\n", err))
+		}
+
+		// rethrow or handle the exception
+		panic(err.Error())
+	}
+}
+
 func main() {
 	http.HandleFunc("/", httpserver)
 	http.ListenAndServe(":8081", nil)
+	//CreateFileGraph()
+	ConvertFile()
 }

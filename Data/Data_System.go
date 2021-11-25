@@ -78,6 +78,7 @@ func ModifyItem(item Sale, targetSheet string){
 	f.SetCellValue(targetSheet, "C"+strconv.Itoa(idx), item.Price)
 	f.SetCellValue(targetSheet, "D"+strconv.Itoa(idx), item.Cost)
 	f.SetCellValue(targetSheet, "E"+strconv.Itoa(idx), item.Quantity)
+	UpdateData(item, "Price Log", 0)
 }
 
 func GetInventory(ID int) int {
@@ -116,41 +117,6 @@ func GetIndex(targetSheet string, ID, searchType int) int{
 		i++
 	}
 }
-
-/*
-func GetIndexStr(targetSheet, ID string, searchType int) int{
-	i:= 1
-	found := false
-	cell := f.GetCellValue(targetSheet, "A"+strconv.Itoa(i))
-	for  {
-		cell = f.GetCellValue(targetSheet, "A"+strconv.Itoa(i))
-		switch searchType {
-		case 2:
-			if cell == ID{
-				found = true
-			}
-			if found{
-				if cell != ID{
-					return i
-				}
-			}
-			break
-		case 1:
-			if cell == ID{
-				return i
-			}
-			break
-		default:
-			if cell == ""{
-				return i
-			}
-			break
-		}
-
-		i++
-	}
-}
- */
 
 func ConvertDate(date time.Time) string{
 	day, month, year := date.Date()

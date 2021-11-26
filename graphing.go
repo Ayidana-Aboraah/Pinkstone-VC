@@ -1,20 +1,14 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
-	"github.com/go-echarts/go-echarts/v2/types"
-	"github.com/pdfcrowd/pdfcrowd-go"
-	"io"
-	"io/ioutil"
-	"math/rand"
-	"mime/multipart"
-	"net/http"
-	"os"
-	"path/filepath"
-
 	"github.com/go-echarts/go-echarts/v2/charts"
 	"github.com/go-echarts/go-echarts/v2/opts"
+	"github.com/go-echarts/go-echarts/v2/types"
+	"github.com/pdfcrowd/pdfcrowd-go"
+	"math/rand"
+	"net/http"
+	"os"
 )
 
 // generate random data for bar chart
@@ -35,7 +29,17 @@ func generateLineItems() []opts.LineData {
 	return items
 }
 
-func CreateFileGraph(){
+/*
+func generateLineItems(inputs []float64) []opts.LineData {
+	items := make([]opts.LineData, 0)
+	for i := 0; i < len(inputs); i++ {
+		items = append(items, opts.LineData{Value: inputs[i]})
+	}
+	return items
+}
+ */
+
+func CreateBarGraph(){
 	// create a new bar instance
 	bar := charts.NewBar()
 	// set some global options like Title/Legend/ToolTip or anything else
@@ -72,65 +76,6 @@ func httpserver(w http.ResponseWriter, _ *http.Request) {
 	line.Render(w)
 }
 
-func ConvertFile(){
-	url := "http://localhost:8081/"
-	method := "POST"
-	payload := &bytes.Buffer{}
-	writer := multipart.NewWriter(payload)
-	file, errFile1 := os.Open("Assets/graph.html")
-	defer file.Close()
-	part1,
-	errFile1 := writer.CreateFormFile("graph.html",filepath.Base("Assets/"))
-	_, errFile1 = io.Copy(part1, file)
-	if errFile1 != nil {
-		fmt.Println(errFile1)
-		return
-	}
-	err := writer.Close()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	client := &http.Client {
-	}
-	req, err := http.NewRequest(method, url, payload)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	req.Header.Add("Content-Type", "multipart/form-data")
-	req.Header.Add("Apikey", "YOUR-API-KEY-HERE")
-	req.Header.Set("Content-Type", writer.FormDataContentType())
-	res, err := client.Do(req)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	defer res.Body.Close()
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println(string(body))
-}
-
-func ConvertHtml(){
-	// create the API client instance
-	client := pdfcrowd.NewHtmlToImageClient("demo", "ce544b6ea52a5621fb9d55f8b542d14d")
-
-	// configure the conversion
-	client.SetOutputFormat("png")
-
-	// run the conversion and write the result to a file
-	//err := client.ConvertUrlToFile("http://www.example.com", "example.png")
-	//err := client.ConvertUrlToFile("http://localhost:8081/", "graphing.png")
-	err := client.ConvertFileToFile("Assets/graph.html", "Assets/graphing.png")
-
-	// check for the conversion error
-	handleError(err)
-}
-
 func handleError(err error) {
 	if err != nil {
 		// report the error
@@ -150,5 +95,4 @@ func main() {
 	http.HandleFunc("/", httpserver)
 	http.ListenAndServe(":8081", nil)
 	//CreateFileGraph()
-	ConvertFile()
 }

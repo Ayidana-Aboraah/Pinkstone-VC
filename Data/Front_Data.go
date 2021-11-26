@@ -38,3 +38,18 @@ func FindAll(targetSheet, targetAxis, subStr string) []int {
 	}
 	return idxes
 }
+
+func GetData(targetSheet string,id int) []string{
+	i := GetIndex(targetSheet, id, 1)
+
+	name := f.GetCellValue(targetSheet, "B"+ strconv.Itoa(i))
+	price := f.GetCellValue(targetSheet, "C"+ strconv.Itoa(i))
+	cost := f.GetCellValue(targetSheet, "D"+ strconv.Itoa(i))
+	quantity := f.GetCellValue(targetSheet, "E"+ strconv.Itoa(i))
+	return []string{
+		name,
+		price,
+		cost,
+		quantity,
+	}
+}

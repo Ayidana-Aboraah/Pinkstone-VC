@@ -90,36 +90,26 @@ func AddToCart(ID int, ShoppingCart []*Sale) []*Sale{
 }
 
 //[Untested]
-func DecreaseFromCart(ID int, ShoppingCart []*Sale) {
-	/*
-	for i := 0; i < len(ShoppingCart); {
-		if ShoppingCart[i].ID == ID {
-			if ShoppingCart[i].Quantity-1 > 0 {
-				ShoppingCart[i].Quantity--
-			} else {
-				RemoveFromCart(i, ShoppingCart)
-			}
-		}
-		i++
-	}
-	 */
-
+func DecreaseFromCart(ID int, ShoppingCart []*Sale) []*Sale{
 	for i, v := range ShoppingCart {
 		if v.ID == ID {
 			if v.Quantity-1 > 0 {
 				v.Quantity--
 			} else {
-				RemoveFromCart(i, ShoppingCart)
+				ShoppingCart = RemoveFromCart(i, ShoppingCart)
 			}
 		}
 	}
+
+	return ShoppingCart
 }
 
 // RemoveFromCart [Untested]
-func RemoveFromCart(i int, ShoppingCart []*Sale) {
+func RemoveFromCart(i int, ShoppingCart []*Sale) []*Sale{
 	ShoppingCart[i] = ShoppingCart[len(ShoppingCart)-1] // Copy last element to index i.
 	ShoppingCart[len(ShoppingCart)-1] = &Sale{}         // Erase last element (write zero value).
 	ShoppingCart = ShoppingCart[:len(ShoppingCart)-1]   // Truncate slice.
+	return ShoppingCart
 }
 
 func GetCartTotal(ShoppingCart []*Sale) (float64 , string) {

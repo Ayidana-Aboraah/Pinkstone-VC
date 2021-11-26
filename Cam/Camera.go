@@ -1,6 +1,6 @@
 package Cam
-/*
 
+/*
 import (
 	"github.com/makiuchi-d/gozxing"
 	"gocv.io/x/gocv"
@@ -8,7 +8,7 @@ import (
 
 var res *gozxing.Result
 
-func OpenCam() {
+func OpenCam() string{
 	webcam, _ := gocv.OpenVideoCapture(0)
 	window := gocv.NewWindow("Hello")
 	img := gocv.NewMat()
@@ -24,8 +24,12 @@ func OpenCam() {
 		//Reading the new Image
 		res = ReadImage(imgObj)
 
+		if res != nil{
+			return res.String()
+		}
+
 		window.WaitKey(1)
 	}
 }
-
  */
+

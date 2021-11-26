@@ -1,11 +1,9 @@
-package main
+package UI
 
 import (
-	"fmt"
 	"github.com/go-echarts/go-echarts/v2/charts"
 	"github.com/go-echarts/go-echarts/v2/opts"
 	"github.com/go-echarts/go-echarts/v2/types"
-	"github.com/pdfcrowd/pdfcrowd-go"
 	"math/rand"
 	"net/http"
 	"os"
@@ -76,22 +74,7 @@ func httpserver(w http.ResponseWriter, _ *http.Request) {
 	line.Render(w)
 }
 
-func handleError(err error) {
-	if err != nil {
-		// report the error
-		why, ok := err.(pdfcrowd.Error)
-		if ok {
-			os.Stderr.WriteString(fmt.Sprintf("Pdfcrowd Error: %s\n", why))
-		} else {
-			os.Stderr.WriteString(fmt.Sprintf("Generic Error: %s\n", err))
-		}
-
-		// rethrow or handle the exception
-		panic(err.Error())
-	}
-}
-
-func main() {
+func StartServer() {
 	http.HandleFunc("/", httpserver)
 	http.ListenAndServe(":8081", nil)
 	//CreateFileGraph()

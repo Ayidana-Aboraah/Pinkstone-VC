@@ -9,13 +9,13 @@ import (
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
-
 	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/data/validation"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
 	"image"
 	_ "image/png"
+	"net/url"
 	"os"
 	"strconv"
 	"time"
@@ -30,7 +30,7 @@ var (
 	itemMenu = fyne.NewContainer()
 
 	testMenu = fyne.NewContainer()
-	appIcon,_ = fyne.LoadResourceFromPath("Assets/icon.png")
+	appIcon,_ = fyne.LoadResourceFromPath("Assets/icon02.png")
 	profitGraph = canvas.NewImageFromFile("Assets/graph.png")
 )
 
@@ -63,6 +63,9 @@ func CreateWindow(a fyne.App) {
 		widget.NewButton("Test", func() {
 			w.SetContent(testMenu)
 		}),
+		widget.NewButton("Camera", func() {
+			Cam.StartCamera()
+		}),
 		widget.NewButton("Quit", func() {
 			w.Close()
 		}),
@@ -79,8 +82,6 @@ func CreateWindow(a fyne.App) {
 	itemMenu = container.NewVBox(
 	)
 
-	testTitle := widget.NewLabel("Test 2")
-	//testItemForm := dialog.NewForm("New Item", "Done", "Cancel", []*widget.FormItem ,confirmCallback(), w)
 	testMenu = container.NewVBox(
 		container.NewAppTabs(
 			container.NewTabItem("Misc", container.NewVBox(
@@ -97,31 +98,12 @@ func CreateWindow(a fyne.App) {
 					Data.TestMain()
 				}),
 				widget.NewCard("Trash Afton", "You wish", UI.NewNumEntry()),
-			)),
-
-			//Shop still not completely
-			container.NewTabItem("Shop", container.NewVBox(
-				widget.NewLabel("Shopping"),
-				//Put code for a binded cart total
-				//widget.NewLabelWithData(),
-				testTitle,
-				//Put code for a binded list
-				widget.NewButton("New Cart Cart", func() {
-					Data.ClearCart(ShoppingCart)
+				widget.NewButton("Start Graph", func() {
+					go UI.StartServer()
 				}),
-				widget.NewButton("Show Cart Contents", func() {
-					ShoppingCart = Data.AddToCart(13000006057, ShoppingCart)
-					fmt.Println(ShoppingCart)
-				}),
-				widget.NewButton("Add B1 To Cart", func() {
-					file, _ := os.Open(Cam.Path + "Online Test 01.png")
-					img, _, _ := image.Decode(file)
-					id := Cam.ReadImage(img).String()
-					conID, _ := strconv.Atoi(id)
-					ShoppingCart = Data.AddToCart(conID, ShoppingCart)
-					total, strtotal := Data.GetCartTotal(ShoppingCart)
-					fmt.Println(ShoppingCart, total)
-					testTitle.SetText(strtotal)
+				widget.NewButton("Open Graph", func() {
+					path := url.URL{Path: "http://localhost:8081/"}
+					a.OpenURL(&path)
 				}),
 			)),
 
@@ -132,7 +114,7 @@ func CreateWindow(a fyne.App) {
 
 			container.NewTabItem("Info", makeInfoMenu(w)),
 
-			container.NewTabItem("Stats", makeStatsMenu(w)),
+			container.NewTabItem("Stats", makeStatsMenu()),
 
 		),
 	)
@@ -225,16 +207,30 @@ func ModifyItem(id int, w fyne.Window){
 }
 
 func makeShoppingMenu(w fyne.Window) fyne.CanvasObject{
+	total := 0.0
+	conTotal := fmt.Sprint(total)
+	title := widget.NewLabel("Cart Total: " + conTotal)
 	cartList := binding.BindSaleList(&[]Data.Sale{})
 
 	button := widget.NewButton("New Item", func() {
-		//dataList.Append(float64(dataList.Length()+1) / 10)
-		//Open Camera
-		//Scan Item
-		//Append the item to the cartList
-		red :=Data.Sale{ID: 2, Name: "red", Price: 0.5, Cost: 0.5, Quantity: 2}
-		cartList.Append(red)
-		ShoppingCart = append(ShoppingCart, &red)
+		//Get ID and Convert
+		id := Cam.OpenCam()
+		conID, _ := strconv.Atoi(id)
+
+		raw := Data.GetData("Items", conID)
+		dialog.ShowConfirm("Check", "Is this the right item: " + raw[0], func(b bool) {
+			if !b{
+				return
+			}
+
+			//Scan Item
+			price, cost, inventory := Data.ConvertStringToSale(raw[1], raw[2], raw[3])
+
+			//Append the item to the cartList
+			red := Data.Sale{ID: conID, Name: raw[0], Price: price, Cost: cost, Quantity: inventory}
+			cartList.Append(red)
+			ShoppingCart = append(ShoppingCart, &red)
+		},w)
 	})
 
 	list := widget.NewListWithData(cartList,
@@ -260,35 +256,25 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject{
 		container.NewVScroll(
 			//Put code for a binded cart total
 			container.NewGridWithColumns(1,
-				widget.NewButton("Cart Item 0", func() {
-					fmt.Println("We are Zero.")
-				}),
+				title,
 				list,
 			),
 		),
 		container.NewHBox(
 			widget.NewButton("Buy Cart", func() {
-				Data.BuyCart(ShoppingCart)
-				//Show a dialog box talking about the confirmed purchese
-				//If failed, show an error message and a possible fix
+				dialog.ShowConfirm("Buying", "Do you want to buy all items in the Cart?", func(b bool) {
+					if !b{
+						fmt.Println("Understandable.")
+						return
+					}
+
+					ShoppingCart = Data.BuyCart(ShoppingCart)
+					dialog.ShowInformation("Complete", "You're Purchase has been made.", w)
+				}, w)
 			}),
 			widget.NewButton("Clear Cart", func(){
 				ShoppingCart = Data.ClearCart(ShoppingCart)
 				//Remove the buttons somehow
-			}),
-			widget.NewButton("Scan To Cart", func() {
-				//Open camera
-				//Camera should return the nessasary info and open the window back up
-				dialog.ShowConfirm("Check", "Is this the right item:" + " Insert scanned item name", func(b bool) {
-					if !b{
-						fmt.Println("Failure")
-						//Maybe open up cam again
-						//return
-					}
-
-					//Add the scanned item to cart
-					fmt.Println("Success!")
-				}, w)
 			}),
 			button,
 		),
@@ -297,11 +283,13 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject{
 }
 
 func makeBarcodeMenu(w fyne.Window) fyne.CanvasObject{
-	title := widget.NewLabel("Barcodes")
 	box := container.NewVBox(
-		title,
+		widget.NewLabel("Barcodes"),
 		widget.NewButton("Camera", func() {
-			//Cam.OpenCam()
+			id := Cam.OpenCam()
+			newId, _ := strconv.Atoi(id)
+
+			CreateNewItem(newId, w)
 		}),
 		widget.NewButton("Barcode 01", func() {
 			file, _ := os.Open(Cam.Path + "Online Test 01.png")
@@ -310,7 +298,6 @@ func makeBarcodeMenu(w fyne.Window) fyne.CanvasObject{
 			newId, _ := strconv.Atoi(id)
 
 			CreateNewItem(newId, w)
-			title.SetText("ID: " + id)
 		}),
 		widget.NewButton("Barcode 02", func() {
 			file, _ := os.Open(Cam.Path + "Online Test 02.png")
@@ -319,7 +306,6 @@ func makeBarcodeMenu(w fyne.Window) fyne.CanvasObject{
 			newId, _ := strconv.Atoi(id)
 
 			CreateNewItem(newId, w)
-			title.SetText("ID: " + id)
 		}),
 		widget.NewButton("Barcode 03", func() {
 			file, _ := os.Open(Cam.Path + "Online Test 03.png")
@@ -328,7 +314,6 @@ func makeBarcodeMenu(w fyne.Window) fyne.CanvasObject{
 			newId, _ := strconv.Atoi(id)
 
 			CreateNewItem(newId, w)
-			title.SetText("ID: " + id)
 		}),
 		widget.NewButton("Barcode 04", func() {
 			file, _ := os.Open(Cam.Path + "Test01.png")
@@ -337,7 +322,6 @@ func makeBarcodeMenu(w fyne.Window) fyne.CanvasObject{
 			newId, _ := strconv.Atoi(id)
 
 			CreateNewItem(newId, w)
-			title.SetText("ID: " + id)
 		}),
 		widget.NewButton("Barcode 05", func() {
 			file, _ := os.Open(Cam.Path + "Online Test 05.png")
@@ -346,7 +330,6 @@ func makeBarcodeMenu(w fyne.Window) fyne.CanvasObject{
 			newId, _ := strconv.Atoi(id)
 
 			CreateNewItem(newId, w)
-			title.SetText("ID: " + id)
 		}),
 	)
 	return box
@@ -456,7 +439,7 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject{
 }
 
 //Finish setting up graph stuff for it
-func makeStatsMenu(w fyne.Window) fyne.CanvasObject{
+func makeStatsMenu() fyne.CanvasObject{
 	selectionEntry := UI.NewNumEntry()
 
 	box := container.NewVBox(

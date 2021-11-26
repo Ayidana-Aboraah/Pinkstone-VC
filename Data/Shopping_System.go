@@ -36,38 +36,20 @@ func TestMain() {
 	ReadVal("Log")
 }
 
-func BuyCart(ShoppingCart []*Sale) {
+func BuyCart(ShoppingCart []*Sale) []*Sale{
 	targetSheet := "Report Data"
-
-	/*
-	for i := 0; i < len(ShoppingCart); {
-		UpdateData(*ShoppingCart[i], targetSheet, 1)
-		i++
-	}
-	 */
 
 	for _, v := range ShoppingCart {
 		UpdateData(*v, targetSheet, 1)
 	}
-	//Clear cart
-	ClearCart(ShoppingCart)
+
+	return ClearCart(ShoppingCart)
 }
 
 //Must pass as the new value of Shopping Cart similar to appending to an array
 func AddToCart(ID int, ShoppingCart []*Sale) []*Sale{
 	targetSheet := "Items"
-	//i := 0
 	for {
-		/*
-		if i < len(ShoppingCart) {
-			if ShoppingCart[i].ID == ID {
-				ShoppingCart[i].Quantity++
-				break
-			}
-			i++
-		}
-		 */
-
 		for _, v := range ShoppingCart{
 			if v.ID == ID {
 				v.Quantity++
@@ -86,10 +68,8 @@ func AddToCart(ID int, ShoppingCart []*Sale) []*Sale{
 		ShoppingCart = append(ShoppingCart, temp)
 		return ShoppingCart
 	}
-	return ShoppingCart
 }
 
-//[Untested]
 func DecreaseFromCart(ID int, ShoppingCart []*Sale) []*Sale{
 	for i, v := range ShoppingCart {
 		if v.ID == ID {

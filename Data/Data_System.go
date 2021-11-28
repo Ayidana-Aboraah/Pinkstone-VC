@@ -3,12 +3,13 @@ package Data
 import (
 	"fmt"
 	"github.com/360EntSecGroup-Skylar/excelize"
+	"io/ioutil"
 	"strconv"
 	"time"
 )
 
 //var f, err = excelize.OpenFile("AppData.xlsx")
-var f, err = excelize.OpenFile("TestAppData.xlsx")
+var f, Err = excelize.OpenFile("TestAppData.xlsx")
 //save a back-up.
 //if an error with reading the file is met; save the back up as the file and try reading again.
 
@@ -24,7 +25,22 @@ func ReadVal(sheet string) {
 	}
 }
 
-func SaveFile(){f.Save()}
+func SaveFile(){err := f.Save();if err != nil{fmt.Println(err)}}
+
+func SaveBackUp(sourceFile, backUpfile string){
+	input, err := ioutil.ReadFile(sourceFile)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	err = ioutil.WriteFile(backUpfile, input, 0644)
+	if err != nil {
+		fmt.Println("Error creating", backUpfile)
+		fmt.Println(err)
+		return
+	}
+}
 
 func UpdateData(item Sale, targetSheet string, variant int){
 	idx := GetIndex(targetSheet, 0, 0)

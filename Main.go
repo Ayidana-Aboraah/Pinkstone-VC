@@ -8,6 +8,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/data/validation"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
@@ -18,17 +19,9 @@ import (
 	"strconv"
 )
 
-var ShoppingCart []*Data.Sale
-
 var (
-	mainMenu = fyne.NewContainer()
-	dataMenu = fyne.NewContainer()
-	shopMenu = fyne.NewContainer()
-	settingsMenu = fyne.NewContainer()
-
-	testMenu = fyne.NewContainer()
+	mainMenu = container.NewWithoutLayout()
 	appIcon,_ = fyne.LoadResourceFromPath("Assets/icon02.png")
-	//profitGraph = canvas.NewImageFromFile("Assets/profitGraph.png")
 )
 
 func main() {
@@ -41,51 +34,39 @@ func main() {
 func CreateWindow(a fyne.App) {
 	w := a.NewWindow("Bronze Hermes")
 
-	title := widget.NewLabel("Welcome!")
-	title.Alignment = fyne.TextAlign(1)
+	if Data.Err != nil{
+		fmt.Println(Data.Err)
+		dialog.ShowError(Data.Err, w)
+	}
 
 	mainMenu = container.NewVBox(
-		title,
-		//Put a link to the profit web server
-		widget.NewButton("Shopping", func() {
-			w.SetContent(shopMenu)
-		}),
-		widget.NewButton("Statistics", func() {
-			w.SetContent(dataMenu)
-		}),
-		widget.NewButton("Settings", func() {
-			w.SetContent(settingsMenu)
-		}),
-		widget.NewButton("Test", func() {
-			w.SetContent(testMenu)
-		}),
-		widget.NewButton("Quit", func() {
-			w.Close()
-		}),
-	)
-
-	dataMenu = container.NewVBox(
-		makeStatsMenu(a, w),
-	)
-
-	settingsMenu = container.NewVBox(
-		makeInfoMenu(w),
-	)
-
-	testMenu = container.NewVBox(
 		container.NewAppTabs(
+			container.NewTabItem("Main", makeMainMenu(a)),
 			//Shop still not completely
 			container.NewTabItem("Shop", makeShoppingMenu(w)),
 
 			container.NewTabItem("Info", makeInfoMenu(w)),
 
-			container.NewTabItem("Stats", makeStatsMenu(a, w)),
+			container.NewTabItem("Stats", makeStatsMenu(w)),
 
-		),
-	)
+		))
 
 	w.SetContent(mainMenu)
 	w.ShowAndRun()
+}
+
+func makeMainMenu(a fyne.App) fyne.CanvasObject{
+	box := container.NewVBox(
+		widget.NewLabelWithStyle("Welcome", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
+		widget.NewButton("Back Up App Data", func() {
+			//Don't forget to change the source file name when switching from test file to normal file
+			Data.SaveBackUp("TestAppData.xlsx", "BackupAppData.xlsx")
+		}),
+		widget.NewButton("Quit", func() {
+			a.Quit()
+		}),
+	)
+	return box
 }
 
 func createItemMenu(id int, w fyne.Window){
@@ -130,9 +111,34 @@ func createItemMenu(id int, w fyne.Window){
 
 func makeShoppingMenu(w fyne.Window) fyne.CanvasObject{
 	total := 0.0
-	conTotal := fmt.Sprint(total)
-	title := widget.NewLabel("Cart Total: " + conTotal)
+	bondTotal := binding.BindFloat(&total)
 
+	cartList := binding.BindSaleList(&[]Data.Sale{})
+
+	title := widget.NewLabelWithData(binding.FloatToString(bondTotal))
+
+	list := widget.NewListWithData(cartList,
+		func() fyne.CanvasObject {
+			return container.NewBorder(nil, nil, nil, widget.NewButton("X", nil),
+				widget.NewLabel(""))
+		},
+		func(item binding.DataItem, obj fyne.CanvasObject) {
+			f := item.(binding.Sale)
+			text := obj.(*fyne.Container).Objects[0].(*widget.Label)
+			i, _ := f.Get()
+			quantity := fmt.Sprint(i.Quantity)
+			text.SetText(i.Name + " x" + quantity)
+
+			btn := obj.(*fyne.Container).Objects[1].(*widget.Button)
+			btn.OnTapped = func() {
+				val, _ := f.Get()
+				cart, _ := cartList.Get()
+				cartList.Set(Data.DecreaseFromCart(val.ID,cart))
+				//ShoppingCart = Data.DecreaseFromCart(val.ID,*ShoppingCart)
+			}
+		})
+
+/*
 	list := widget.NewList(func() int {return len(ShoppingCart)},
 		func() fyne.CanvasObject {
 			return container.NewBorder(nil, nil, nil, widget.NewButton("X", nil),
@@ -147,10 +153,11 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject{
 
 			btn := obj.(*fyne.Container).Objects[1].(*widget.Button)
 			btn.OnTapped = func() {
-				ShoppingCart = Data.DecreaseFromCart(f.ID, ShoppingCart)
+				ShoppingCart = Data.DecreaseFromCart(f.ID, *ShoppingCart)
 				text.Refresh()
 			}
 		})
+ */
 
 	button := widget.NewButton("New Item", func() {
 		//Get ID and Convert
@@ -163,18 +170,18 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject{
 				return
 			}
 			//Append the item to the cartList
-			ShoppingCart = Data.AddToCart(conID, ShoppingCart)
+			cart, _ := cartList.Get()
+			cartList.Set(Data.AddToCart(conID, cart))
+			bondTotal.Set(Data.GetCartTotal(cart))
 		},w)
 	})
 
 	split := container.NewVSplit(
-		container.NewVScroll(
-			//Put code for a binded cart total
 			container.NewGridWithColumns(1,
 				title,
 				list,
 			),
-		),
+
 		container.NewHBox(
 			widget.NewButton("Buy Cart", func() {
 				dialog.ShowConfirm("Buying", "Do you want to buy all items in the Cart?", func(b bool) {
@@ -182,13 +189,16 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject{
 						fmt.Println("Understandable.")
 						return
 					}
-
-					ShoppingCart = Data.BuyCart(ShoppingCart)
+					cart, _ := cartList.Get()
+					cartList.Set(Data.BuyCart(cart))
+					bondTotal.Set(Data.GetCartTotal(cart))
 					dialog.ShowInformation("Complete", "You're Purchase has been made.", w)
 				}, w)
 			}),
 			widget.NewButton("Clear Cart", func(){
-				ShoppingCart = Data.ClearCart(ShoppingCart)
+				cart, _ := cartList.Get()
+				cartList.Set(Data.ClearCart(cart))
+				bondTotal.Set(Data.GetCartTotal(cart))
 			}),
 			button,
 		),
@@ -315,7 +325,7 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject{
 }
 
 //Finish setting up graph stuff for it
-func makeStatsMenu(a fyne.App, w fyne.Window) fyne.CanvasObject {
+func makeStatsMenu(w fyne.Window) fyne.CanvasObject {
 	u, _ := url.Parse("http://localhost:8081")
 	testLink := widget.NewHyperlink("Random Line Graph", u)
 

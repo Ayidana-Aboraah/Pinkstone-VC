@@ -25,44 +25,36 @@ func NewSale(ID int, Name string, Price, Cost float64, Quantity int) Sale{
 	}
 }
 
-//A test Main
-func TestMain() {
-	UpdateData(Sale{
-		ID:    0,
-		Name:  "Null",
-		Price: 0,
-	}, "Log", 0)
-
-	ReadVal("Log")
-}
-
-func BuyCart(ShoppingCart []*Sale) []*Sale{
+func BuyCart(ShoppingCart []Sale) []Sale{
 	targetSheet := "Report Data"
 
 	for _, v := range ShoppingCart {
-		UpdateData(*v, targetSheet, 1)
+		UpdateData(v, targetSheet, 1)
 	}
 
 	return ClearCart(ShoppingCart)
 }
 
 //Must pass as the new value of Shopping Cart similar to appending to an array
-func AddToCart(ID int, ShoppingCart []*Sale) []*Sale{
+func AddToCart(ID int, ShoppingCart []Sale) []Sale{
 	targetSheet := "Items"
 	for {
 		for _, v := range ShoppingCart{
 			if v.ID == ID {
-				v.Quantity++
-				break
+				v.Quantity += 1
+				return ShoppingCart
 			}
 		}
 		idx := GetIndex(targetSheet, ID, 1)
 		p, _ := strconv.ParseFloat(f.GetCellValue(targetSheet, "B"+strconv.Itoa(idx)), 64)
+		c, _ := strconv.ParseFloat(f.GetCellValue(targetSheet, "C"+strconv.Itoa(idx)), 64)
 
-		temp := &Sale{
+		temp := Sale{
 			ID:    ID,
 			Name:  f.GetCellValue(targetSheet, "B"+strconv.Itoa(idx)),
 			Price: p,
+			Cost: c,
+			Quantity: 1,
 		}
 		fmt.Println(temp)
 		ShoppingCart = append(ShoppingCart, temp)
@@ -70,7 +62,7 @@ func AddToCart(ID int, ShoppingCart []*Sale) []*Sale{
 	}
 }
 
-func DecreaseFromCart(ID int, ShoppingCart []*Sale) []*Sale{
+func DecreaseFromCart(ID int, ShoppingCart []Sale) []Sale{
 	for i, v := range ShoppingCart {
 		if v.ID == ID {
 			if v.Quantity-1 > 0 {
@@ -85,25 +77,25 @@ func DecreaseFromCart(ID int, ShoppingCart []*Sale) []*Sale{
 }
 
 // RemoveFromCart [Untested]
-func RemoveFromCart(i int, ShoppingCart []*Sale) []*Sale{
+func RemoveFromCart(i int, ShoppingCart []Sale) []Sale{
 	ShoppingCart[i] = ShoppingCart[len(ShoppingCart)-1] // Copy last element to index i.
-	ShoppingCart[len(ShoppingCart)-1] = &Sale{}         // Erase last element (write zero value).
+	ShoppingCart[len(ShoppingCart)-1] = Sale{}         // Erase last element (write zero value).
 	ShoppingCart = ShoppingCart[:len(ShoppingCart)-1]   // Truncate slice.
 	return ShoppingCart
 }
 
-func GetCartTotal(ShoppingCart []*Sale) (float64 , string) {
+func GetCartTotal(ShoppingCart []Sale) float64 {
 	total := 0.0
 	for _, v := range ShoppingCart{
 		total += v.Price * float64(v.Quantity)
 	}
-	strTotal := fmt.Sprint(total)
-	return total, strTotal
+	return total
 }
 
 //Removes all items from the shopping cart
-func ClearCart(ShoppingCart []*Sale) []*Sale {
-	return ShoppingCart[:0]
+func ClearCart(ShoppingCart []Sale) []Sale {
+	ShoppingCart = ShoppingCart[:0]
+	return ShoppingCart
 }
 
 func ConvertStringToSale(Price, Cost, Quantity string) (float64, float64, int){

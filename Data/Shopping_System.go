@@ -74,7 +74,7 @@ func DecreaseFromCart(ID int, ShoppingCart []*Sale) []*Sale{
 	for i, v := range ShoppingCart {
 		if v.ID == ID {
 			if v.Quantity-1 > 0 {
-				v.Quantity--
+				v.Quantity --
 			} else {
 				ShoppingCart = RemoveFromCart(i, ShoppingCart)
 			}

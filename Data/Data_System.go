@@ -71,16 +71,6 @@ func UpdateData(item Sale, targetSheet string, variant int){
 	}
 }
 
-func ModifyItem(item Sale, targetSheet string){
-	idx := GetIndex(targetSheet, item.ID, 1)
-
-	f.SetCellValue(targetSheet, "B"+strconv.Itoa(idx), item.Name)
-	f.SetCellValue(targetSheet, "C"+strconv.Itoa(idx), item.Price)
-	f.SetCellValue(targetSheet, "D"+strconv.Itoa(idx), item.Cost)
-	f.SetCellValue(targetSheet, "E"+strconv.Itoa(idx), item.Quantity)
-	UpdateData(item, "Price Log", 0)
-}
-
 func GetInventory(ID int) int {
 	targetSheet := "Detection Data"
 

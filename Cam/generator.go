@@ -1,4 +1,4 @@
-package main
+package Cam
 
 import (
 	"image/png"
@@ -8,10 +8,10 @@ import (
 	"github.com/makiuchi-d/gozxing/oned"
 )
 
-func main() {
+func GenerateBarcode(message string) {
 	// Generate a barcode image (*BitMatrix)
-	enc := oned.NewCode128Writer()
-	img, _ := enc.Encode("1", gozxing.BarcodeFormat_CODE_128, 250, 50, nil)
+	enc := oned.NewUPCAWriter()
+	img, _ := enc.Encode(message, gozxing.BarcodeFormat_CODE_128, 250, 50, nil)
 
 	file, _ := os.Create("barcodes [test]/barcode.png")
 	defer file.Close()

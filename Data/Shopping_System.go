@@ -72,7 +72,6 @@ func DecreaseFromCart(ID int, ShoppingCart []Sale) []Sale{
 			}
 		}
 	}
-
 	return ShoppingCart
 }
 

@@ -25,7 +25,13 @@ func ReadVal(sheet string) {
 	}
 }
 
-func SaveFile(){err := f.Save();if err != nil{fmt.Println(err)}}
+//Maybe add a backup in file Saving
+func SaveFile(){
+	err := f.Save()
+	if err != nil{
+		fmt.Println(err)
+	}
+}
 
 func SaveBackUp(sourceFile, backUpfile string){
 	input, err := ioutil.ReadFile(sourceFile)
@@ -34,7 +40,7 @@ func SaveBackUp(sourceFile, backUpfile string){
 		return
 	}
 
-	err = ioutil.WriteFile(backUpfile, input, 0644)
+	err = ioutil.WriteFile("Assets/" + backUpfile, input, 0644)
 	if err != nil {
 		fmt.Println("Error creating", backUpfile)
 		fmt.Println(err)
@@ -46,7 +52,7 @@ func UpdateData(item Sale, targetSheet string, variant int){
 	idx := GetIndex(targetSheet, 0, 0)
 
 	switch variant {
-	//Update Items [Add]
+	//Update Items
 	case 2:
 		checker := GetIndex(targetSheet, item.ID, 1)
 		if checker == 0{

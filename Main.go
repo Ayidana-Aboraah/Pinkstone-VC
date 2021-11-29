@@ -134,30 +134,8 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject{
 				val, _ := f.Get()
 				cart, _ := cartList.Get()
 				cartList.Set(Data.DecreaseFromCart(val.ID,cart))
-				//ShoppingCart = Data.DecreaseFromCart(val.ID,*ShoppingCart)
 			}
 		})
-
-/*
-	list := widget.NewList(func() int {return len(ShoppingCart)},
-		func() fyne.CanvasObject {
-			return container.NewBorder(nil, nil, nil, widget.NewButton("X", nil),
-				widget.NewLabel(""))
-		},
-		func(id widget.ListItemID, obj fyne.CanvasObject) {
-			f := ShoppingCart[id]
-			text := obj.(*fyne.Container).Objects[0].(*widget.Label)
-
-			quantity := fmt.Sprint(f.Quantity)
-			text.SetText(f.Name + " x" + quantity)
-
-			btn := obj.(*fyne.Container).Objects[1].(*widget.Button)
-			btn.OnTapped = func() {
-				ShoppingCart = Data.DecreaseFromCart(f.ID, *ShoppingCart)
-				text.Refresh()
-			}
-		})
- */
 
 	button := widget.NewButton("New Item", func() {
 		//Get ID and Convert
@@ -186,7 +164,6 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject{
 			widget.NewButton("Buy Cart", func() {
 				dialog.ShowConfirm("Buying", "Do you want to buy all items in the Cart?", func(b bool) {
 					if !b{
-						fmt.Println("Understandable.")
 						return
 					}
 					cart, _ := cartList.Get()

@@ -14,7 +14,6 @@ type Sale struct {
 	Quantity int
 }
 
-//A constructor for a NewSale
 func NewSale(ID int, Name string, Price, Cost float64, Quantity int) Sale{
 	return Sale{
 		ID: ID,
@@ -39,9 +38,10 @@ func BuyCart(ShoppingCart []Sale) []Sale{
 func AddToCart(ID int, ShoppingCart []Sale) []Sale{
 	targetSheet := "Items"
 	for {
-		for _, v := range ShoppingCart{
+		for i, v := range ShoppingCart{
 			if v.ID == ID {
-				v.Quantity += 1
+				//v.Quantity += 1
+				ShoppingCart[i].Quantity += 1
 				return ShoppingCart
 			}
 		}
@@ -66,12 +66,13 @@ func DecreaseFromCart(ID int, ShoppingCart []Sale) []Sale{
 	for i, v := range ShoppingCart {
 		if v.ID == ID {
 			if v.Quantity-1 > 0 {
-				v.Quantity --
+				ShoppingCart[i].Quantity -= 1
 			} else {
 				ShoppingCart = RemoveFromCart(i, ShoppingCart)
 			}
 		}
 	}
+
 	return ShoppingCart
 }
 
@@ -102,4 +103,16 @@ func ConvertStringToSale(Price, Cost, Quantity string) (float64, float64, int){
 	newCost, _ := strconv.ParseFloat(Cost, 64)
 	newQuantity, _ := strconv.Atoi(Quantity)
 	return newPrice, newCost, newQuantity
+}
+
+func ConvertSaleToString(price, cost float64, inventory int) []string{
+	p := fmt.Sprint(price)
+	c := fmt.Sprint(cost)
+	inven := strconv.Itoa(inventory)
+
+	return []string{
+		p,
+		c,
+		inven,
+	}
 }

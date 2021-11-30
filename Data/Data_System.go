@@ -132,7 +132,7 @@ func GetIndex(targetSheet string, ID, searchType int) int{
 
 func ConvertDate(date time.Time) string{
 	day, month, year := date.Date()
-	return strconv.Itoa(day) + "/" + strconv.Itoa(int(month))  + "/" + strconv.Itoa(year)
+	return strconv.Itoa(year)+ "/"+ strconv.Itoa(int(month)) + "/" + strconv.Itoa(day)
 }
 
 func ConvertClock(clock time.Time) string {

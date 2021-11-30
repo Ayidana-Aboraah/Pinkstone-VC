@@ -3,6 +3,7 @@ package main
 import (
 	"business.go/Cam"
 	"business.go/Data"
+	"business.go/Graph"
 	"business.go/UI"
 	"fmt"
 	"fyne.io/fyne/v2"
@@ -12,10 +13,8 @@ import (
 	"fyne.io/fyne/v2/data/validation"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
-	"image"
 	_ "image/png"
 	"net/url"
-	"os"
 	"strconv"
 )
 
@@ -27,6 +26,7 @@ var (
 func main() {
 	a := app.NewWithID("Bronze Hermes")
 	a.SetIcon(appIcon)
+	go Graph.StartServer()
 
 	CreateWindow(a)
 }
@@ -117,6 +117,23 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject{
 
 	title := widget.NewLabelWithData(binding.FloatToString(bondTotal))
 
+	button := widget.NewButton("New Item", func() {
+		//Get ID and Convert
+		id := Cam.OpenCam()
+		conID, _ := strconv.Atoi(id)
+
+		raw := Data.GetData("Items", conID)
+		dialog.ShowConfirm("Check (Move middle bar)", "Is this the right item: " + raw[0], func(b bool) {
+			if !b{
+				return
+			}
+			//Append the item to the cartList
+			cart, _ := cartList.Get()
+			cartList.Set(Data.AddToCart(conID, cart))
+			bondTotal.Set(Data.GetCartTotal(cart))
+		},w)
+	})
+
 	list := widget.NewListWithData(cartList,
 		func() fyne.CanvasObject {
 			return container.NewBorder(nil, nil, nil, widget.NewButton("X", nil),
@@ -136,23 +153,6 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject{
 				cartList.Set(Data.DecreaseFromCart(val.ID,cart))
 			}
 		})
-
-	button := widget.NewButton("New Item", func() {
-		//Get ID and Convert
-		id := Cam.OpenCam()
-		conID, _ := strconv.Atoi(id)
-
-		raw := Data.GetData("Items", conID)
-		dialog.ShowConfirm("Check (Move the bar in the middle to update the list)", "Is this the right item: " + raw[0], func(b bool) {
-			if !b{
-				return
-			}
-			//Append the item to the cartList
-			cart, _ := cartList.Get()
-			cartList.Set(Data.AddToCart(conID, cart))
-			bondTotal.Set(Data.GetCartTotal(cart))
-		},w)
-	})
 
 	split := container.NewVSplit(
 			container.NewGridWithColumns(1,
@@ -191,12 +191,33 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject{
 	inventoryLabel := widget.NewLabel("Inventory")
 
 	title := widget.NewLabelWithStyle("Inventory Info", fyne.TextAlign(1),fyne.TextStyle{Bold: true})
+
 	//Create a list of all registered items
+	listData := Data.GetAllData("Items")
+	boundData := binding.BindSaleList(&listData)
+	list := widget.NewListWithData(boundData, func() fyne.CanvasObject {
+		return container.NewBorder(nil, nil, nil, widget.NewButton("i", nil), widget.NewLabel(""))
+	},
+	func(item binding.DataItem, obj fyne.CanvasObject) {
+		f := item.(binding.Sale)
+		val, _ := f.Get()
+
+		obj.(*fyne.Container).Objects[0].(*widget.Label).SetText(val.Name)
+
+		btn := obj.(*fyne.Container).Objects[1].(*widget.Button)
+		btn.OnTapped = func() {
+			vals := Data.ConvertSaleToString(val.Price, val.Cost, val.Quantity)
+			idLabel.SetText(strconv.Itoa(val.ID))
+			nameLabel.SetText(val.Name)
+			priceLabel.SetText(vals[0])
+			costLabel.SetText(vals[1])
+			inventoryLabel.SetText(vals[2])
+		}
+	})
 
 	box := container.NewVBox(
 		title,
 		container.NewHSplit(
-			container.NewVScroll(
 				container.NewVBox(
 					widget.NewButton("Camera", func() {
 						id := Cam.OpenCam()
@@ -210,82 +231,8 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject{
 						costLabel.SetText(res[2])
 						inventoryLabel.SetText(res[3])
 					}),
-					widget.NewButton("Barcode 01", func() {
-						file, _ := os.Open(Cam.Path + "Online Test 01.png")
-						img, _, _ := image.Decode(file)
-						id := Cam.ReadImage(img).String()
-						conID, _ := strconv.Atoi(id)
-
-						//ModifyItem(conID, w)
-						res := Data.GetData("Items", conID)
-
-						idLabel.SetText(id)
-						nameLabel.SetText(res[0])
-						priceLabel.SetText(res[1])
-						costLabel.SetText(res[2])
-						inventoryLabel.SetText(res[3])
-					}),
-					widget.NewButton("Barcode 02", func() {
-						file, _ := os.Open(Cam.Path + "Online Test 02.png")
-						img, _, _ := image.Decode(file)
-						id := Cam.ReadImage(img).String()
-						conID, _ := strconv.Atoi(id)
-
-						//ModifyItem(conID, w)
-						res := Data.GetData("Items", conID)
-
-						idLabel.SetText(id)
-						nameLabel.SetText(res[0])
-						priceLabel.SetText(res[1])
-						costLabel.SetText(res[2])
-						inventoryLabel.SetText(res[3])
-					}),
-					widget.NewButton("Barcode 03", func() {
-						file, _ := os.Open(Cam.Path + "Online Test 03.png")
-						img, _, _ := image.Decode(file)
-						id := Cam.ReadImage(img).String()
-						conID, _ := strconv.Atoi(id)
-
-						//ModifyItem(conID, w)
-						res := Data.GetData("Items", conID)
-
-						idLabel.SetText(id)
-						nameLabel.SetText(res[0])
-						priceLabel.SetText(res[1])
-						costLabel.SetText(res[2])
-						inventoryLabel.SetText(res[3])
-					}),
-					widget.NewButton("Barcode 04", func() {
-						file, _ := os.Open(Cam.Path + "Test01.png")
-						img, _, _ := image.Decode(file)
-						id := Cam.ReadImage(img).String()
-						conID, _ := strconv.Atoi(id)
-
-						//ModifyItem(conID, w)
-						res := Data.GetData("Items", conID)
-
-						idLabel.SetText(id)
-						nameLabel.SetText(res[0])
-						priceLabel.SetText(res[1])
-						costLabel.SetText(res[2])
-						inventoryLabel.SetText(res[3])
-					}),
-					widget.NewButton("Barcode 05", func() {
-						file, _ := os.Open(Cam.Path + "Online Test 05.png")
-						img, _, _ := image.Decode(file)
-						id := Cam.ReadImage(img).String()
-						conID, _ := strconv.Atoi(id)
-
-						//ModifyItem(conID, w)
-						res := Data.GetData("Items", conID)
-
-						idLabel.SetText(id)
-						nameLabel.SetText(res[0])
-						priceLabel.SetText(res[1])
-						costLabel.SetText(res[2])
-						inventoryLabel.SetText(res[3])
-					}),
-				)),
+					list,
+				),
 			container.NewVBox(
 				idLabel,
 				nameLabel,
@@ -298,6 +245,7 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject{
 				}),
 			)),
 	)
+
 	return  box
 }
 
@@ -306,21 +254,18 @@ func makeStatsMenu(w fyne.Window) fyne.CanvasObject {
 	u, _ := url.Parse("http://localhost:8081")
 	testLink := widget.NewHyperlink("Random Line Graph", u)
 
-	back := widget.NewButton("Back", func() {
-		w.SetContent(mainMenu)
-	})
-
 	selectionEntry := UI.NewNumEntry()
+	selectionEntry.SetPlaceHolder("YYYY/MM/DD")
 
 	box := container.NewVBox(
 		selectionEntry,
-		widget.NewButton("New Graph", func() {
+		widget.NewButton("Graph", func() {
 			//rev, cos, prof := Data.GetTotalProfit(selectionEntry.Text)
-			go UI.StartServer()
+			colors := []string{"Red", "Blue", "Green"}
+			Graph.Labels = &colors
 		}),
 		//Put a graph here
 		testLink,
-		back,
 	)
 
 	return box

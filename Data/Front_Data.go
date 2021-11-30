@@ -53,3 +53,31 @@ func GetData(targetSheet string,id int) []string{
 		quantity,
 	}
 }
+
+func GetAllData(targetSheet string) []Sale{
+	i:= 1
+	var data []Sale
+
+	cell := f.GetCellValue(targetSheet, "A"+strconv.Itoa(i))
+	for cell != ""{
+		name := f.GetCellValue(targetSheet, "B"+ strconv.Itoa(i))
+		price := f.GetCellValue(targetSheet, "C"+ strconv.Itoa(i))
+		cost := f.GetCellValue(targetSheet, "D"+ strconv.Itoa(i))
+		quantity := f.GetCellValue(targetSheet, "E"+ strconv.Itoa(i))
+
+		conID, _ := strconv.Atoi(cell)
+		p, c, q := ConvertStringToSale(price, cost, quantity)
+
+		temp := Sale{
+			ID:    conID,
+			Name:  name,
+			Price: p,
+			Cost:  c,
+			Quantity: q,
+		}
+		data = append(data, temp)
+		cell = f.GetCellValue(targetSheet, "A"+strconv.Itoa(i+1))
+		i++
+	}
+	return data
+}

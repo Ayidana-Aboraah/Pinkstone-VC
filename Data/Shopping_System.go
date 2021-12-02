@@ -31,6 +31,8 @@ func BuyCart(ShoppingCart []Sale) []Sale{
 		UpdateData(v, targetSheet, 1)
 	}
 
+	ReadVal(targetSheet)
+	SaveFile()
 	return ClearCart(ShoppingCart)
 }
 

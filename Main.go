@@ -252,21 +252,35 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject{
 //Finish setting up graph stuff for it
 func makeStatsMenu(w fyne.Window) fyne.CanvasObject {
 	u, _ := url.Parse("http://localhost:8081")
-	testLink := widget.NewHyperlink("Random Line Graph", u)
+	testLink := widget.NewHyperlink("Profits Graph", u)
 
 	selectionEntry := UI.NewNumEntry()
-	selectionEntry.SetPlaceHolder("YYYY/MM/DD")
+	selectionEntry.SetPlaceHolder("YYYY/MM/Day")
 
-	box := container.NewVBox(
-		selectionEntry,
-		widget.NewButton("Graph", func() {
-			//rev, cos, prof := Data.GetTotalProfit(selectionEntry.Text)
-			colors := []string{"Red", "Blue", "Green"}
-			Graph.Labels = &colors
-		}),
-		//Put a graph here
-		testLink,
-	)
+	scroll := container.NewVScroll(
+		container.NewAppTabs(container.NewTabItem("Graphs",
+		container.NewVBox(
+		widget.NewCard("Item Popularity Chart", "See the ", container.NewVBox(
+			selectionEntry,
+			widget.NewButton("Graph", func() {
+				labels, profits := Data.GetTotalProfit(selectionEntry.Text, 2)
+				//colors := []string{"Red", "Blue", "Green", "Purple", "Violet", "Orange", "Indigo", "White", "Black"}
+				cats := []string{selectionEntry.Text}
+				fmt.Println(labels, profits)
 
-	return box
+				Graph.Labels = &cats
+				Graph.Categories = &labels
+				Graph.Inputs = &profits
+			}),
+			//Put a graph here
+			testLink,
+			)),
+		),
+	),
+	container.NewTabItem("Numbers",
+		container.NewVBox(
+			)),
+		))
+
+	return scroll
 }

@@ -25,7 +25,6 @@ func ReadVal(sheet string) {
 	}
 }
 
-//Maybe add a backup in file Saving
 func SaveFile(){
 	err := f.Save()
 	if err != nil{
@@ -71,15 +70,14 @@ func UpdateData(item Sale, targetSheet string, variant int){
 		break
 	//Update Report function
 	case 1:
-		newInven := GetInventory(item.ID) - 1
+		inventory := SetInventory(item.ID, item.Quantity)
 		f.SetCellValue(targetSheet, "A"+strconv.Itoa(idx), item.ID)
 		f.SetCellValue(targetSheet, "B"+strconv.Itoa(idx), item.Name)
 		f.SetCellValue(targetSheet, "C"+strconv.Itoa(idx), item.Quantity)
 		f.SetCellValue(targetSheet, "D"+strconv.Itoa(idx), item.Price)
 		f.SetCellValue(targetSheet, "E"+strconv.Itoa(idx), item.Cost)
-		f.SetCellValue(targetSheet, "F"+strconv.Itoa(idx), newInven)
+		f.SetCellValue(targetSheet, "F"+strconv.Itoa(idx), inventory)
 		f.SetCellValue(targetSheet, "G"+strconv.Itoa(idx), ConvertDate(time.Now()))
-		f.SetCellValue(targetSheet, "H"+strconv.Itoa(idx), ConvertClock(time.Now()))
 		break
 		//Update Log function
 	default:
@@ -88,20 +86,24 @@ func UpdateData(item Sale, targetSheet string, variant int){
 		f.SetCellValue(targetSheet, "B"+strconv.Itoa(idx), item.Name)
 		f.SetCellValue(targetSheet, "C"+strconv.Itoa(idx), item.Price)
 		f.SetCellValue(targetSheet, "D"+strconv.Itoa(idx), item.Cost)
-		f.SetCellValue(targetSheet, "E"+strconv.Itoa(idx), time.Now())
+		f.SetCellValue(targetSheet, "E"+strconv.Itoa(idx), ConvertDate(time.Now()))
 		break
 	}
 }
 
-func GetInventory(ID int) int {
-	targetSheet := "Detection Data"
+func SetInventory(ID, amount int) int{
+	targetSheet := "Items"
 
 	idx := GetIndex(targetSheet, ID, 1)
 
 	res := f.GetCellValue(targetSheet, "F"+strconv.Itoa(idx))
 
 	inven, _ := strconv.Atoi(res)
-	return inven
+
+	newInventory := inven - amount
+
+	f.SetCellValue(targetSheet, "F" + strconv.Itoa(idx), newInventory)
+	return newInventory
 }
 
 func GetIndex(targetSheet string, ID, searchType int) int{
@@ -131,7 +133,7 @@ func GetIndex(targetSheet string, ID, searchType int) int{
 }
 
 func ConvertDate(date time.Time) string{
-	day, month, year := date.Date()
+	year, month, day := date.Date()
 	return strconv.Itoa(year)+ "/"+ strconv.Itoa(int(month)) + "/" + strconv.Itoa(day)
 }
 

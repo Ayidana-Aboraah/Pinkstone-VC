@@ -81,7 +81,6 @@ func UpdateData(item Sale, targetSheet string, variant int){
 		break
 		//Update Log function
 	default:
-		fmt.Println("A" + strconv.Itoa(idx))
 		f.SetCellValue(targetSheet, "A"+strconv.Itoa(idx), item.ID)
 		f.SetCellValue(targetSheet, "B"+strconv.Itoa(idx), item.Name)
 		f.SetCellValue(targetSheet, "C"+strconv.Itoa(idx), item.Price)

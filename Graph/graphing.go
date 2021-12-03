@@ -1,6 +1,7 @@
 package Graph
 
 import (
+	"fmt"
 	"github.com/go-echarts/go-echarts/v2/charts"
 	"github.com/go-echarts/go-echarts/v2/opts"
 	"github.com/go-echarts/go-echarts/v2/types"
@@ -23,10 +24,8 @@ func generateRandomBarItems() []opts.BarData {
 
 func generateBarItems(r []float64) []opts.BarData {
 	items := make([]opts.BarData, 0)
-	for i := 0; i < len(*Inputs); i++ {
-		for _,v := range r{
-			items = append(items, opts.BarData{Value: v})
-		}
+	for i := 0; i < len(r); i++ {
+		items = append(items, opts.BarData{Value: r[i]})
 	}
 	return items
 }
@@ -67,10 +66,10 @@ func CreateBarGraph(w http.ResponseWriter){
 
 
 	bar.SetXAxis(Labels)
-	for _, v := range *Categories{
+	for _, v := range *Categories {
 		bar.AddSeries(v, generateBarItems(*Inputs))
+		fmt.Println(Inputs)
 	}
-	// Put data into instance
 
 	// Where the magic happens
 	bar.Render(w)

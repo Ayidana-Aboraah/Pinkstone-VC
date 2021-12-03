@@ -263,13 +263,14 @@ func makeStatsMenu(w fyne.Window) fyne.CanvasObject {
 		widget.NewCard("Item Popularity Chart", "See the ", container.NewVBox(
 			selectionEntry,
 			widget.NewButton("Graph", func() {
-				labels, profits := Data.GetTotalProfit(selectionEntry.Text, 2)
+				profits := Data.GetProfitForTimes(2, 674398202423, selectionEntry.Text)
 				//colors := []string{"Red", "Blue", "Green", "Purple", "Violet", "Orange", "Indigo", "White", "Black"}
 				cats := []string{selectionEntry.Text}
-				fmt.Println(labels, profits)
+				//fmt.Println(labels)
+				fmt.Println(profits)
 
 				Graph.Labels = &cats
-				Graph.Categories = &labels
+				Graph.Categories = &[]string{""}
 				Graph.Inputs = &profits
 			}),
 			//Put a graph here

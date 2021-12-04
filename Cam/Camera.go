@@ -6,7 +6,7 @@ import (
 
 func OpenCam() string{
 	webcam, _ := gocv.OpenVideoCapture(0)
-	window := gocv.NewWindow("Hello")
+	window := gocv.NewWindow("Bronze Hermes")
 	img := gocv.NewMat()
 
 	for {

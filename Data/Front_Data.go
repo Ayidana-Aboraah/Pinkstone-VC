@@ -1,102 +1,22 @@
 package Data
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 )
 
-func GetTotalProfit(id int, targetSheet, selectionStr string) []float64{
-	totalRevenue := 0.0
-	totalCost := 0.0
-	totalProfit := 0.0
-
-	res := FindAll(targetSheet, "G", selectionStr, id)
-
-	for i := 0; i < len(res); i++{
-		rev := f.GetCellValue(targetSheet, "D")
-		cost := f.GetCellValue(targetSheet, "E")
-
-		conRev, _ :=  strconv.ParseFloat(rev, 64)
-		conCos, _ := strconv.ParseFloat(cost, 64)
-		prof := conRev - conCos
-
-		totalRevenue += conRev
-		totalCost += conCos
-		totalProfit += prof
-	}
-	return  []float64{
-		totalRevenue,
-		totalCost,
-		totalProfit,
-	}
-}
-
-func GetProfitForTimes(variant, id int, subStr string) []float64{
-	targetSheet := "Report Data"
-	profit := make([]float64, 0)
-
-	for i := 0; i < 32; i++{
-		newSelect := subStr + "/" + strconv.Itoa(i)
-		indexs := FindAll(targetSheet, "", newSelect, id)
-		fmt.Println()
-		for _, v := range indexs {
-			totals := GetTotalProfit(v,targetSheet, newSelect)
-			//0 revenue; 1 cost; 2 profit
-			profit = append(profit, totals[variant])
-			fmt.Println(profit)
-		}
-	}
-	return profit
-}
-
-func GetProfitForTimeTest(selectionStr string, variants int) ([]string, []float64){
-	targetSheet := "Report Data"
-
-
-	names := []string{}
-	res := []float64{}
-
-	IDs := GetAllIDs(targetSheet)
-	for _,v  := range IDs{
-		results := FindAll(targetSheet, "G", selectionStr, v)
-
-		for	_, r := range results{
-			name := f.GetCellValue(targetSheet, "B" + strconv.Itoa(r))
-			rev := f.GetCellValue(targetSheet, "D" + strconv.Itoa(r))
-			cos := f.GetCellValue(targetSheet, "E" + strconv.Itoa(r))
-			conRev, _ :=  strconv.ParseFloat(rev, 64)
-			conCos, _ := strconv.ParseFloat(cos, 64)
-			prof := conRev - conCos
-
-			names = append(names, name)
-
-			switch variants {
-			case 2:
-				res = append(res, prof)
-				break
-			case 1:
-				res = append(res, conCos)
-				break
-			default:
-				res = append(res, conRev)
-				break
-			}
-		}
-	}
-
-	return names, res
-}
-
 func GetAllIDs(targetSheet string) []int{
 	IDs := []int{}
+
 	cell := f.GetCellValue(targetSheet, "A2")
+
 	for i := 1; cell != ""; {
 		conID, _ := strconv.Atoi(cell)
 		IDs = append(IDs, conID)
 		i++
 		cell = f.GetCellValue(targetSheet, "A" + strconv.Itoa(i))
 	}
+
 	return IDs
 }
 
@@ -126,43 +46,48 @@ func FindAll(targetSheet, targetAxis, subStr string, ID int) []int {
 	return idxes
 }
 
-func GetData(targetSheet string,id int) []string{
-	i := GetIndex(targetSheet, id, 1)
-
-	name := f.GetCellValue(targetSheet, "B"+ strconv.Itoa(i))
-	price := f.GetCellValue(targetSheet, "C"+ strconv.Itoa(i))
-	cost := f.GetCellValue(targetSheet, "D"+ strconv.Itoa(i))
-	quantity := f.GetCellValue(targetSheet, "E"+ strconv.Itoa(i))
-	return []string{
-		name,
-		price,
-		cost,
-		quantity,
-	}
-}
-
-func GetAllData(targetSheet string) []Sale{
+func GetAllData(targetSheet string, id int) []Sale{
 	var data []Sale
 
-	cell := f.GetCellValue(targetSheet, "A2")
-	for i := 1; cell != ""; i++{
+	if id == 0{
+		cell := f.GetCellValue(targetSheet, "A2")
+		for i := 1; cell != ""; i++{
+			name := f.GetCellValue(targetSheet, "B"+ strconv.Itoa(i))
+			price := f.GetCellValue(targetSheet, "C"+ strconv.Itoa(i))
+			cost := f.GetCellValue(targetSheet, "D"+ strconv.Itoa(i))
+			quantity := f.GetCellValue(targetSheet, "E"+ strconv.Itoa(i))
+
+			conID, _ := strconv.Atoi(cell)
+			p, c, q := ConvertStringToSale(price, cost, quantity)
+
+			temp := Sale{
+				ID:    conID,
+				Name:  name,
+				Price: p,
+				Cost:  c,
+				Quantity: q,
+			}
+			data = append(data, temp)
+			cell = f.GetCellValue(targetSheet, "A"+strconv.Itoa(i))
+		}
+	}else{
+		i := GetIndex(targetSheet, id, 1)
+
 		name := f.GetCellValue(targetSheet, "B"+ strconv.Itoa(i))
 		price := f.GetCellValue(targetSheet, "C"+ strconv.Itoa(i))
 		cost := f.GetCellValue(targetSheet, "D"+ strconv.Itoa(i))
 		quantity := f.GetCellValue(targetSheet, "E"+ strconv.Itoa(i))
 
-		conID, _ := strconv.Atoi(cell)
 		p, c, q := ConvertStringToSale(price, cost, quantity)
-
 		temp := Sale{
-			ID:    conID,
-			Name:  name,
-			Price: p,
-			Cost:  c,
-			Quantity: q,
+			id,
+			name,
+			p,
+			c,
+			q,
 		}
 		data = append(data, temp)
-		cell = f.GetCellValue(targetSheet, "A"+strconv.Itoa(i))
 	}
+
 	return data
 }

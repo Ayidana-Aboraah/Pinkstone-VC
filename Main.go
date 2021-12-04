@@ -26,7 +26,7 @@ var (
 func main() {
 	a := app.NewWithID("Bronze Hermes")
 	a.SetIcon(appIcon)
-	go Graph.StartServer()
+	go Graph.StartServers()
 
 	CreateWindow(a)
 }
@@ -122,8 +122,8 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject{
 		id := Cam.OpenCam()
 		conID, _ := strconv.Atoi(id)
 
-		raw := Data.GetData("Items", conID)
-		dialog.ShowConfirm("Check (Move middle bar)", "Is this the right item: " + raw[0], func(b bool) {
+		raw := Data.GetAllData("Items", conID)
+		dialog.ShowConfirm("Check (Move middle bar)", "Is this the right item: " + raw[0].Name, func(b bool) {
 			if !b{
 				return
 			}
@@ -193,7 +193,7 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject{
 	title := widget.NewLabelWithStyle("Inventory Info", fyne.TextAlign(1),fyne.TextStyle{Bold: true})
 
 	//Create a list of all registered items
-	listData := Data.GetAllData("Items")
+	listData := Data.GetAllData("Items", 0)
 	boundData := binding.BindSaleList(&listData)
 	list := widget.NewListWithData(boundData, func() fyne.CanvasObject {
 		return container.NewBorder(nil, nil, nil, widget.NewButton("i", nil), widget.NewLabel(""))
@@ -223,7 +223,8 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject{
 						id := Cam.OpenCam()
 						conID, _ := strconv.Atoi(id)
 
-						res := Data.GetData("Items", conID)
+						results := Data.GetAllData("Items", conID)
+						res := Data.ConvertSaleToString(results[0].Price, results[0].Cost, results[0].Quantity)
 
 						idLabel.SetText(id)
 						nameLabel.SetText(res[0])
@@ -251,30 +252,53 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject{
 
 //Finish setting up graph stuff for it
 func makeStatsMenu(w fyne.Window) fyne.CanvasObject {
-	u, _ := url.Parse("http://localhost:8081")
-	testLink := widget.NewHyperlink("Profits Graph", u)
+	//variant := 0
 
-	selectionEntry := UI.NewNumEntry()
-	selectionEntry.SetPlaceHolder("YYYY/MM/Day")
+	u, _ := url.Parse("http://localhost:8081/line")
+	r, _ := url.Parse("http://localhost:8081/pie")
+
+	lineLink := widget.NewHyperlink("Profits Graph", u)
+	pieLink := widget.NewHyperlink("Pie Graph", r)
+
+	lineSelectionEntry := UI.NewNumEntry()
+	lineSelectionEntry.SetPlaceHolder("Year/Month")
+
+	pieSelectionEntry := UI.NewNumEntry()
+	pieSelectionEntry.SetPlaceHolder("YYYY/MM/Day")
 
 	scroll := container.NewVScroll(
 		container.NewAppTabs(container.NewTabItem("Graphs",
 		container.NewVBox(
-		widget.NewCard("Item Popularity Chart", "See the ", container.NewVBox(
-			selectionEntry,
+		widget.NewCard("Profit Graph", "See the ", container.NewVBox(
+			lineSelectionEntry,
 			widget.NewButton("Graph", func() {
-				profits := Data.GetProfitForTimes(2, 674398202423, selectionEntry.Text)
-				//colors := []string{"Red", "Blue", "Green", "Purple", "Violet", "Orange", "Indigo", "White", "Black"}
-				cats := []string{selectionEntry.Text}
-				//fmt.Println(labels)
+				profits := Data.GetProfitForTimes(2, 674398202423, lineSelectionEntry.Text)
+				days := []string{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14",
+					"15", "16", "17", "18", "19", "20", "21", "22", "23", "24",
+					"25", "26", "27", "28", "29", "30", "31"}
+
+				//cats := []string{lineSelectionEntry.Text}
 				fmt.Println(profits)
 
-				Graph.Labels = &cats
+				Graph.Labels = &days
 				Graph.Categories = &[]string{""}
 				Graph.Inputs = &profits
 			}),
 			//Put a graph here
-			testLink,
+			lineLink,
+			)),
+
+			widget.NewCard("Price Changes", "",  container.NewVBox(
+				lineSelectionEntry,
+				widget.NewButton("Graph", func() {
+				}),
+			)),
+
+			widget.NewCard("Item Popularity", "X", container.NewVBox(
+				pieSelectionEntry,
+				widget.NewButton("Graph", func() {
+				}),
+				pieLink,
 			)),
 		),
 	),

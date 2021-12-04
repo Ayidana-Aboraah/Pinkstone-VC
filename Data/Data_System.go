@@ -135,8 +135,3 @@ func ConvertDate(date time.Time) string{
 	year, month, day := date.Date()
 	return strconv.Itoa(year)+ "/"+ strconv.Itoa(int(month)) + "/" + strconv.Itoa(day)
 }
-
-func ConvertClock(clock time.Time) string {
-	hr, min, sec := clock.Clock()
-	return strconv.Itoa(hr) + ":" + strconv.Itoa(min) + ":" + strconv.Itoa(sec)
-}

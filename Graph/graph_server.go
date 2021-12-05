@@ -8,7 +8,7 @@ func lineserver(w http.ResponseWriter, _ *http.Request) {
 	CreateLineGraph(w)
 }
 
-func pieserver(w http.ResponseWriter, _ *http.Request){
+func pieserver(w http.ResponseWriter, _ *http.Request) {
 	CreatePieGraph(w)
 }
 

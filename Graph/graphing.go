@@ -20,34 +20,48 @@ func generateLineItems(r []float64) []opts.LineData {
 	return items
 }
 
-func generatePieItems(data []float64) []opts.LiquidData {
-	items := make([]opts.LiquidData, 0)
-	for i := 0; i < len(data); {
-		items = append(items, opts.LiquidData{Value: data[i]})
+/*
+func generatePieItems(data []float64) []opts.PieData {
+	items := make([]opts.PieData, 0)
+	//items = append(items, opts.LiquidData{Value: data})
+
+	for _, v := range data {
+		items = append(items, opts.PieData{Value: v})
 	}
+
+	return items
+}
+*/
+
+func generatePieItems(tags []string, data []float64) []opts.PieData {
+	items := make([]opts.PieData, 0)
+	//items = append(items, opts.LiquidData{Value: data})
+
+	for i, _ := range tags {
+		items = append(items, opts.PieData{Name: tags[i], Value: data[i]})
+	}
+
 	return items
 }
 
-
-func CreateLineGraph(w http.ResponseWriter){
+func CreateLineGraph(w http.ResponseWriter) {
 	// create a new line instance
 	line := charts.NewLine()
 
 	// set some global options like Title/Legend/ToolTip or anything else
 	line.SetGlobalOptions(
-		charts.WithInitializationOpts(opts.Initialization{PageTitle: "Bronze Hermes Data",Theme: types.ThemeWesteros}),
+		charts.WithInitializationOpts(opts.Initialization{PageTitle: "Bronze Hermes Data", Theme: types.ThemeWesteros}),
 		charts.WithTitleOpts(opts.Title{
-		Title:    "Profit Line Chart",
-		Subtitle: "Only profit",
-	}),
-		)
-
+			Title:    "Profit Line Chart",
+			Subtitle: "Only profit",
+		}),
+	)
 
 	line.SetXAxis(Labels)
 
 	for _, v := range *Categories {
-			line.AddSeries(v, generateLineItems(*Inputs)).SetSeriesOptions(charts.WithLineChartOpts(opts.LineChart{Smooth: true}))
-			fmt.Println(Inputs)
+		line.AddSeries(v, generateLineItems(*Inputs)).SetSeriesOptions(charts.WithLineChartOpts(opts.LineChart{Smooth: true}))
+		fmt.Println(Inputs)
 	}
 
 	// Where the magic happens
@@ -55,16 +69,16 @@ func CreateLineGraph(w http.ResponseWriter){
 }
 
 func CreatePieGraph(w http.ResponseWriter) {
-	pie := charts.NewLiquid()
+	pie := charts.NewPie()
 
 	pie.SetGlobalOptions(
 		charts.WithInitializationOpts(opts.Initialization{PageTitle: "Bronze Hermes Data", Theme: types.ThemeWesteros}),
 		charts.WithTitleOpts(opts.Title{
 			Title:    "Item Popularity",
-			Subtitle: "Total in Numbers area of statistics menu",
+			Subtitle: "Hover Over them to see how much they take up the wheel",
 		}))
 
-		pie.AddSeries("",generatePieItems(*Inputs))
+	pie.AddSeries("", generatePieItems(*Labels, *Inputs))
 
 	pie.Render(w)
 }
@@ -105,4 +119,4 @@ func generateRandomBarItems() []opts.BarData {
 	}
 	return items
 }
- */
+*/

@@ -10,6 +10,7 @@ import (
 
 //var F, err = excelize.OpenFile("Assets/AppData.xlsx")
 var F, Err = excelize.OpenFile("TestAppData.xlsx")
+
 //save a back-up.
 //if an error with reading the file is met; save the back up as the file and try reading again.
 
@@ -25,14 +26,14 @@ func ReadVal(sheet string) {
 	}
 }
 
-func SaveFile(){
+func SaveFile() {
 	err := F.Save()
-	if err != nil{
+	if err != nil {
 		fmt.Println(err)
 	}
 }
 
-func SaveBackUp(sourceFile, backUpfile string){
+func SaveBackUp(sourceFile, backUpfile string) {
 	input, err := ioutil.ReadFile(sourceFile)
 	//input, err := ioutil.ReadFile("Assets/" + sourceFile)
 	if err != nil {
@@ -40,7 +41,7 @@ func SaveBackUp(sourceFile, backUpfile string){
 		return
 	}
 
-	err = ioutil.WriteFile("Assets/" + backUpfile, input, 0644)
+	err = ioutil.WriteFile("Assets/"+backUpfile, input, 0644)
 	if err != nil {
 		fmt.Println("Error creating", backUpfile)
 		fmt.Println(err)
@@ -48,14 +49,14 @@ func SaveBackUp(sourceFile, backUpfile string){
 	}
 }
 
-func UpdateData(item Sale, targetSheet string, variant int){
+func UpdateData(item Sale, targetSheet string, variant int) {
 	idx := GetIndex(targetSheet, 0, 0)
 
 	switch variant {
 	//Update Items
 	case 2:
 		checker := GetIndex(targetSheet, item.ID, 1)
-		if checker == 0{
+		if checker == 0 {
 			F.SetCellValue(targetSheet, "A"+strconv.Itoa(idx), item.ID)
 			F.SetCellValue(targetSheet, "B"+strconv.Itoa(idx), item.Name)
 			F.SetCellValue(targetSheet, "C"+strconv.Itoa(idx), item.Price)
@@ -63,11 +64,11 @@ func UpdateData(item Sale, targetSheet string, variant int){
 			F.SetCellValue(targetSheet, "E"+strconv.Itoa(idx), item.Quantity)
 			break
 		}
-			F.SetCellValue(targetSheet, "A"+strconv.Itoa(checker), item.ID)
-			F.SetCellValue(targetSheet, "B"+strconv.Itoa(checker), item.Name)
-			F.SetCellValue(targetSheet, "C"+strconv.Itoa(checker), item.Price)
-			F.SetCellValue(targetSheet, "D"+strconv.Itoa(checker), item.Cost)
-			F.SetCellValue(targetSheet, "E"+strconv.Itoa(checker), item.Quantity)
+		F.SetCellValue(targetSheet, "A"+strconv.Itoa(checker), item.ID)
+		F.SetCellValue(targetSheet, "B"+strconv.Itoa(checker), item.Name)
+		F.SetCellValue(targetSheet, "C"+strconv.Itoa(checker), item.Price)
+		F.SetCellValue(targetSheet, "D"+strconv.Itoa(checker), item.Cost)
+		F.SetCellValue(targetSheet, "E"+strconv.Itoa(checker), item.Quantity)
 		break
 	//Update Report function
 	case 1:
@@ -91,7 +92,7 @@ func UpdateData(item Sale, targetSheet string, variant int){
 	}
 }
 
-func SetInventory(ID, amount int) int{
+func SetInventory(ID, amount int) int {
 	targetSheet := "Items"
 
 	idx := GetIndex(targetSheet, ID, 1)
@@ -102,27 +103,27 @@ func SetInventory(ID, amount int) int{
 
 	newInventory := inven - amount
 
-	F.SetCellValue(targetSheet, "F" + strconv.Itoa(idx), newInventory)
+	F.SetCellValue(targetSheet, "F"+strconv.Itoa(idx), newInventory)
 	return newInventory
 }
 
-func GetIndex(targetSheet string, ID, searchType int) int{
-	i:= 1
+func GetIndex(targetSheet string, ID, searchType int) int {
+	i := 1
 	cell := F.GetCellValue(targetSheet, "A"+strconv.Itoa(i))
-	for  {
+	for {
 		cell = F.GetCellValue(targetSheet, "A"+strconv.Itoa(i))
 		conCell, _ := strconv.Atoi(cell)
 		switch searchType {
 		case 1:
-			if conCell == ID{
+			if conCell == ID {
 				return i
 			}
-			if cell == ""{
+			if cell == "" {
 				return 0
 			}
 			break
 		default:
-			if cell == ""{
+			if cell == "" {
 				return i
 			}
 			break
@@ -132,7 +133,7 @@ func GetIndex(targetSheet string, ID, searchType int) int{
 	}
 }
 
-func ConvertDate(date time.Time) string{
+func ConvertDate(date time.Time) string {
 	year, month, day := date.Date()
-	return strconv.Itoa(year)+ "/"+ strconv.Itoa(int(month)) + "/" + strconv.Itoa(day)
+	return strconv.Itoa(year) + "/" + strconv.Itoa(int(month)) + "/" + strconv.Itoa(day)
 }

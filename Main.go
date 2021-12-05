@@ -12,6 +12,7 @@ import (
 	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/data/validation"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
 	_ "image/png"
 	"net/url"
@@ -20,8 +21,8 @@ import (
 )
 
 var (
-	mainMenu = container.NewWithoutLayout()
-	appIcon,_ = fyne.LoadResourceFromPath("Assets/icon02.png")
+	mainMenu   = container.NewWithoutLayout()
+	appIcon, _ = fyne.LoadResourceFromPath("Assets/icon02.png")
 )
 
 func main() {
@@ -35,7 +36,7 @@ func main() {
 func CreateWindow(a fyne.App) {
 	w := a.NewWindow("Bronze Hermes")
 
-	if Data.Err != nil{
+	if Data.Err != nil {
 		//Replace TestAppData with normal App data when ready
 		os.Remove("TestAppData.xlsx")
 		//os.Remove("AppData.xlsx")
@@ -54,19 +55,19 @@ func CreateWindow(a fyne.App) {
 			container.NewTabItem("Info", makeInfoMenu(w)),
 
 			container.NewTabItem("Stats", makeStatsMenu(w)),
-
 		))
 
 	w.SetContent(mainMenu)
 	w.ShowAndRun()
 }
 
-func makeMainMenu(a fyne.App) fyne.CanvasObject{
+func makeMainMenu(a fyne.App) fyne.CanvasObject {
 	box := container.NewVBox(
 		widget.NewLabelWithStyle("Welcome", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
 		widget.NewButton("Back Up App Data", func() {
 			//Don't forget to change the source file name when switching from test file to normal file
 			go Data.SaveBackUp("TestAppData.xlsx", "BackupAppData.xlsx")
+			//go Data.SaveBackUp("AppData.xlsx", "BackupAppData.xlsx")
 		}),
 		widget.NewButton("Quit", func() {
 			a.Quit()
@@ -75,7 +76,7 @@ func makeMainMenu(a fyne.App) fyne.CanvasObject{
 	return box
 }
 
-func createItemMenu(id int, w fyne.Window){
+func createItemMenu(id int, w fyne.Window) {
 	idLabel := widget.NewLabel(strconv.Itoa(id))
 
 	nameEntry := widget.NewEntry()
@@ -115,13 +116,13 @@ func createItemMenu(id int, w fyne.Window){
 	}, w)
 }
 
-func makeShoppingMenu(w fyne.Window) fyne.CanvasObject{
+func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 	total := 0.0
 	bondTotal := binding.BindFloat(&total)
 
 	cartList := binding.BindSaleList(&[]Data.Sale{})
 
-	title := widget.NewLabelWithData(binding.FloatToString(bondTotal))
+	title := widget.NewLabelWithData(binding.FloatToStringWithFormat(bondTotal, "Cart Total: %f"))
 
 	button := widget.NewButton("New Item", func() {
 		//Get ID and Convert
@@ -129,15 +130,17 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject{
 		conID, _ := strconv.Atoi(id)
 
 		raw := Data.GetAllData("Items", conID)
-		dialog.ShowConfirm("Check (Move middle bar)", "Is this the right item: " + raw[0].Name, func(b bool) {
-			if !b{
+		dialog.ShowConfirm("Check (Move middle bar)", "Is this the right item: "+raw[0].Name, func(b bool) {
+			if !b {
 				return
 			}
 			//Append the item to the cartList
 			cart, _ := cartList.Get()
 			cartList.Set(Data.AddToCart(conID, cart))
+			cart, _ = cartList.Get()
 			bondTotal.Set(Data.GetCartTotal(cart))
-		},w)
+			fmt.Println(bondTotal)
+		}, w)
 	})
 
 	list := widget.NewListWithData(cartList,
@@ -156,20 +159,20 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject{
 			btn.OnTapped = func() {
 				val, _ := f.Get()
 				cart, _ := cartList.Get()
-				cartList.Set(Data.DecreaseFromCart(val.ID,cart))
+				cartList.Set(Data.DecreaseFromCart(val.ID, cart))
 			}
 		})
 
 	split := container.NewVSplit(
-			container.NewGridWithColumns(1,
-				title,
-				list,
-			),
+		container.NewGridWithColumns(1,
+			title,
+			list,
+		),
 
 		container.NewHBox(
 			widget.NewButton("Buy Cart", func() {
 				dialog.ShowConfirm("Buying", "Do you want to buy all items in the Cart?", func(b bool) {
-					if !b{
+					if !b {
 						return
 					}
 					cart, _ := cartList.Get()
@@ -178,7 +181,7 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject{
 					dialog.ShowInformation("Complete", "You're Purchase has been made.", w)
 				}, w)
 			}),
-			widget.NewButton("Clear Cart", func(){
+			widget.NewButton("Clear Cart", func() {
 				cart, _ := cartList.Get()
 				cartList.Set(Data.ClearCart(cart))
 				bondTotal.Set(Data.GetCartTotal(cart))
@@ -189,77 +192,94 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject{
 	return split
 }
 
-func makeInfoMenu(w fyne.Window) fyne.CanvasObject{
+func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 	idLabel := widget.NewLabel("ID")
 	nameLabel := widget.NewLabel("Name")
 	priceLabel := widget.NewLabel("Price")
 	costLabel := widget.NewLabel("Cost")
 	inventoryLabel := widget.NewLabel("Inventory")
 
-	title := widget.NewLabelWithStyle("Inventory Info", fyne.TextAlign(1),fyne.TextStyle{Bold: true})
+	title := widget.NewLabelWithStyle("Inventory Info", fyne.TextAlign(1), fyne.TextStyle{Bold: true})
 
 	//Create a list of all registered items
 	listData := Data.GetAllData("Items", 0)
-	boundData := binding.BindSaleList(&listData)
-	list := widget.NewListWithData(boundData, func() fyne.CanvasObject {
-		return container.NewBorder(nil, nil, nil, widget.NewButton("i", nil), widget.NewLabel(""))
-	},
-	func(item binding.DataItem, obj fyne.CanvasObject) {
-		f := item.(binding.Sale)
-		val, _ := f.Get()
 
-		obj.(*fyne.Container).Objects[0].(*widget.Label).SetText(val.Name)
+	/*
+		boundData := binding.BindSaleList(&listData)
+		list := widget.NewListWithData(boundData, func() fyne.CanvasObject {
+			return container.NewBorder(nil, nil, nil, widget.NewButton("i", nil), widget.NewLabel("name"))
+		},
+		func(item binding.DataItem, obj fyne.CanvasObject) {
+			f := item.(binding.Sale)
+			val, _ := f.Get()
 
-		btn := obj.(*fyne.Container).Objects[1].(*widget.Button)
-		btn.OnTapped = func() {
-			vals := Data.ConvertSaleToString(val.Price, val.Cost, val.Quantity)
-			idLabel.SetText(strconv.Itoa(val.ID))
-			nameLabel.SetText(val.Name)
-			priceLabel.SetText(vals[0])
-			costLabel.SetText(vals[1])
-			inventoryLabel.SetText(vals[2])
-		}
-	})
+			obj.(*fyne.Container).Objects[0].(*widget.Label).SetText(val.Name)
 
-	box := container.NewVBox(
-		title,
-		container.NewHSplit(
-				container.NewVBox(
-					widget.NewButton("Camera", func() {
-						id := Cam.OpenCam()
-						conID, _ := strconv.Atoi(id)
+			btn := obj.(*fyne.Container).Objects[1].(*widget.Button)
+			btn.OnTapped = func() {
+				vals := Data.ConvertSaleToString(val.Price, val.Cost, val.Quantity)
+				idLabel.SetText(strconv.Itoa(val.ID))
+				nameLabel.SetText(val.Name)
+				priceLabel.SetText(vals[0])
+				costLabel.SetText(vals[1])
+				inventoryLabel.SetText(vals[2])
+			}
+		})
+	*/
 
-						results := Data.GetAllData("Items", conID)
-						res := Data.ConvertSaleToString(results[0].Price, results[0].Cost, results[0].Quantity)
+	list := widget.NewList(func() int { return len(listData) },
+		func() fyne.CanvasObject {
+			return container.NewVBox(widget.NewLabel("Name"))
+		}, func(id widget.ListItemID, obj fyne.CanvasObject) {
+			obj.(*fyne.Container).Objects[0].(*widget.Label).SetText(listData[id].Name)
+		})
 
-						idLabel.SetText(id)
-						nameLabel.SetText(res[0])
-						priceLabel.SetText(res[1])
-						costLabel.SetText(res[2])
-						inventoryLabel.SetText(res[3])
-					}),
-					list,
-				),
-			container.NewVBox(
-				idLabel,
-				nameLabel,
-				priceLabel,
-				costLabel,
-				inventoryLabel,
-				widget.NewButton("Modify", func() {
-					conID, _ := strconv.Atoi(idLabel.Text)
-					createItemMenu(conID, w)
-				}),
-			)),
-	)
+	list.OnSelected = func(id widget.ListItemID) {
+		val := listData[id]
+		vals := Data.ConvertSaleToString(val.Price, val.Cost, val.Quantity)
 
-	return  box
+		idLabel.SetText(strconv.Itoa(val.ID))
+		nameLabel.SetText(val.Name)
+		priceLabel.SetText(vals[0])
+		costLabel.SetText(vals[1])
+		inventoryLabel.SetText(vals[2])
+	}
+
+	box := container.New(layout.NewGridLayout(2),
+		container.New(layout.NewVBoxLayout(),
+			title,
+			widget.NewButton("Camera", func() {
+				id := Cam.OpenCam()
+				conID, _ := strconv.Atoi(id)
+
+				results := Data.GetAllData("Items", conID)
+				res := Data.ConvertSaleToString(results[0].Price, results[0].Cost, results[0].Quantity)
+
+				idLabel.SetText(id)
+				nameLabel.SetText(results[0].Name)
+				priceLabel.SetText(res[0])
+				costLabel.SetText(res[1])
+				inventoryLabel.SetText(res[2])
+			}),
+			list,
+		),
+		container.NewVBox(
+			idLabel,
+			nameLabel,
+			priceLabel,
+			costLabel,
+			inventoryLabel,
+			widget.NewButton("Modify", func() {
+				conID, _ := strconv.Atoi(idLabel.Text)
+				createItemMenu(conID, w)
+			}),
+		))
+
+	return box
 }
 
 //Finish setting up graph stuff for it
-func makeStatsMenu(w fyne.Window) fyne.CanvasObject {
-	//variant := 0
-
+func makeStatsMenu() fyne.CanvasObject {
 	u, _ := url.Parse("http://localhost:8081/line")
 	r, _ := url.Parse("http://localhost:8081/pie")
 
@@ -274,48 +294,49 @@ func makeStatsMenu(w fyne.Window) fyne.CanvasObject {
 
 	scroll := container.NewVScroll(
 		container.NewAppTabs(container.NewTabItem("Graphs",
-		container.NewVBox(
-		widget.NewCard("Profit Graph", "See the ", container.NewVBox(
-			lineSelectionEntry,
-			widget.NewButton("Graph", func() {
-				profits := Data.GetProfitForTimes(2, 674398202423, lineSelectionEntry.Text)
-				days := []string{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14",
-					"15", "16", "17", "18", "19", "20", "21", "22", "23", "24",
-					"25", "26", "27", "28", "29", "30", "31"}
+			container.NewVBox(
+				widget.NewCard("Profit Graph", "See the ", container.NewVBox(
+					lineSelectionEntry,
+					widget.NewButton("Graph", func() {
+						profits := Data.GetProfitForTimes(2, 674398202423, lineSelectionEntry.Text)
+						days := []string{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14",
+							"15", "16", "17", "18", "19", "20", "21", "22", "23", "24",
+							"25", "26", "27", "28", "29", "30", "31"}
 
-				//cats := []string{lineSelectionEntry.Text}
-				fmt.Println(profits)
+						//cats := []string{lineSelectionEntry.Text}
+						fmt.Println(profits)
 
-				Graph.Labels = &days
-				Graph.Categories = &[]string{""}
-				Graph.Inputs = &profits
-			}),
-			//Put a graph here
-			lineLink,
-			)),
+						Graph.Labels = &days
+						Graph.Categories = &[]string{""}
+						Graph.Inputs = &profits
+					}),
+					//Put a graph here
+					lineLink,
+				)),
 
-			widget.NewCard("Price Changes", "",  container.NewVBox(
-				lineSelectionEntry,
-				widget.NewButton("Graph", func() {
-				}),
-			)),
+				widget.NewCard("Price Changes", "", container.NewVBox(
+					lineSelectionEntry,
+					widget.NewButton("Graph", func() {
+					}),
+				)),
 
-			widget.NewCard("Item Popularity", "X", container.NewVBox(
-				pieSelectionEntry,
-				widget.NewButton("Graph", func() {
-					profits, labels := Data.GetAllProfits(2,pieSelectionEntry.Text)
-					fmt.Println(labels)
-					fmt.Println(profits)
-					Graph.Labels = &[]string{"DO", "De", "Dre", "Du", "DI", "Do", "DAA"}
-					Graph.Inputs = &[]float64{4, 5, 4, 1, 4, 6, 1}
-				}),
-				pieLink,
-			)),
+				widget.NewCard("Item Popularity", "X", container.NewVBox(
+					pieSelectionEntry,
+					widget.NewButton("Graph", func() {
+						profits, labels := Data.GetAllProfits(2, pieSelectionEntry.Text)
+						fmt.Println(labels)
+						fmt.Println(profits)
+						//Graph.Labels = &[]string{"DO", "De", "Dre", "Du", "DI", "Do", "DAA"}
+						//Graph.Inputs = &[]float64{4, 5, 4, 1, 4, 6, 1}
+						Graph.Labels = &labels
+						Graph.Inputs = &profits
+					}),
+					pieLink,
+				)),
+			),
 		),
-	),
-	container.NewTabItem("Numbers",
-		container.NewVBox(
-			)),
+			container.NewTabItem("Numbers",
+				container.NewVBox()),
 		))
 
 	return scroll

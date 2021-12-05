@@ -10,21 +10,21 @@ type Sale struct {
 	ID       int
 	Name     string
 	Price    float64
-	Cost 	 float64
+	Cost     float64
 	Quantity int
 }
 
-func NewSale(ID int, Name string, Price, Cost float64, Quantity int) Sale{
+func NewSale(ID int, Name string, Price, Cost float64, Quantity int) Sale {
 	return Sale{
-		ID: ID,
-		Name: Name,
-		Price: Price,
-		Cost: Cost,
+		ID:       ID,
+		Name:     Name,
+		Price:    Price,
+		Cost:     Cost,
 		Quantity: Quantity,
 	}
 }
 
-func BuyCart(ShoppingCart []Sale) []Sale{
+func BuyCart(ShoppingCart []Sale) []Sale {
 	targetSheet := "Report Data"
 
 	for _, v := range ShoppingCart {
@@ -37,10 +37,10 @@ func BuyCart(ShoppingCart []Sale) []Sale{
 }
 
 //Must pass as the new value of Shopping Cart similar to appending to an array
-func AddToCart(ID int, ShoppingCart []Sale) []Sale{
+func AddToCart(ID int, ShoppingCart []Sale) []Sale {
 	targetSheet := "Items"
 	for {
-		for i, v := range ShoppingCart{
+		for i, v := range ShoppingCart {
 			if v.ID == ID {
 				//v.Quantity += 1
 				ShoppingCart[i].Quantity += 1
@@ -64,7 +64,7 @@ func AddToCart(ID int, ShoppingCart []Sale) []Sale{
 	}
 }
 
-func DecreaseFromCart(ID int, ShoppingCart []Sale) []Sale{
+func DecreaseFromCart(ID int, ShoppingCart []Sale) []Sale {
 	for i, v := range ShoppingCart {
 		if v.ID == ID {
 			if v.Quantity-1 > 0 {
@@ -79,16 +79,16 @@ func DecreaseFromCart(ID int, ShoppingCart []Sale) []Sale{
 }
 
 // RemoveFromCart [Untested]
-func RemoveFromCart(i int, ShoppingCart []Sale) []Sale{
+func RemoveFromCart(i int, ShoppingCart []Sale) []Sale {
 	ShoppingCart[i] = ShoppingCart[len(ShoppingCart)-1] // Copy last element to index i.
-	ShoppingCart[len(ShoppingCart)-1] = Sale{}         // Erase last element (write zero value).
+	ShoppingCart[len(ShoppingCart)-1] = Sale{}          // Erase last element (write zero value).
 	ShoppingCart = ShoppingCart[:len(ShoppingCart)-1]   // Truncate slice.
 	return ShoppingCart
 }
 
 func GetCartTotal(ShoppingCart []Sale) float64 {
 	total := 0.0
-	for _, v := range ShoppingCart{
+	for _, v := range ShoppingCart {
 		total += v.Price * float64(v.Quantity)
 	}
 	return total
@@ -100,14 +100,14 @@ func ClearCart(ShoppingCart []Sale) []Sale {
 	return ShoppingCart
 }
 
-func ConvertStringToSale(Price, Cost, Quantity string) (float64, float64, int){
+func ConvertStringToSale(Price, Cost, Quantity string) (float64, float64, int) {
 	newPrice, _ := strconv.ParseFloat(Price, 64)
 	newCost, _ := strconv.ParseFloat(Cost, 64)
 	newQuantity, _ := strconv.Atoi(Quantity)
 	return newPrice, newCost, newQuantity
 }
 
-func ConvertSaleToString(price, cost float64, inventory int) []string{
+func ConvertSaleToString(price, cost float64, inventory int) []string {
 	p := fmt.Sprint(price)
 	c := fmt.Sprint(cost)
 	inven := strconv.Itoa(inventory)

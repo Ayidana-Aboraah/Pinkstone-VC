@@ -5,19 +5,19 @@ import (
 	"strconv"
 )
 
-func GetTotalProfit(id int, targetSheet, selectionStr string) []float64{
+func GetTotalProfit(id int, targetSheet, selectionStr string) []float64 {
 	totalRevenue := 0.0
 	totalCost := 0.0
 	totalProfit := 0.0
 
 	res := FindAll(targetSheet, "G", selectionStr, id)
 
-	for i := 0; i < len(res); i++{
-		for _, v := range res{
-			rev := F.GetCellValue(targetSheet, "D" + strconv.Itoa(v))
-			cost := F.GetCellValue(targetSheet, "E" + strconv.Itoa(v))
+	for i := 0; i < len(res); i++ {
+		for _, v := range res {
+			rev := F.GetCellValue(targetSheet, "D"+strconv.Itoa(v))
+			cost := F.GetCellValue(targetSheet, "E"+strconv.Itoa(v))
 
-			conRev, _ :=  strconv.ParseFloat(rev, 64)
+			conRev, _ := strconv.ParseFloat(rev, 64)
 			conCos, _ := strconv.ParseFloat(cost, 64)
 			prof := conRev - conCos
 
@@ -27,14 +27,14 @@ func GetTotalProfit(id int, targetSheet, selectionStr string) []float64{
 		}
 	}
 
-	return  []float64{
+	return []float64{
 		totalRevenue,
 		totalCost,
 		totalProfit,
 	}
 }
 
-func GetProfitForTimes(variant, id int, subStr string) []float64{
+func GetProfitForTimes(variant, id int, subStr string) []float64 {
 	targetSheet := "Report Data"
 	profit := []float64{}
 
@@ -48,7 +48,7 @@ func GetProfitForTimes(variant, id int, subStr string) []float64{
 	return profit
 }
 
-func GetAllProfits(variant int, selectionStr string) ([]float64, []string){
+func GetAllProfits(variant int, selectionStr string) ([]float64, []string) {
 	targetSheet := "Report Data"
 	IDs, Names := GetAllIDs(targetSheet, selectionStr)
 	profits := []float64{}

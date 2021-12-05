@@ -10,7 +10,7 @@ import (
 
 var Path = "barcodes [test]/"
 
-func ReadImage(img image.Image) *gozxing.Result{
+func ReadImage(img image.Image) *gozxing.Result {
 	// prepare BinaryBitmap
 	bmp, _ := gozxing.NewBinaryBitmapFromImage(img)
 

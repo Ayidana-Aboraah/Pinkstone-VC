@@ -1,6 +1,7 @@
 package Data
 
 import (
+	"fmt"
 	"strconv"
 )
 
@@ -13,8 +14,8 @@ func GetTotalProfit(id int, targetSheet, selectionStr string) []float64{
 
 	for i := 0; i < len(res); i++{
 		for _, v := range res{
-			rev := f.GetCellValue(targetSheet, "D" + strconv.Itoa(v))
-			cost := f.GetCellValue(targetSheet, "E" + strconv.Itoa(v))
+			rev := F.GetCellValue(targetSheet, "D" + strconv.Itoa(v))
+			cost := F.GetCellValue(targetSheet, "E" + strconv.Itoa(v))
 
 			conRev, _ :=  strconv.ParseFloat(rev, 64)
 			conCos, _ := strconv.ParseFloat(cost, 64)
@@ -45,4 +46,18 @@ func GetProfitForTimes(variant, id int, subStr string) []float64{
 		profit = append(profit, totals[variant])
 	}
 	return profit
+}
+
+func GetAllProfits(variant int, selectionStr string) ([]float64, []string){
+	targetSheet := "Report Data"
+	IDs, Names := GetAllIDs(targetSheet, selectionStr)
+	profits := []float64{}
+	fmt.Println(IDs)
+
+	for _, v := range IDs {
+		totals := GetTotalProfit(v, targetSheet, selectionStr)
+		profits = append(profits, totals[variant])
+	}
+
+	return profits, Names
 }

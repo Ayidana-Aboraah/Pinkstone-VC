@@ -48,14 +48,14 @@ func AddToCart(ID int, ShoppingCart []Sale) []Sale{
 			}
 		}
 		idx := GetIndex(targetSheet, ID, 1)
-		p, _ := strconv.ParseFloat(f.GetCellValue(targetSheet, "B"+strconv.Itoa(idx)), 64)
-		c, _ := strconv.ParseFloat(f.GetCellValue(targetSheet, "C"+strconv.Itoa(idx)), 64)
+		p, _ := strconv.ParseFloat(F.GetCellValue(targetSheet, "B"+strconv.Itoa(idx)), 64)
+		c, _ := strconv.ParseFloat(F.GetCellValue(targetSheet, "C"+strconv.Itoa(idx)), 64)
 
 		temp := Sale{
-			ID:    ID,
-			Name:  f.GetCellValue(targetSheet, "B"+strconv.Itoa(idx)),
-			Price: p,
-			Cost: c,
+			ID:       ID,
+			Name:     F.GetCellValue(targetSheet, "B"+strconv.Itoa(idx)),
+			Price:    p,
+			Cost:     c,
 			Quantity: 1,
 		}
 		fmt.Println(temp)

@@ -15,6 +15,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 	_ "image/png"
 	"net/url"
+	"os"
 	"strconv"
 )
 
@@ -35,6 +36,11 @@ func CreateWindow(a fyne.App) {
 	w := a.NewWindow("Bronze Hermes")
 
 	if Data.Err != nil{
+		//Replace TestAppData with normal App data when ready
+		os.Remove("TestAppData.xlsx")
+		//os.Remove("AppData.xlsx")
+		Data.SaveBackUp("Assets/BackupAppData.xlsx", "TestAppData.xlsx")
+		//Data.SaveBackUp("BackupAppData.xlsx", "AppData.xlsx")
 		fmt.Println(Data.Err)
 		dialog.ShowError(Data.Err, w)
 	}
@@ -60,7 +66,7 @@ func makeMainMenu(a fyne.App) fyne.CanvasObject{
 		widget.NewLabelWithStyle("Welcome", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
 		widget.NewButton("Back Up App Data", func() {
 			//Don't forget to change the source file name when switching from test file to normal file
-			Data.SaveBackUp("TestAppData.xlsx", "BackupAppData.xlsx")
+			go Data.SaveBackUp("TestAppData.xlsx", "BackupAppData.xlsx")
 		}),
 		widget.NewButton("Quit", func() {
 			a.Quit()
@@ -297,6 +303,11 @@ func makeStatsMenu(w fyne.Window) fyne.CanvasObject {
 			widget.NewCard("Item Popularity", "X", container.NewVBox(
 				pieSelectionEntry,
 				widget.NewButton("Graph", func() {
+					profits, labels := Data.GetAllProfits(2,pieSelectionEntry.Text)
+					fmt.Println(labels)
+					fmt.Println(profits)
+					Graph.Labels = &[]string{"DO", "De", "Dre", "Du", "DI", "Do", "DAA"}
+					Graph.Inputs = &[]float64{4, 5, 4, 1, 4, 6, 1}
 				}),
 				pieLink,
 			)),

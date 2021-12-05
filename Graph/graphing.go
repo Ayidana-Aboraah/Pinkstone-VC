@@ -20,14 +20,14 @@ func generateLineItems(r []float64) []opts.LineData {
 	return items
 }
 
-func generatePieItems(data []float64) []opts.PieData {
-	items := make([]opts.PieData, 0)
-
-	for _, v := range data {
-		items = append(items, opts.PieData{Value: v})
+func generatePieItems(data []float64) []opts.LiquidData {
+	items := make([]opts.LiquidData, 0)
+	for i := 0; i < len(data); {
+		items = append(items, opts.LiquidData{Value: data[i]})
 	}
 	return items
 }
+
 
 func CreateLineGraph(w http.ResponseWriter){
 	// create a new line instance
@@ -55,7 +55,7 @@ func CreateLineGraph(w http.ResponseWriter){
 }
 
 func CreatePieGraph(w http.ResponseWriter) {
-	pie := charts.NewPie()
+	pie := charts.NewLiquid()
 
 	pie.SetGlobalOptions(
 		charts.WithInitializationOpts(opts.Initialization{PageTitle: "Bronze Hermes Data", Theme: types.ThemeWesteros}),
@@ -64,9 +64,7 @@ func CreatePieGraph(w http.ResponseWriter) {
 			Subtitle: "Total in Numbers area of statistics menu",
 		}))
 
-	for _, v := range *Categories {
-		pie.AddSeries(v, generatePieItems(*Inputs))
-	}
+		pie.AddSeries("",generatePieItems(*Inputs))
 
 	pie.Render(w)
 }

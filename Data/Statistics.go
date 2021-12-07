@@ -48,16 +48,35 @@ func GetProfitForTimes(variant, id int, subStr string) []float64 {
 	return profit
 }
 
-func GetAllProfits(variant int, selectionStr string) ([]float64, []string) {
+func GetAllProfits(selectionStr string) ([][]float64, []string) {
 	targetSheet := "Report Data"
 	IDs, Names := GetAllIDs(targetSheet, selectionStr)
 	profits := []float64{}
+	revenue := []float64{}
+	costs := []float64{}
+
 	fmt.Println(IDs)
 
 	for _, v := range IDs {
 		totals := GetTotalProfit(v, targetSheet, selectionStr)
-		profits = append(profits, totals[variant])
+		revenue = append(revenue, totals[0])
+		costs = append(revenue, totals[1])
+		profits = append(profits, totals[2])
 	}
 
-	return profits, Names
+	return [][]float64{
+		revenue,
+		costs,
+		profits,
+	}, Names
+}
+
+func ProcessAllProfit(values []float64) float64{
+	total := 0.0
+
+	for _, v := range values{
+		total += v
+	}
+
+	return total
 }

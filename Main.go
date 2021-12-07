@@ -54,7 +54,7 @@ func CreateWindow(a fyne.App) {
 
 			container.NewTabItem("Info", makeInfoMenu(w)),
 
-			container.NewTabItem("Stats", makeStatsMenu(w)),
+			container.NewTabItem("Stats", makeStatsMenu()),
 		))
 
 	w.SetContent(mainMenu)
@@ -117,12 +117,10 @@ func createItemMenu(id int, w fyne.Window) {
 }
 
 func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
-	total := 0.0
-	bondTotal := binding.BindFloat(&total)
 
 	cartList := binding.BindSaleList(&[]Data.Sale{})
 
-	title := widget.NewLabelWithData(binding.FloatToStringWithFormat(bondTotal, "Cart Total: %f"))
+	title := widget.NewLabelWithStyle("Cart Total: ", fyne.TextAlignCenter, fyne.TextStyle{})
 
 	button := widget.NewButton("New Item", func() {
 		//Get ID and Convert
@@ -138,8 +136,7 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 			cart, _ := cartList.Get()
 			cartList.Set(Data.AddToCart(conID, cart))
 			cart, _ = cartList.Get()
-			bondTotal.Set(Data.GetCartTotal(cart))
-			fmt.Println(bondTotal)
+			title.SetText(fmt.Sprintf("Cart Total: %f",  Data.GetCartTotal(cart)))
 		}, w)
 	})
 
@@ -149,17 +146,20 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 				widget.NewLabel(""))
 		},
 		func(item binding.DataItem, obj fyne.CanvasObject) {
-			f := item.(binding.Sale)
+			s := item.(binding.Sale)
 			text := obj.(*fyne.Container).Objects[0].(*widget.Label)
-			i, _ := f.Get()
-			quantity := fmt.Sprint(i.Quantity)
-			text.SetText(i.Name + " x" + quantity)
+			i, _ := s.Get()
+
+			text.SetText(i.Name + " x" + strconv.Itoa(i.Quantity))
 
 			btn := obj.(*fyne.Container).Objects[1].(*widget.Button)
 			btn.OnTapped = func() {
-				val, _ := f.Get()
+				val, _ := s.Get()
 				cart, _ := cartList.Get()
 				cartList.Set(Data.DecreaseFromCart(val.ID, cart))
+				cart, _ = cartList.Get()
+				title.SetText(fmt.Sprintf("Cart Total: %s",  Data.GetCartTotal(cart)))
+				text.SetText(i.Name + " x" + strconv.Itoa(i.Quantity))
 			}
 		})
 
@@ -177,14 +177,16 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 					}
 					cart, _ := cartList.Get()
 					cartList.Set(Data.BuyCart(cart))
-					bondTotal.Set(Data.GetCartTotal(cart))
+					cart, _ = cartList.Get()
+					title.SetText(fmt.Sprintf("Cart Total: %f",  Data.GetCartTotal(cart)))
 					dialog.ShowInformation("Complete", "You're Purchase has been made.", w)
 				}, w)
 			}),
 			widget.NewButton("Clear Cart", func() {
 				cart, _ := cartList.Get()
 				cartList.Set(Data.ClearCart(cart))
-				bondTotal.Set(Data.GetCartTotal(cart))
+				cart, _ = cartList.Get()
+				title.SetText(fmt.Sprintf("Cart Total: %f",  Data.GetCartTotal(cart)))
 			}),
 			button,
 		),
@@ -292,6 +294,11 @@ func makeStatsMenu() fyne.CanvasObject {
 	pieSelectionEntry := UI.NewNumEntry()
 	pieSelectionEntry.SetPlaceHolder("YYYY/MM/Day")
 
+	totalRevLabel := widget.NewLabelWithStyle("", fyne.TextAlignCenter, fyne.TextStyle{})
+	totalCostLabel := widget.NewLabelWithStyle("", fyne.TextAlignCenter, fyne.TextStyle{})
+	totalProfitLabel := widget.NewLabelWithStyle("", fyne.TextAlignCenter, fyne.TextStyle{})
+
+
 	scroll := container.NewVScroll(
 		container.NewAppTabs(container.NewTabItem("Graphs",
 			container.NewVBox(
@@ -323,20 +330,39 @@ func makeStatsMenu() fyne.CanvasObject {
 				widget.NewCard("Item Popularity", "X", container.NewVBox(
 					pieSelectionEntry,
 					widget.NewButton("Graph", func() {
-						profits, labels := Data.GetAllProfits(2, pieSelectionEntry.Text)
-						fmt.Println(labels)
-						fmt.Println(profits)
-						//Graph.Labels = &[]string{"DO", "De", "Dre", "Du", "DI", "Do", "DAA"}
-						//Graph.Inputs = &[]float64{4, 5, 4, 1, 4, 6, 1}
+						profits, labels := Data.GetAllProfits(pieSelectionEntry.Text)
+
 						Graph.Labels = &labels
-						Graph.Inputs = &profits
+						Graph.Inputs = &profits[2]
 					}),
 					pieLink,
 				)),
 			),
 		),
 			container.NewTabItem("Numbers",
-				container.NewVBox()),
+				container.NewVBox(
+					widget.NewCard("Totals", "", container.NewVBox(
+						pieSelectionEntry,
+						widget.NewButton("Graph", func() {
+							data, _ := Data.GetAllProfits(pieSelectionEntry.Text)
+
+							rev := Data.ProcessAllProfit(data[0])
+							cos := Data.ProcessAllProfit(data[1])
+							prof := Data.ProcessAllProfit(data[2])
+
+							revenue := fmt.Sprint(rev)
+							cost := fmt.Sprint(cos)
+							profit := fmt.Sprint(prof)
+
+							totalProfitLabel.SetText("Total Profit: " + profit)
+							totalRevLabel.SetText("Total Revenue: " + revenue)
+							totalCostLabel.SetText("Total Cost: " + cost)
+						}),
+						totalRevLabel,
+						totalCostLabel,
+						totalProfitLabel,
+					)),
+					)),
 		))
 
 	return scroll

@@ -34,26 +34,46 @@ func GetTotalProfit(id int, targetSheet, selectionStr string) []float64 {
 	}
 }
 
-func GetProfitForTimes(variant, id int, subStr string) []float64 {
-	targetSheet := "Report Data"
-	profit := []float64{}
+func GetProfitForTimes(variant int, targetSheet, subStr string)([][]float64,[]string){
+	ids, labels := GetAllIDs(targetSheet, subStr)
+	values := make([][]float64, 0)
+
+	for _, v := range ids{
+		check := GetProfitForItemTimes(v, targetSheet, subStr)
+		//revenue: 0, cost: 1, profit, 2;
+		values = append(values, check[variant])
+	}
+
+	return values, labels
+}
+
+func GetProfitForItemTimes(id int, targetSheet, subStr string) [][]float64 {
+	revenue := make([]float64, 0)
+	cost := make([]float64, 0)
+	profit := make([]float64, 0)
 
 	for i := 0; i < 32; i++ {
 		newSelect := subStr + "/" + strconv.Itoa(i)
 
 		totals := GetTotalProfit(id, targetSheet, newSelect)
 		//0 revenue; 1 cost; 2 profit
-		profit = append(profit, totals[variant])
+		revenue = append(revenue, totals[0])
+		cost = append(cost, totals[1])
+		profit = append(profit, totals[2])
 	}
-	return profit
+	return [][]float64{
+		revenue,
+		cost,
+		profit,
+	}
 }
 
 func GetAllProfits(selectionStr string) ([][]float64, []string) {
 	targetSheet := "Report Data"
 	IDs, Names := GetAllIDs(targetSheet, selectionStr)
-	profits := []float64{}
-	revenue := []float64{}
-	costs := []float64{}
+	profits := make([]float64, 0)
+	revenue := make([]float64, 0)
+	costs := make([]float64, 0)
 
 	fmt.Println(IDs)
 

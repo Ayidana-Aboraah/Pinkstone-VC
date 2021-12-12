@@ -6,8 +6,8 @@ import (
 )
 
 func GetAllIDs(targetSheet, selectionStr string) ([]int, []string) {
-	IDs := []int{}
-	Names := []string{}
+	IDs := make([]int,0)
+	Names := make([]string,0)
 
 	cell := F.GetCellValue(targetSheet, "A2")
 
@@ -18,6 +18,12 @@ func GetAllIDs(targetSheet, selectionStr string) ([]int, []string) {
 		if strings.Contains(checkCell, selectionStr) {
 			name := F.GetCellValue(targetSheet, "B"+strconv.Itoa(i))
 			conID, _ := strconv.Atoi(cell)
+
+			for _, v := range IDs{
+				if v == conID{
+					i++
+				}
+			}
 
 			Names = append(Names, name)
 			IDs = append(IDs, conID)

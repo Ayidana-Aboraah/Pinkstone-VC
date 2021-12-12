@@ -1,10 +1,10 @@
 package main
 
 import (
-	"business.go/Cam"
-	"business.go/Data"
-	"business.go/Graph"
-	"business.go/UI"
+	"BronzeHermes/Cam"
+	"BronzeHermes/Data"
+	"BronzeHermes/Graph"
+	"BronzeHermes/UI"
 	"fmt"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -305,17 +305,16 @@ func makeStatsMenu() fyne.CanvasObject {
 				widget.NewCard("Profit Graph", "See the ", container.NewVBox(
 					lineSelectionEntry,
 					widget.NewButton("Graph", func() {
-						profits := Data.GetProfitForTimes(2, 674398202423, lineSelectionEntry.Text)
+						results, labels := Data.GetProfitForTimes(0,"Report Data", lineSelectionEntry.Text)
 						days := []string{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14",
 							"15", "16", "17", "18", "19", "20", "21", "22", "23", "24",
 							"25", "26", "27", "28", "29", "30", "31"}
 
-						//cats := []string{lineSelectionEntry.Text}
-						fmt.Println(profits)
+						fmt.Println(results)
 
 						Graph.Labels = &days
-						Graph.Categories = &[]string{""}
-						Graph.Inputs = &profits
+						Graph.Categories = &labels
+						Graph.LineInputs = &results
 					}),
 					//Put a graph here
 					lineLink,

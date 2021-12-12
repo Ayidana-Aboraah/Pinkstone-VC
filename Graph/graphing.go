@@ -1,7 +1,6 @@
 package Graph
 
 import (
-	"fmt"
 	"github.com/go-echarts/go-echarts/v2/charts"
 	"github.com/go-echarts/go-echarts/v2/opts"
 	"github.com/go-echarts/go-echarts/v2/types"
@@ -11,31 +10,19 @@ import (
 var Labels *[]string
 var Categories *[]string
 var Inputs *[]float64
+var LineInputs *[][]float64
 
-func generateLineItems(r []float64) []opts.LineData {
+func generateLineItems(label string, r []float64) []opts.LineData {
 	items := make([]opts.LineData, 0)
-	for i := 0; i < len(r); i++ {
-		items = append(items, opts.LineData{Value: r[i]})
+	for i, _ := range r{
+		items = append(items, opts.LineData{Name:label, Value: r[i]})
 	}
 	return items
 }
-
-/*
-func generatePieItems(data []float64) []opts.PieData {
-	items := make([]opts.PieData, 0)
-	//items = append(items, opts.LiquidData{Value: data})
-
-	for _, v := range data {
-		items = append(items, opts.PieData{Value: v})
-	}
-
-	return items
-}
-*/
 
 func generatePieItems(tags []string, data []float64) []opts.PieData {
 	items := make([]opts.PieData, 0)
-	//items = append(items, opts.LiquidData{Value: data})
+
 
 	for i, _ := range tags {
 		items = append(items, opts.PieData{Name: tags[i], Value: data[i]})
@@ -45,7 +32,6 @@ func generatePieItems(tags []string, data []float64) []opts.PieData {
 }
 
 func CreateLineGraph(w http.ResponseWriter) {
-	// create a new line instance
 	line := charts.NewLine()
 
 	// set some global options like Title/Legend/ToolTip or anything else
@@ -53,18 +39,16 @@ func CreateLineGraph(w http.ResponseWriter) {
 		charts.WithInitializationOpts(opts.Initialization{PageTitle: "Bronze Hermes Data", Theme: types.ThemeWesteros}),
 		charts.WithTitleOpts(opts.Title{
 			Title:    "Profit Line Chart",
-			Subtitle: "Only profit",
+			Subtitle: "Dark blue is Revenue, Light blue is Cost, Profit is pink;",
 		}),
 	)
 
 	line.SetXAxis(Labels)
 
-	for _, v := range *Categories {
-		line.AddSeries(v, generateLineItems(*Inputs)).SetSeriesOptions(charts.WithLineChartOpts(opts.LineChart{Smooth: true}))
-		fmt.Println(Inputs)
+	for _, v := range *LineInputs{
+		line.AddSeries("", generateLineItems("data", v)).SetSeriesOptions(charts.WithLineChartOpts(opts.LineChart{Smooth: true}))
 	}
 
-	// Where the magic happens
 	line.Render(w)
 }
 
@@ -78,45 +62,7 @@ func CreatePieGraph(w http.ResponseWriter) {
 			Subtitle: "Hover Over them to see how much they take up the wheel",
 		}))
 
-	pie.AddSeries("", generatePieItems(*Labels, *Inputs))
+	pie.AddSeries("Tree", generatePieItems(*Labels, *Inputs))
 
 	pie.Render(w)
 }
-
-/*
-func CreateLineOverTime(labels, categories []string, inputs []float64){
-	// create a new line instance
-	line := charts.NewLine()
-	// set some global options like Title/Legend/ToolTip or anything else
-	line.SetGlobalOptions(
-		charts.WithInitializationOpts(opts.Initialization{PageTitle: "Bronze Hermes Data",Theme: types.ThemeWesteros}),
-		charts.WithTitleOpts(opts.Title{
-			Title:    "Graph",
-			Subtitle: "Data",
-		}))
-
-	// Put data into instance
-		line.SetXAxis("labels").
-			AddSeries("categories[0]", generateLineValues([]float64{0})).
-			SetSeriesOptions(charts.WithLineChartOpts(opts.LineChart{Smooth: true}))
-
-	//line.Render(render)
-}
-
-func generateLineValues(inputs []float64) []opts.LineData {
-	items := make([]opts.LineData, 0)
-	for i := 0; i < len(inputs); i++ {
-		items = append(items, opts.LineData{Value: inputs[i]})
-	}
-	return items
-}
-
-// generate random data for bar chart
-func generateRandomBarItems() []opts.BarData {
-	items := make([]opts.BarData, 0)
-	for i := 0; i < len(*Categories); i++ {
-		items = append(items, opts.BarData{Value: rand.Intn(999)})
-	}
-	return items
-}
-*/

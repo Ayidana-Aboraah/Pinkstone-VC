@@ -39,7 +39,7 @@ func CreateWindow(a fyne.App) {
 	if Data.Err != nil {
 		//Replace TestAppData with normal App data when ready
 		os.Remove("TestAppData.xlsx")
-		//os.Remove("AppData.xlsx")
+		//os.Remove("Assets/AppData.xlsx")
 		Data.SaveBackUp("Assets/BackupAppData.xlsx", "TestAppData.xlsx")
 		//Data.SaveBackUp("BackupAppData.xlsx", "AppData.xlsx")
 		fmt.Println(Data.Err)
@@ -302,11 +302,11 @@ func makeStatsMenu() fyne.CanvasObject {
 	scroll := container.NewVScroll(
 		container.NewAppTabs(container.NewTabItem("Graphs",
 			container.NewVBox(
-				widget.NewCard("Profit Graph", "See the ", container.NewVBox(
+				widget.NewCard("Profit Graph", "", container.NewVBox(
 					lineSelectionEntry,
 					widget.NewButton("Graph", func() {
 						results, labels := Data.GetProfitForTimes(0,"Report Data", lineSelectionEntry.Text)
-						days := []string{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14",
+						days := []string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14",
 							"15", "16", "17", "18", "19", "20", "21", "22", "23", "24",
 							"25", "26", "27", "28", "29", "30", "31"}
 
@@ -326,13 +326,13 @@ func makeStatsMenu() fyne.CanvasObject {
 					}),
 				)),
 
-				widget.NewCard("Item Popularity", "X", container.NewVBox(
+				widget.NewCard("Item Popularity", "", container.NewVBox(
 					pieSelectionEntry,
 					widget.NewButton("Graph", func() {
 						profits, labels := Data.GetAllProfits(pieSelectionEntry.Text)
 
 						Graph.Labels = &labels
-						Graph.Inputs = &profits[2]
+						Graph.Inputs = &profits[0]
 					}),
 					pieLink,
 				)),
@@ -345,13 +345,9 @@ func makeStatsMenu() fyne.CanvasObject {
 						widget.NewButton("Graph", func() {
 							data, _ := Data.GetAllProfits(pieSelectionEntry.Text)
 
-							rev := Data.ProcessAllProfit(data[0])
-							cos := Data.ProcessAllProfit(data[1])
-							prof := Data.ProcessAllProfit(data[2])
-
-							revenue := fmt.Sprint(rev)
-							cost := fmt.Sprint(cos)
-							profit := fmt.Sprint(prof)
+							revenue := fmt.Sprint(data[0])
+							cost := fmt.Sprint(data[1])
+							profit := fmt.Sprint(data[2])
 
 							totalProfitLabel.SetText("Total Profit: " + profit)
 							totalRevLabel.SetText("Total Revenue: " + revenue)

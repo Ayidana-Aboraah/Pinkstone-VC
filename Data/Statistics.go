@@ -5,41 +5,15 @@ import (
 	"strconv"
 )
 
-func GetTotalProfit(id int, targetSheet, selectionStr string) []float64 {
-	totalRevenue := 0.0
-	totalCost := 0.0
-	totalProfit := 0.0
-
-	res := FindAll(targetSheet, "G", selectionStr, id)
-
-	for i := 0; i < len(res); i++ {
-		for _, v := range res {
-			rev := F.GetCellValue(targetSheet, "D"+strconv.Itoa(v))
-			cost := F.GetCellValue(targetSheet, "E"+strconv.Itoa(v))
-
-			conRev, _ := strconv.ParseFloat(rev, 64)
-			conCos, _ := strconv.ParseFloat(cost, 64)
-			prof := conRev - conCos
-
-			totalRevenue += conRev
-			totalCost += conCos
-			totalProfit += prof
-		}
-	}
-
-	return []float64{
-		totalRevenue,
-		totalCost,
-		totalProfit,
-	}
-}
-
+//For the Line chart
 func GetProfitForTimes(variant int, targetSheet, subStr string)([][]float64,[]string){
-	ids, labels := GetAllIDs(targetSheet, subStr)
+	items := GetAllIDs(targetSheet, subStr)
+	labels := make([]string, 0)
 	values := make([][]float64, 0)
 
-	for _, v := range ids{
-		check := GetProfitForItemTimes(v, targetSheet, subStr)
+	for _, v := range items{
+		check := GetProfitForItemTimes(v.ID, targetSheet, subStr)
+		labels = append(labels, v.Name)
 		//revenue: 0, cost: 1, profit, 2;
 		values = append(values, check[variant])
 	}
@@ -68,35 +42,63 @@ func GetProfitForItemTimes(id int, targetSheet, subStr string) [][]float64 {
 	}
 }
 
+//For the Pie Chart
 func GetAllProfits(selectionStr string) ([][]float64, []string) {
 	targetSheet := "Report Data"
-	IDs, Names := GetAllIDs(targetSheet, selectionStr)
+	items := GetAllIDs(targetSheet, selectionStr)
+	fmt.Println(items)
+
+	names := make([]string, 0)
 	profits := make([]float64, 0)
 	revenue := make([]float64, 0)
 	costs := make([]float64, 0)
 
-	fmt.Println(IDs)
+	for _, v := range items {
+		//totals := GetTotalProfit(v.ID, targetSheet, selectionStr)
+		/*
+			revenue = append(revenue, totals[0])
+			costs = append(revenue, totals[1])
+			profits = append(profits, totals[2])
+		*/
 
-	for _, v := range IDs {
-		totals := GetTotalProfit(v, targetSheet, selectionStr)
-		revenue = append(revenue, totals[0])
-		costs = append(revenue, totals[1])
-		profits = append(profits, totals[2])
+		names = append(names, v.Name)
+		revenue = append(revenue, v.Price)
+		costs = append(revenue, v.Cost)
+		profits = append(profits, v.Price - v.Cost)
 	}
 
 	return [][]float64{
 		revenue,
 		costs,
 		profits,
-	}, Names
+	}, names
 }
 
-func ProcessAllProfit(values []float64) float64{
-	total := 0.0
+func GetTotalProfit(id int, targetSheet, selectionStr string) []float64 {
+	totalRevenue := 0.0
+	totalCost := 0.0
+	totalProfit := 0.0
 
-	for _, v := range values{
-		total += v
+	res := FindAll(targetSheet, "G", selectionStr, id)
+
+	for i := 0; i < len(res); i++ {
+		for _, v := range res {
+			rev := F.GetCellValue(targetSheet, "D"+strconv.Itoa(v))
+			cost := F.GetCellValue(targetSheet, "E"+strconv.Itoa(v))
+
+			conRev, _ := strconv.ParseFloat(rev, 64)
+			conCos, _ := strconv.ParseFloat(cost, 64)
+			prof := conRev - conCos
+
+			totalRevenue += conRev
+			totalCost += conCos
+			totalProfit += prof
+		}
 	}
 
-	return total
+	return []float64{
+		totalRevenue,
+		totalCost,
+		totalProfit,
+	}
 }

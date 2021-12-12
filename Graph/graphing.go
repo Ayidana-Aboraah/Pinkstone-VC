@@ -41,6 +41,7 @@ func CreateLineGraph(w http.ResponseWriter) {
 			Title:    "Profit Line Chart",
 			Subtitle: "Dark blue is Revenue, Light blue is Cost, Profit is pink;",
 		}),
+		charts.WithLegendOpts(opts.Legend{Show: true, InactiveColor: "grey",Data: *LineInputs}),
 	)
 
 	line.SetXAxis(Labels)
@@ -60,9 +61,19 @@ func CreatePieGraph(w http.ResponseWriter) {
 		charts.WithTitleOpts(opts.Title{
 			Title:    "Item Popularity",
 			Subtitle: "Hover Over them to see how much they take up the wheel",
-		}))
+		}),
+		charts.WithLegendOpts(opts.Legend{Show: true, InactiveColor: "grey", Data: *Inputs}),
+	)
 
-	pie.AddSeries("Tree", generatePieItems(*Labels, *Inputs))
+	pie.SetSeriesOptions(charts.WithPieChartOpts(opts.PieChart{Radius: 50}))
+
+	pie.AddSeries("Tree", generatePieItems(*Labels, *Inputs)).
+		SetSeriesOptions(charts.WithLabelOpts(
+			opts.Label{
+				Show:      true,
+				Formatter: "{b}: {c}",
+			}),
+		)
 
 	pie.Render(w)
 }

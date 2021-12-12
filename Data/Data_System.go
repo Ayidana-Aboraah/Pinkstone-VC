@@ -72,7 +72,7 @@ func UpdateData(item Sale, targetSheet string, variant int) {
 		break
 	//Update Report function
 	case 1:
-		inventory := SetInventory(item.ID, item.Quantity)
+		inventory := UpdateInventory(item.ID, item.Quantity)
 		F.SetCellValue(targetSheet, "A"+strconv.Itoa(idx), item.ID)
 		F.SetCellValue(targetSheet, "B"+strconv.Itoa(idx), item.Name)
 		F.SetCellValue(targetSheet, "C"+strconv.Itoa(idx), item.Quantity)
@@ -92,27 +92,28 @@ func UpdateData(item Sale, targetSheet string, variant int) {
 	}
 }
 
-func SetInventory(ID, amount int) int {
+func UpdateInventory(ID, amount int) int {
 	targetSheet := "Items"
 
 	idx := GetIndex(targetSheet, ID, 1)
 
 	res := F.GetCellValue(targetSheet, "F"+strconv.Itoa(idx))
 
-	inven, _ := strconv.Atoi(res)
+	inventory, _ := strconv.Atoi(res)
 
-	newInventory := inven - amount
+	newInventory := inventory - amount
 
 	F.SetCellValue(targetSheet, "F"+strconv.Itoa(idx), newInventory)
 	return newInventory
 }
 
-func GetIndex(targetSheet string, ID, searchType int) int {
+func GetIndex(targetSheet string, ID, searchType int) int  {
 	i := 1
 	cell := F.GetCellValue(targetSheet, "A"+strconv.Itoa(i))
 	for {
 		cell = F.GetCellValue(targetSheet, "A"+strconv.Itoa(i))
 		conCell, _ := strconv.Atoi(cell)
+
 		switch searchType {
 		case 1:
 			if conCell == ID {

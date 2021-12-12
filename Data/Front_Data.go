@@ -1,36 +1,59 @@
 package Data
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 )
 
-func GetAllIDs(targetSheet, selectionStr string) ([]int, []string) {
-	IDs := make([]int,0)
-	Names := make([]string,0)
+func GetAllIDs(targetSheet, selectionStr string) []Sale {
+	Items := make([]Sale, 0)
 
 	cell := F.GetCellValue(targetSheet, "A2")
 
-	for i := 2; cell != ""; i++ {
+	complete := false
+
+	for i := 2; cell != ""; i++{
+		complete = false
 		cell = F.GetCellValue(targetSheet, "A"+strconv.Itoa(i))
 		checkCell := F.GetCellValue(targetSheet, "G"+strconv.Itoa(i))
 
 		if strings.Contains(checkCell, selectionStr) {
 			name := F.GetCellValue(targetSheet, "B"+strconv.Itoa(i))
+			rev := F.GetCellValue(targetSheet, "D"+strconv.Itoa(i))
+			cos := F.GetCellValue(targetSheet, "E"+strconv.Itoa(i))
+			revenue, cost, _ := ConvertStringToSale(rev, cos, "")
 			conID, _ := strconv.Atoi(cell)
 
-			for _, v := range IDs{
-				if v == conID{
-					i++
+			for idx, v := range Items{
+				if v.ID == conID{
+					Items[idx].Price += revenue
+					Items[idx].Cost += cost
+					complete = true
+					break
 				}
 			}
+			if !complete{
 
-			Names = append(Names, name)
-			IDs = append(IDs, conID)
+
+
+				temp := Sale{
+					ID: conID,
+					Name: name,
+					Price: revenue,
+					Cost: cost,
+					Quantity: 1,
+				}
+
+				fmt.Println(temp)
+				Items = append(Items, temp)
+			}
 		}
 	}
 
-	return IDs, Names
+	Items = Items[:len(Items) -1]
+
+	return Items
 }
 
 func FindAll(targetSheet, targetAxis, subStr string, ID int) []int {

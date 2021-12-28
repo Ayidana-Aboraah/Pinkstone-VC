@@ -30,7 +30,6 @@ func GetProfitForItemTimes(id int, targetSheet, subStr string) [][]float64 {
 		newSelect := subStr + "/" + strconv.Itoa(i)
 
 		totals := GetTotalProfit(id, targetSheet, newSelect)
-		//0 revenue; 1 cost; 2 profit
 		revenue = append(revenue, totals[0])
 		cost = append(cost, totals[1])
 		profit = append(profit, totals[2])
@@ -54,13 +53,6 @@ func GetAllProfits(selectionStr string) ([][]float64, []string) {
 	costs := make([]float64, 0)
 
 	for _, v := range items {
-		//totals := GetTotalProfit(v.ID, targetSheet, selectionStr)
-		/*
-			revenue = append(revenue, totals[0])
-			costs = append(revenue, totals[1])
-			profits = append(profits, totals[2])
-		*/
-
 		names = append(names, v.Name)
 		revenue = append(revenue, v.Price)
 		costs = append(revenue, v.Cost)

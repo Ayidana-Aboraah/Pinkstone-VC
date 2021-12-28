@@ -8,7 +8,6 @@ import (
 	_ "image/png"
 )
 
-var Path = "barcodes [test]/"
 
 func ReadImage(img image.Image) *gozxing.Result {
 	// prepare BinaryBitmap
@@ -17,6 +16,7 @@ func ReadImage(img image.Image) *gozxing.Result {
 	// decode image
 	barReader := oned.NewUPCAReader()
 	result, _ := barReader.Decode(bmp, nil)
+
 
 	fmt.Println(result)
 	return result

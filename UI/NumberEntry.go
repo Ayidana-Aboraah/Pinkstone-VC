@@ -14,10 +14,11 @@ func (n *NumEntry) Keyboard() mobile.KeyboardType {
 	return mobile.NumberKeyboard
 }
 
-func NewNumEntry() *NumEntry {
+func NewNumEntry(placeHolder string) *NumEntry {
 	e := &NumEntry{}
 	e.ExtendBaseWidget(e)
 	e.Validator = validation.NewRegexp(`\d`, "Must contain a number")
+	e.PlaceHolder = placeHolder
 	return e
 }
 

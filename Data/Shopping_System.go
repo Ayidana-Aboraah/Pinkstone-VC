@@ -37,37 +37,25 @@ func BuyCart(ShoppingCart []Sale) []Sale {
 }
 
 //Must pass as the new value of Shopping Cart similar to appending to an array
-func AddToCart(ID int, ShoppingCart []Sale) []Sale {
-	targetSheet := "Items"
+func AddToCart(item Sale, ShoppingCart []Sale) []Sale {
 	for {
 		for i, v := range ShoppingCart {
-			if v.ID == ID {
+			if v.ID == item.ID && v.Price == item.Price{
 				//v.Quantity += 1
 				ShoppingCart[i].Quantity += 1
 				return ShoppingCart
 			}
 		}
-		idx := GetIndex(targetSheet, ID, 1)
-		name := F.GetCellValue(targetSheet, "B"+strconv.Itoa(idx))
-		p, _ := strconv.ParseFloat(F.GetCellValue(targetSheet, "C"+strconv.Itoa(idx)), 64)
-		c, _ := strconv.ParseFloat(F.GetCellValue(targetSheet, "D"+strconv.Itoa(idx)), 64)
 
-		temp := Sale{
-			ID:       ID,
-			Name:     name,
-			Price:    p,
-			Cost:     c,
-			Quantity: 1,
-		}
-		fmt.Println(temp)
-		ShoppingCart = append(ShoppingCart, temp)
+		fmt.Println(item)
+		ShoppingCart = append(ShoppingCart, item)
 		return ShoppingCart
 	}
 }
 
-func DecreaseFromCart(ID int, ShoppingCart []Sale) []Sale {
+func DecreaseFromCart(item Sale, ShoppingCart []Sale) []Sale {
 	for i, v := range ShoppingCart {
-		if v.ID == ID {
+		if v.ID == item.ID && v.Price == item.Price{
 			if v.Quantity-1 > 0 {
 				ShoppingCart[i].Quantity -= 1
 			} else {

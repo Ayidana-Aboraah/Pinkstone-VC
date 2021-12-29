@@ -1,7 +1,6 @@
 package Cam
 
 import (
-	"C"
 	"gocv.io/x/gocv"
 )
 

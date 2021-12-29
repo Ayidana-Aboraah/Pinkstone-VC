@@ -76,8 +76,8 @@ func UpdateData(item Sale, targetSheet string, variant int) {
 		F.SetCellValue(targetSheet, "A"+strconv.Itoa(idx), item.ID)
 		F.SetCellValue(targetSheet, "B"+strconv.Itoa(idx), item.Name)
 		F.SetCellValue(targetSheet, "C"+strconv.Itoa(idx), item.Quantity)
-		F.SetCellValue(targetSheet, "D"+strconv.Itoa(idx), item.Price * float64(item.Quantity))
-		F.SetCellValue(targetSheet, "E"+strconv.Itoa(idx), item.Cost * float64(item.Quantity))
+		F.SetCellValue(targetSheet, "D"+strconv.Itoa(idx), item.Price*float64(item.Quantity))
+		F.SetCellValue(targetSheet, "E"+strconv.Itoa(idx), item.Cost*float64(item.Quantity))
 		F.SetCellValue(targetSheet, "F"+strconv.Itoa(idx), inventory)
 		F.SetCellValue(targetSheet, "G"+strconv.Itoa(idx), ConvertDate(time.Now()))
 		break
@@ -107,7 +107,7 @@ func UpdateInventory(ID, amount int) int {
 	return newInventory
 }
 
-func GetIndex(targetSheet string, ID, searchType int) int  {
+func GetIndex(targetSheet string, ID, searchType int) int {
 	i := 1
 	cell := F.GetCellValue(targetSheet, "A"+strconv.Itoa(i))
 	for {

@@ -13,7 +13,7 @@ func GetAllIDs(targetSheet, selectionStr string) []Sale {
 
 	complete := false
 
-	for i := 2; cell != ""; i++{
+	for i := 2; cell != ""; i++ {
 		complete = false
 		cell = F.GetCellValue(targetSheet, "A"+strconv.Itoa(i))
 		checkCell := F.GetCellValue(targetSheet, "G"+strconv.Itoa(i))
@@ -25,23 +25,21 @@ func GetAllIDs(targetSheet, selectionStr string) []Sale {
 			revenue, cost, _ := ConvertStringToSale(rev, cos, "")
 			conID, _ := strconv.Atoi(cell)
 
-			for idx, v := range Items{
-				if v.ID == conID{
+			for idx, v := range Items {
+				if v.ID == conID {
 					Items[idx].Price += revenue
 					Items[idx].Cost += cost
 					complete = true
 					break
 				}
 			}
-			if !complete{
-
-
+			if !complete {
 
 				temp := Sale{
-					ID: conID,
-					Name: name,
-					Price: revenue,
-					Cost: cost,
+					ID:       conID,
+					Name:     name,
+					Price:    revenue,
+					Cost:     cost,
 					Quantity: 1,
 				}
 
@@ -51,7 +49,7 @@ func GetAllIDs(targetSheet, selectionStr string) []Sale {
 		}
 	}
 
-	Items = Items[:len(Items) -1]
+	Items = Items[:len(Items)-1]
 
 	return Items
 }

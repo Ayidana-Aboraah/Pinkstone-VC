@@ -14,8 +14,6 @@ import (
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
-	"image"
-	_ "image/png"
 	"net/url"
 	"os"
 	"strconv"
@@ -65,12 +63,6 @@ func CreateWindow(a fyne.App) {
 func makeMainMenu(a fyne.App) fyne.CanvasObject {
 	box := container.NewVBox(
 		widget.NewLabelWithStyle("Welcome", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
-		widget.NewButton("Barcode test 1", func() {
-			file, _ := os.Open("Assets/" + "Barcode test1.png")
-			img, _, _ := image.Decode(file)
-			id := Cam.ReadImage(img).String()
-			fmt.Println(id)
-		}),
 		widget.NewButton("Import Backup", func() {
 
 		}),
@@ -134,12 +126,7 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 
 	button := widget.NewButton("New Item", func() {
 		//Get ID and Convert
-		//id := Cam.OpenCam()
-
-		//Test Code
-		file, _ := os.Open("Assets/" + "Barcode test1.png")
-		img, _, _ := image.Decode(file)
-		id := Cam.ReadImage(img).String()
+		id := Cam.OpenCam()
 
 		conID, _ := strconv.Atoi(id)
 
@@ -157,26 +144,26 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 			cart, _ = cartList.Get()
 			title.SetText(fmt.Sprintf("Cart Total: %0.0f",  Data.GetCartTotal(cart)))
 		}, w)
-		 */
+		*/
 		dialog.ShowCustomConfirm("Check (Move middle bar)", "Yes", "No",
 			container.NewVBox(
 				widget.NewLabel("Is this the right item: "+raw[0].Name),
 				priceEntry,
-				),
+			),
 			func(b bool) {
-			if !b {
-				return
-			}
-			//Append the item to the cartList
-			newPrice, _, _ := Data.ConvertStringToSale(priceEntry.Text, "", "")
-			raw[0].Price = newPrice
-			raw[0].Quantity = 1
+				if !b {
+					return
+				}
+				//Append the item to the cartList
+				newPrice, _, _ := Data.ConvertStringToSale(priceEntry.Text, "", "")
+				raw[0].Price = newPrice
+				raw[0].Quantity = 1
 
-			cart, _ := cartList.Get()
-			cartList.Set(Data.AddToCart(raw[0], cart))
-			cart, _ = cartList.Get()
-			title.SetText(fmt.Sprintf("Cart Total: %1.10f",  Data.GetCartTotal(cart)))
-		}, w)
+				cart, _ := cartList.Get()
+				cartList.Set(Data.AddToCart(raw[0], cart))
+				cart, _ = cartList.Get()
+				title.SetText(fmt.Sprintf("Cart Total: %1.10f", Data.GetCartTotal(cart)))
+			}, w)
 	})
 
 	list := widget.NewListWithData(cartList,
@@ -197,7 +184,7 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 				cart, _ := cartList.Get()
 				cartList.Set(Data.DecreaseFromCart(val, cart))
 				cart, _ = cartList.Get()
-				title.SetText(fmt.Sprintf("Cart Total: %f",  Data.GetCartTotal(cart)))
+				title.SetText(fmt.Sprintf("Cart Total: %f", Data.GetCartTotal(cart)))
 				text.SetText(i.Name + " x" + strconv.Itoa(i.Quantity))
 			}
 		})
@@ -217,7 +204,7 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 					cart, _ := cartList.Get()
 					cartList.Set(Data.BuyCart(cart))
 					cart, _ = cartList.Get()
-					title.SetText(fmt.Sprintf("Cart Total: %1.1f",  Data.GetCartTotal(cart)))
+					title.SetText(fmt.Sprintf("Cart Total: %1.1f", Data.GetCartTotal(cart)))
 					dialog.ShowInformation("Complete", "You're Purchase has been made.", w)
 				}, w)
 			}),
@@ -225,7 +212,7 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 				cart, _ := cartList.Get()
 				cartList.Set(Data.ClearCart(cart))
 				cart, _ = cartList.Get()
-				title.SetText(fmt.Sprintf("Cart Total: %1.1f",  Data.GetCartTotal(cart)))
+				title.SetText(fmt.Sprintf("Cart Total: %1.1f", Data.GetCartTotal(cart)))
 			}),
 			button,
 		),
@@ -245,35 +232,24 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 	//Create a list of all registered items
 	listData := Data.GetAllData("Items", 0)
 
-	/*
-		boundData := binding.BindSaleList(&listData)
-		list := widget.NewListWithData(boundData, func() fyne.CanvasObject {
-			return container.NewBorder(nil, nil, nil, widget.NewButton("i", nil), widget.NewLabel("name"))
-		},
+	boundData := binding.BindSaleList(&listData)
+	list := widget.NewListWithData(boundData, func() fyne.CanvasObject {
+		return container.NewBorder(nil, nil, nil, nil, widget.NewLabel("name"))
+	},
 		func(item binding.DataItem, obj fyne.CanvasObject) {
 			f := item.(binding.Sale)
 			val, _ := f.Get()
-
 			obj.(*fyne.Container).Objects[0].(*widget.Label).SetText(val.Name)
-
-			btn := obj.(*fyne.Container).Objects[1].(*widget.Button)
-			btn.OnTapped = func() {
-				vals := Data.ConvertSaleToString(val.Price, val.Cost, val.Quantity)
-				idLabel.SetText(strconv.Itoa(val.ID))
-				nameLabel.SetText(val.Name)
-				priceLabel.SetText(vals[0])
-				costLabel.SetText(vals[1])
-				inventoryLabel.SetText(vals[2])
-			}
 		})
-	*/
 
+	/*
 	list := widget.NewList(func() int { return len(listData) },
 		func() fyne.CanvasObject {
 			return container.NewVBox(widget.NewLabel("Name"))
 		}, func(id widget.ListItemID, obj fyne.CanvasObject) {
 			obj.(*fyne.Container).Objects[0].(*widget.Label).SetText(listData[id].Name)
 		})
+	*/
 
 	list.OnSelected = func(id widget.ListItemID) {
 		val := listData[id]
@@ -335,14 +311,13 @@ func makeStatsMenu() fyne.CanvasObject {
 	totalCostLabel := widget.NewLabelWithStyle("", fyne.TextAlignCenter, fyne.TextStyle{})
 	totalProfitLabel := widget.NewLabelWithStyle("", fyne.TextAlignCenter, fyne.TextStyle{})
 
-
 	scroll := container.NewVScroll(
 		container.NewAppTabs(container.NewTabItem("Graphs",
 			container.NewVBox(
 				widget.NewCard("Profit Graph", "", container.NewVBox(
 					lineSelectionEntry,
 					widget.NewButton("Graph", func() {
-						results, labels := Data.GetProfitForTimes(0,"Report Data", lineSelectionEntry.Text)
+						results, labels := Data.GetProfitForTimes(0, "Report Data", lineSelectionEntry.Text)
 						days := []string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14",
 							"15", "16", "17", "18", "19", "20", "21", "22", "23", "24",
 							"25", "26", "27", "28", "29", "30", "31"}
@@ -368,7 +343,6 @@ func makeStatsMenu() fyne.CanvasObject {
 					widget.NewButton("Graph", func() {
 						profits, labels := Data.GetAllProfits(pieSelectionEntry.Text)
 
-						
 						Graph.Labels = &labels
 						Graph.Inputs = &profits[0]
 					}),
@@ -395,7 +369,7 @@ func makeStatsMenu() fyne.CanvasObject {
 						totalCostLabel,
 						totalProfitLabel,
 					)),
-					)),
+				)),
 		))
 
 	return scroll

@@ -14,15 +14,14 @@ var LineInputs *[][]float64
 
 func generateLineItems(label string, r []float64) []opts.LineData {
 	items := make([]opts.LineData, 0)
-	for i, _ := range r{
-		items = append(items, opts.LineData{Name:label, Value: r[i]})
+	for i, _ := range r {
+		items = append(items, opts.LineData{Name: label, Value: r[i]})
 	}
 	return items
 }
 
 func generatePieItems(tags []string, data []float64) []opts.PieData {
 	items := make([]opts.PieData, 0)
-
 
 	for i, _ := range tags {
 		items = append(items, opts.PieData{Name: tags[i], Value: data[i]})
@@ -41,12 +40,12 @@ func CreateLineGraph(w http.ResponseWriter) {
 			Title:    "Profit Line Chart",
 			Subtitle: "Dark blue is Revenue, Light blue is Cost, Profit is pink;",
 		}),
-		charts.WithLegendOpts(opts.Legend{Show: true, InactiveColor: "grey",Data: *LineInputs}),
+		charts.WithLegendOpts(opts.Legend{Show: true, InactiveColor: "grey", Data: *LineInputs}),
 	)
 
 	line.SetXAxis(Labels)
 
-	for _, v := range *LineInputs{
+	for _, v := range *LineInputs {
 		line.AddSeries("", generateLineItems("data", v)).SetSeriesOptions(charts.WithLineChartOpts(opts.LineChart{Smooth: true}))
 	}
 

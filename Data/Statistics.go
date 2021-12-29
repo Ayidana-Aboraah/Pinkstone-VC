@@ -6,12 +6,12 @@ import (
 )
 
 //For the Line chart
-func GetProfitForTimes(variant int, targetSheet, subStr string)([][]float64,[]string){
+func GetProfitForTimes(variant int, targetSheet, subStr string) ([][]float64, []string) {
 	items := GetAllIDs(targetSheet, subStr)
 	labels := make([]string, 0)
 	values := make([][]float64, 0)
 
-	for _, v := range items{
+	for _, v := range items {
 		check := GetProfitForItemTimes(v.ID, targetSheet, subStr)
 		labels = append(labels, v.Name)
 		//revenue: 0, cost: 1, profit, 2;
@@ -56,7 +56,7 @@ func GetAllProfits(selectionStr string) ([][]float64, []string) {
 		names = append(names, v.Name)
 		revenue = append(revenue, v.Price)
 		costs = append(revenue, v.Cost)
-		profits = append(profits, v.Price - v.Cost)
+		profits = append(profits, v.Price-v.Cost)
 	}
 
 	return [][]float64{

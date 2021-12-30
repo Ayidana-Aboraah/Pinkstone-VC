@@ -8,8 +8,8 @@ import (
 //For the Line chart
 func GetProfitForTimes(variant int, targetSheet, subStr string) ([][]float64, []string) {
 	items := GetAllIDs(targetSheet, subStr)
-	labels := make([]string, 0)
-	values := make([][]float64, 0)
+	var labels []string
+	var values [][]float64
 
 	for _, v := range items {
 		check := GetProfitForItemTimes(v.ID, targetSheet, subStr)
@@ -22,9 +22,11 @@ func GetProfitForTimes(variant int, targetSheet, subStr string) ([][]float64, []
 }
 
 func GetProfitForItemTimes(id int, targetSheet, subStr string) [][]float64 {
-	revenue := make([]float64, 0)
-	cost := make([]float64, 0)
-	profit := make([]float64, 0)
+	var revenue []float64
+	var cost []float64
+	var profit [] float64
+
+
 
 	for i := 0; i < 32; i++ {
 		newSelect := subStr + "/" + strconv.Itoa(i)
@@ -47,10 +49,10 @@ func GetAllProfits(selectionStr string) ([][]float64, []string) {
 	items := GetAllIDs(targetSheet, selectionStr)
 	fmt.Println(items)
 
-	names := make([]string, 0)
-	profits := make([]float64, 0)
-	revenue := make([]float64, 0)
-	costs := make([]float64, 0)
+	var names []string
+	var revenue [] float64
+	var costs [] float64
+	var profits [] float64
 
 	for _, v := range items {
 		names = append(names, v.Name)

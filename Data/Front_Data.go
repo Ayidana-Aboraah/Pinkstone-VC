@@ -85,7 +85,7 @@ func GetAllData(targetSheet string, id int) []Sale {
 
 	if id == 0 {
 		cell := F.GetCellValue(targetSheet, "A2")
-		for i := 2; cell != ""; i++ {
+		for i := 2; cell != "";{
 			name := F.GetCellValue(targetSheet, "B"+strconv.Itoa(i))
 			price := F.GetCellValue(targetSheet, "C"+strconv.Itoa(i))
 			cost := F.GetCellValue(targetSheet, "D"+strconv.Itoa(i))
@@ -102,6 +102,7 @@ func GetAllData(targetSheet string, id int) []Sale {
 				Quantity: q,
 			}
 			data = append(data, temp)
+			i++
 			cell = F.GetCellValue(targetSheet, "A"+strconv.Itoa(i))
 		}
 	} else {

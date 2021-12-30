@@ -127,8 +127,9 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 	button := widget.NewButton("New Item", func() {
 		//Get ID and Convert
 		id := Cam.OpenCam()
+		stringID := id.String()
 
-		conID, _ := strconv.Atoi(id)
+		conID, _ := strconv.Atoi(stringID)
 
 		raw := Data.GetAllData("Items", conID)
 		priceEntry := UI.NewNumEntry(fmt.Sprint(raw[0].Price))
@@ -278,12 +279,13 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 		container.NewVBox(
 			widget.NewButton("Camera", func() {
 				id := Cam.OpenCam()
-				conID, _ := strconv.Atoi(id)
+				stringID := id.String()
+				conID, _ := strconv.Atoi(stringID)
 
 				results := Data.GetAllData("Items", conID)
 				res := Data.ConvertSaleToString(results[0].Price, results[0].Cost, results[0].Quantity)
 
-				idLabel.SetText(id)
+				idLabel.SetText(stringID)
 				nameLabel.SetText(results[0].Name)
 				priceLabel.SetText(res[0])
 				costLabel.SetText(res[1])

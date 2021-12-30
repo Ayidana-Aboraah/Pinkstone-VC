@@ -1,27 +1,25 @@
 package Cam
 
 import (
+	"github.com/makiuchi-d/gozxing"
 	"gocv.io/x/gocv"
 )
 
-func OpenCam() string {
-	webcam, _ := gocv.OpenVideoCapture(0)
-	window := gocv.NewWindow("Bronze Hermes")
+func OpenCam() *gozxing.Result{
+	webcam, _ := gocv.VideoCaptureDevice(0)
+	window := gocv.NewWindow("Hello")
 	img := gocv.NewMat()
 
 	for {
 		webcam.Read(&img)
 		window.IMShow(img)
-		//Turning Image mat into a normal image
-		imgObj, _ := img.ToImage()
+		imageObject, _ := img.ToImage()
+		results := ReadImage(imageObject)
 
-		//Reading the new Image
-		res := ReadImage(imgObj)
-
-		if res != nil {
-			window.Close()
+		if results != nil{
 			webcam.Close()
-			return res.String()
+			window.Close()
+			return results
 		}
 
 		window.WaitKey(1)

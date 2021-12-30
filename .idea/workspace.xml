@@ -5,16 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="44dd9531-3f5e-4b78-ae4c-7dac53db713f" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Cam/Camera.go" beforeDir="false" afterPath="$PROJECT_DIR$/Cam/Camera.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Cam/reader.go" beforeDir="false" afterPath="$PROJECT_DIR$/Cam/reader.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Data/Data_System.go" beforeDir="false" afterPath="$PROJECT_DIR$/Data/Data_System.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Data/Front_Data.go" beforeDir="false" afterPath="$PROJECT_DIR$/Data/Front_Data.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Data/Shopping_System.go" beforeDir="false" afterPath="$PROJECT_DIR$/Data/Shopping_System.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Data/Statistics.go" beforeDir="false" afterPath="$PROJECT_DIR$/Data/Statistics.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Graph/graphing.go" beforeDir="false" afterPath="$PROJECT_DIR$/Graph/graphing.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Main.go" beforeDir="false" afterPath="$PROJECT_DIR$/Main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -57,25 +51,6 @@
     <property name="node.js.detected.package.tslint" value="true" />
     <property name="node.js.selected.package.eslint" value="(autodetect)" />
     <property name="node.js.selected.package.tslint" value="(autodetect)" />
-  </component>
-  <component name="RunManager">
-    <configuration default="true" type="GoApplicationRunConfiguration" factoryName="Go Application">
-      <module name="MomApp" />
-      <working_directory value="$PROJECT_DIR$" />
-      <kind value="FILE" />
-      <directory value="$PROJECT_DIR$" />
-      <filePath value="$PROJECT_DIR$" />
-      <method v="2" />
-    </configuration>
-    <configuration default="true" type="GoTestRunConfiguration" factoryName="Go Test">
-      <module name="MomApp" />
-      <working_directory value="$PROJECT_DIR$" />
-      <kind value="DIRECTORY" />
-      <directory value="$PROJECT_DIR$" />
-      <filePath value="$PROJECT_DIR$" />
-      <framework value="gotest" />
-      <method v="2" />
-    </configuration>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TypeScriptGeneratedFilesManager">

@@ -7,13 +7,11 @@ import (
 	"image"
 )
 
-func ReadImage(img image.Image) *gozxing.Result {
-	// prepare BinaryBitmap
+func ReadImage(img image.Image) *gozxing.Result{
 	bmp, _ := gozxing.NewBinaryBitmapFromImage(img)
+	reader := oned.NewUPCAReader()
 
-	// decode image
-	barReader := oned.NewUPCAReader()
-	result, _ := barReader.Decode(bmp, nil)
+	result, _ := reader.Decode(bmp, nil)
 
 	fmt.Println(result)
 	return result

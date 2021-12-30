@@ -17,12 +17,11 @@ import (
 	"net/url"
 	"os"
 	"strconv"
-	"time"
 )
 
 var (
 	mainMenu   = container.NewWithoutLayout()
-	appIcon, _ = fyne.LoadResourceFromPath("Assets/icon02.png")
+	appIcon, _    = fyne.LoadResourceFromPath("Assets/icon02.png")
 )
 
 func main() {
@@ -82,7 +81,7 @@ func makeMainMenu(a fyne.App) fyne.CanvasObject {
 	return box
 }
 
-func createItemMenu(id int, w fyne.Window) {
+func createItemMenu(id int, w fyne.Window, boundData binding.ExternalSaleList) {
 	idLabel := widget.NewLabel(strconv.Itoa(id))
 
 	nameEntry := widget.NewEntry()
@@ -90,9 +89,7 @@ func createItemMenu(id int, w fyne.Window) {
 	nameEntry.Validator = validation.NewRegexp(`^[A-Za-z0-9_-]+$`, "username can only contain letters, numbers, '_', and '-'")
 
 	priceEntry := UI.NewNumEntry("The Price it will be sold.")
-
 	costEntry := UI.NewNumEntry("The Cost of buying this item.")
-
 	inventoryEntry := UI.NewNumEntry("The Amount currently in inventory.")
 
 	items := []*widget.FormItem{
@@ -113,6 +110,7 @@ func createItemMenu(id int, w fyne.Window) {
 
 		price, cost, inventory := Data.ConvertStringToSale(priceEntry.Text, costEntry.Text, inventoryEntry.Text)
 		Data.UpdateData(Data.NewSale(id, nameEntry.Text, price, cost, inventory), "Items", 2)
+		boundData.Set(Data.GetAllData("Items", 0))
 
 		Data.ReadVal("Items")
 		Data.SaveFile()
@@ -188,13 +186,10 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 			}, w)
 	})
 
-	split := container.NewVSplit(
-		container.NewGridWithColumns(1,
-			title,
-			list,
-		),
-
-		container.NewHBox(
+	screen := container.New(layout.NewGridLayoutWithRows(3),
+		title,
+		container.NewMax(list),
+		container.NewGridWithColumns(3,
 			widget.NewButton("Buy Cart", func() {
 				dialog.ShowConfirm("Buying", "Do you want to buy all items in the Cart?", func(b bool) {
 					if !b {
@@ -214,7 +209,7 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 			button,
 		),
 	)
-	return split
+	return screen
 }
 
 func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
@@ -226,11 +221,9 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 
 	title := widget.NewLabelWithStyle("Inventory Info", fyne.TextAlign(1), fyne.TextStyle{Bold: true})
 
-	//Create a list of all registered items
-	listData := Data.GetAllData("Items", 0)
-
-	boundData := binding.BindSaleList(&listData)
-	list := widget.NewListWithData(boundData, func() fyne.CanvasObject {
+	inventoryData := Data.GetAllData("Items", 0)
+	boundData := binding.BindSaleList(&inventoryData)
+	inventoryList := widget.NewListWithData(boundData, func() fyne.CanvasObject {
 		return container.NewBorder(nil, nil, nil, nil, widget.NewLabel("name"))
 	},
 		func(item binding.DataItem, obj fyne.CanvasObject) {
@@ -239,29 +232,18 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 			obj.(*fyne.Container).Objects[0].(*widget.Label).SetText(val.Name)
 		})
 
+	inventoryList.OnSelected = func(id widget.ListItemID) {
+		item := inventoryData[id]
+		values := Data.ConvertSaleToString(item.Price, item.Cost, item.Quantity)
 
-
-	/*
-	list := widget.NewList(func() int { return len(listData) },
-		func() fyne.CanvasObject {
-			return container.NewVBox(widget.NewLabel("Name"))
-		}, func(id widget.ListItemID, obj fyne.CanvasObject) {
-			obj.(*fyne.Container).Objects[0].(*widget.Label).SetText(listData[id].Name)
-		})
-	*/
-
-	list.OnSelected = func(id widget.ListItemID) {
-		val := listData[id]
-		vals := Data.ConvertSaleToString(val.Price, val.Cost, val.Quantity)
-
-		idLabel.SetText(strconv.Itoa(val.ID))
-		nameLabel.SetText(val.Name)
-		priceLabel.SetText(vals[0])
-		costLabel.SetText(vals[1])
-		inventoryLabel.SetText(vals[2])
+		idLabel.SetText(strconv.Itoa(item.ID))
+		nameLabel.SetText(item.Name)
+		priceLabel.SetText(values[0])
+		costLabel.SetText(values[1])
+		inventoryLabel.SetText(values[2])
 	}
 
-	box := container.New(layout.NewGridLayoutWithRows(2),
+	box := container.New(layout.NewGridLayout(2),
 		container.NewVBox(
 			title,
 			idLabel,
@@ -271,10 +253,8 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 			inventoryLabel,
 			widget.NewButton("Modify", func() {
 				conID, _ := strconv.Atoi(idLabel.Text)
-				createItemMenu(conID, w)
+				createItemMenu(conID, w, boundData)
 			}),
-		),
-		container.NewVBox(
 			widget.NewButton("Camera", func() {
 				id := Cam.OpenCam()
 				stringID := id.String()
@@ -289,15 +269,10 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 				costLabel.SetText(res[1])
 				inventoryLabel.SetText(res[2])
 			}),
-			list,
+		),
+		container.NewMax(
+			inventoryList,
 		))
-
-	go func() {
-		for {
-			time.After(time.Second * 50)
-			listData = Data.GetAllData("Items", 0)
-		}
-	}()
 
 	return box
 }
@@ -318,7 +293,7 @@ func makeStatsMenu() fyne.CanvasObject {
 	totalCostLabel := widget.NewLabelWithStyle("", fyne.TextAlignCenter, fyne.TextStyle{})
 	totalProfitLabel := widget.NewLabelWithStyle("", fyne.TextAlignCenter, fyne.TextStyle{})
 
-	scroll := container.NewVScroll(
+	scroll := container.NewMax(
 		container.NewAppTabs(container.NewTabItem("Graphs",
 			container.NewVBox(
 				widget.NewCard("Profit Graph", "", container.NewVBox(

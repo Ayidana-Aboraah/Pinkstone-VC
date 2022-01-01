@@ -5,8 +5,12 @@ import (
 	"gocv.io/x/gocv"
 )
 
-func OpenCam() *gozxing.Result{
-	webcam, _ := gocv.VideoCaptureDevice(0)
+func OpenCam() (*gozxing.Result, error, string){
+	webcam, err := gocv.VideoCaptureDevice(0)
+	if err != nil{
+		return nil, err, "You're camera May not be connected"
+	}
+
 	window := gocv.NewWindow("Hello")
 	img := gocv.NewMat()
 
@@ -17,11 +21,17 @@ func OpenCam() *gozxing.Result{
 		results := ReadImage(imageObject)
 
 		if results != nil{
-			webcam.Close()
-			window.Close()
-			return results
+			e := webcam.Close()
+			if e != nil{
+				return results, e, "Your Camera seems to not want to close."
+			}
+			er := window.Close()
+			if er != nil{
+				return results, er, "You're camera window doesn't want to close"
+			}
+			return results, err, "All good"
 		}
 
-		window.WaitKey(1)
+		window.WaitKey(3)
 	}
 }

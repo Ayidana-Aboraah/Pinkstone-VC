@@ -16,7 +16,6 @@ import (
 	"fyne.io/fyne/v2/widget"
 	"github.com/360EntSecGroup-Skylar/excelize"
 	"net/url"
-	"os"
 	"strconv"
 )
 
@@ -37,8 +36,6 @@ func CreateWindow(a fyne.App) {
 	w := a.NewWindow("Bronze Hermes")
 
 	if Data.Err != nil {
-		//Replace TestAppData with normal App data when ready
-		os.Remove("Assets/AppData.xlsx")
 		Data.SaveBackUp("BackupAppData.xlsx", "AppData.xlsx")
 		Data.F, Data.Err = excelize.OpenFile("Assets/AppData.xlsx")
 		dialog.ShowError(Data.Err, w)
@@ -63,8 +60,6 @@ func makeMainMenu(a fyne.App) fyne.CanvasObject {
 	box := container.NewVBox(
 		widget.NewLabelWithStyle("Welcome", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
 		widget.NewButton("Back Up App Data", func() {
-			//Don't forget to change the source file name when switching from test file to normal file
-			//go Data.SaveBackUp("TestAppData.xlsx", "BackupAppData.xlsx")
 			go Data.SaveBackUp("AppData.xlsx", "BackupAppData.xlsx")
 		}),
 		widget.NewButton("Quit", func() {
@@ -150,7 +145,12 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 
 	button := widget.NewButton("New Item", func() {
 		//Get ID and Convert
-		id := Cam.OpenCam()
+		id, err, msg := Cam.OpenCam()
+		if err != nil{
+			dialog.ShowError(err, w)
+			dialog.ShowInformation("Error: 01", "Camera Issue is present: " + msg, w)
+		}
+
 		stringID := id.String()
 
 		conID, _ := strconv.Atoi(stringID)
@@ -250,7 +250,12 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 				createItemMenu(conID, w, boundData, inventoryList)
 			}),
 			widget.NewButton("Camera", func() {
-				id := Cam.OpenCam()
+				id, err, msg := Cam.OpenCam()
+				if err != nil{
+					dialog.ShowError(err, w)
+					dialog.ShowInformation("Error: 01", "Camera Issue is present: " + msg, w)
+				}
+
 				stringID := id.String()
 				conID, _ := strconv.Atoi(stringID)
 

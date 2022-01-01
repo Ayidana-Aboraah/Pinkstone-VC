@@ -3,7 +3,7 @@ module BronzeHermes
 go 1.17
 
 require (
-	fyne.io/fyne/v2 v2.1.1
+	fyne.io/fyne/v2 v2.1.2
 	github.com/360EntSecGroup-Skylar/excelize v1.4.1
 	github.com/go-echarts/go-echarts/v2 v2.2.4
 	github.com/makiuchi-d/gozxing v0.1.1
@@ -15,7 +15,7 @@ require (
 	github.com/fredbi/uri v0.0.0-20181227131451-3dcfdacbaaf3 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/go-gl/gl v0.0.0-20210813123233-e4099ee2221f // indirect
-	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20210410170116-ea3d685f79fb // indirect
+	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20211024062804-40e447a793be // indirect
 	github.com/godbus/dbus/v5 v5.0.4 // indirect
 	github.com/goki/freetype v0.0.0-20181231101311-fa8a33aabaff // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect

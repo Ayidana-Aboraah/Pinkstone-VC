@@ -7,7 +7,7 @@ import (
 )
 
 func GetAllIDs(targetSheet, selectionStr string) []Sale {
-	Items := make([]Sale, 0)
+	var Items []Sale
 
 	cell := F.GetCellValue(targetSheet, "A2")
 
@@ -49,8 +49,6 @@ func GetAllIDs(targetSheet, selectionStr string) []Sale {
 		}
 	}
 
-	Items = Items[:len(Items)-1]
-
 	return Items
 }
 
@@ -64,14 +62,8 @@ func FindAll(targetSheet, targetAxis, subStr string, ID int) []int {
 		idCell := F.GetCellValue(targetSheet, "A"+strconv.Itoa(i))
 		conID, _ := strconv.Atoi(idCell)
 
-		if conID == ID {
-			if strings.Contains(cell, subStr) {
-				idxes = append(idxes, i)
-			}
-		}
-
-		if ID == 0 {
-			if strings.Contains(cell, subStr) {
+		if conID == ID  || ID == 0{
+			if strings.Contains(cell, subStr) && !strings.Contains(cell, subStr+"0") && !strings.Contains(cell, subStr+"1") {
 				idxes = append(idxes, i)
 			}
 		}

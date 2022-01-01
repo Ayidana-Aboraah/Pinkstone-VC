@@ -14,6 +14,7 @@ import (
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
+	"github.com/360EntSecGroup-Skylar/excelize"
 	"net/url"
 	"os"
 	"strconv"
@@ -21,7 +22,7 @@ import (
 
 var (
 	mainMenu   = container.NewWithoutLayout()
-	appIcon, _    = fyne.LoadResourceFromPath("Assets/icon02.png")
+	appIcon, _ = fyne.LoadResourceFromPath("Assets/icon02.png")
 )
 
 func main() {
@@ -37,18 +38,16 @@ func CreateWindow(a fyne.App) {
 
 	if Data.Err != nil {
 		//Replace TestAppData with normal App data when ready
-		os.Remove("TestAppData.xlsx")
-		//os.Remove("Assets/AppData.xlsx")
-		Data.SaveBackUp("Assets/BackupAppData.xlsx", "TestAppData.xlsx")
-		//Data.SaveBackUp("BackupAppData.xlsx", "AppData.xlsx")
-		fmt.Println(Data.Err)
+		os.Remove("Assets/AppData.xlsx")
+		Data.SaveBackUp("BackupAppData.xlsx", "AppData.xlsx")
+		Data.F, Data.Err = excelize.OpenFile("Assets/AppData.xlsx")
 		dialog.ShowError(Data.Err, w)
 	}
 
 	mainMenu = container.NewVBox(
 		container.NewAppTabs(
 			container.NewTabItem("Main", makeMainMenu(a)),
-			//Shop still not completely
+
 			container.NewTabItem("Shop", makeShoppingMenu(w)),
 
 			container.NewTabItem("Inventory", makeInfoMenu(w)),
@@ -63,16 +62,10 @@ func CreateWindow(a fyne.App) {
 func makeMainMenu(a fyne.App) fyne.CanvasObject {
 	box := container.NewVBox(
 		widget.NewLabelWithStyle("Welcome", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
-		widget.NewButton("Import Backup", func() {
-
-		}),
-		widget.NewButton("Export BackUp", func() {
-
-		}),
 		widget.NewButton("Back Up App Data", func() {
 			//Don't forget to change the source file name when switching from test file to normal file
-			go Data.SaveBackUp("TestAppData.xlsx", "BackupAppData.xlsx")
-			//go Data.SaveBackUp("AppData.xlsx", "BackupAppData.xlsx")
+			//go Data.SaveBackUp("TestAppData.xlsx", "BackupAppData.xlsx")
+			go Data.SaveBackUp("AppData.xlsx", "BackupAppData.xlsx")
 		}),
 		widget.NewButton("Quit", func() {
 			a.Quit()
@@ -81,11 +74,11 @@ func makeMainMenu(a fyne.App) fyne.CanvasObject {
 	return box
 }
 
-func createItemMenu(id int, w fyne.Window, boundData binding.ExternalSaleList) {
+func createItemMenu(id int, w fyne.Window, boundData binding.ExternalSaleList, list *widget.List) {
 	idLabel := widget.NewLabel(strconv.Itoa(id))
 
 	nameEntry := widget.NewEntry()
-	nameEntry.SetPlaceHolder("The Name of the Product")
+	nameEntry.SetPlaceHolder("Product Name with _ for spaces.")
 	nameEntry.Validator = validation.NewRegexp(`^[A-Za-z0-9_-]+$`, "username can only contain letters, numbers, '_', and '-'")
 
 	priceEntry := UI.NewNumEntry("The Price it will be sold.")
@@ -110,7 +103,9 @@ func createItemMenu(id int, w fyne.Window, boundData binding.ExternalSaleList) {
 
 		price, cost, inventory := Data.ConvertStringToSale(priceEntry.Text, costEntry.Text, inventoryEntry.Text)
 		Data.UpdateData(Data.NewSale(id, nameEntry.Text, price, cost, inventory), "Items", 2)
+		Data.UpdateData(Data.NewSale(id, nameEntry.Text, price, cost, inventory), "Price Log", 0)
 		boundData.Set(Data.GetAllData("Items", 0))
+		list.Refresh()
 
 		Data.ReadVal("Items")
 		Data.SaveFile()
@@ -142,7 +137,6 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 		text := obj.(*fyne.Container).Objects[0].(*widget.Label)
 		btn := obj.(*fyne.Container).Objects[1].(*widget.Button)
 		val := shoppingCart[id]
-
 
 		text.SetText(val.Name + " x" + strconv.Itoa(val.Quantity))
 		btn.OnTapped = func() {
@@ -253,7 +247,7 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 			inventoryLabel,
 			widget.NewButton("Modify", func() {
 				conID, _ := strconv.Atoi(idLabel.Text)
-				createItemMenu(conID, w, boundData)
+				createItemMenu(conID, w, boundData, inventoryList)
 			}),
 			widget.NewButton("Camera", func() {
 				id := Cam.OpenCam()
@@ -273,41 +267,43 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 		container.NewMax(
 			inventoryList,
 		))
-
 	return box
 }
 
-//Finish setting up graph stuff for it
 func makeStatsMenu() fyne.CanvasObject {
 	u, _ := url.Parse("http://localhost:8081/line")
 	r, _ := url.Parse("http://localhost:8081/pie")
 
 	lineLink := widget.NewHyperlink("Profits Graph", u)
-	pieLink := widget.NewHyperlink("Pie Graph", r)
+	pieLink := widget.NewHyperlink("Total Sales graph", r)
 
 	lineSelectionEntry := UI.NewNumEntry("Year/Month")
-
 	pieSelectionEntry := UI.NewNumEntry("YYYY/MM/Day")
+
+	var lineDataSelectType int
+	dataSelectOptions := widget.NewSelect([]string{"Revenue", "Cost", "Profit"},func(dataType string){
+		if dataType == "Revenue"{lineDataSelectType = 0}
+		if dataType == "Cost"{lineDataSelectType = 1}
+		if dataType == "Profit"{lineDataSelectType = 2}
+	})
 
 	totalRevLabel := widget.NewLabelWithStyle("", fyne.TextAlignCenter, fyne.TextStyle{})
 	totalCostLabel := widget.NewLabelWithStyle("", fyne.TextAlignCenter, fyne.TextStyle{})
 	totalProfitLabel := widget.NewLabelWithStyle("", fyne.TextAlignCenter, fyne.TextStyle{})
 
 	scroll := container.NewMax(
-		container.NewAppTabs(container.NewTabItem("Graphs",
 			container.NewVBox(
-				widget.NewCard("Profit Graph", "", container.NewVBox(
+				widget.NewCard("Items Graph", "", container.NewVBox(
 					lineSelectionEntry,
+					dataSelectOptions,
 					widget.NewButton("Graph", func() {
-						results, labels := Data.GetProfitForTimes(0, "Report Data", lineSelectionEntry.Text)
+						results, labels := Data.GetProfitForTimes(lineDataSelectType, "Report Data", lineSelectionEntry.Text)
 						days := []string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14",
 							"15", "16", "17", "18", "19", "20", "21", "22", "23", "24",
 							"25", "26", "27", "28", "29", "30", "31"}
 
-						fmt.Println(results)
-
 						Graph.Labels = &days
-						Graph.Categories = &labels
+						Graph.Categories = labels
 						Graph.LineInputs = &results
 					}),
 					//Put a graph here
@@ -316,43 +312,49 @@ func makeStatsMenu() fyne.CanvasObject {
 
 				widget.NewCard("Price Changes", "", container.NewVBox(
 					lineSelectionEntry,
+					dataSelectOptions,
 					widget.NewButton("Graph", func() {
+						results, labels := Data.GetProfitForTimes(lineDataSelectType, "Price Log", lineSelectionEntry.Text)
+						days := []string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14",
+							"15", "16", "17", "18", "19", "20", "21", "22", "23", "24",
+							"25", "26", "27", "28", "29", "30", "31"}
+
+						Graph.Labels = &days
+						Graph.Categories = labels
+						Graph.LineInputs = &results
 					}),
+					lineLink,
 				)),
 
 				widget.NewCard("Item Popularity", "", container.NewVBox(
 					pieSelectionEntry,
+					dataSelectOptions,
 					widget.NewButton("Graph", func() {
 						profits, labels := Data.GetAllProfits(pieSelectionEntry.Text)
 
 						Graph.Labels = &labels
-						Graph.Inputs = &profits[0]
+						Graph.Inputs = &profits[lineDataSelectType]
 					}),
 					pieLink,
 				)),
-			),
-		),
-			container.NewTabItem("Numbers",
-				container.NewVBox(
-					widget.NewCard("Totals", "", container.NewVBox(
-						pieSelectionEntry,
-						widget.NewButton("Graph", func() {
-							data, _ := Data.GetAllProfits(pieSelectionEntry.Text)
+				widget.NewCard("Totals", "", container.NewVBox(
+					pieSelectionEntry,
+					widget.NewButton("Graph", func() {
+						data, _ := Data.GetAllProfits(pieSelectionEntry.Text)
 
-							revenue := fmt.Sprint(data[0])
-							cost := fmt.Sprint(data[1])
-							profit := fmt.Sprint(data[2])
+						revenue := fmt.Sprint(data[0])
+						cost := fmt.Sprint(data[1])
+						profit := fmt.Sprint(data[2])
 
-							totalProfitLabel.SetText("Total Profit: " + profit)
-							totalRevLabel.SetText("Total Revenue: " + revenue)
-							totalCostLabel.SetText("Total Cost: " + cost)
-						}),
-						totalRevLabel,
-						totalCostLabel,
-						totalProfitLabel,
-					)),
+						totalProfitLabel.SetText("Total Profit: " + profit)
+						totalRevLabel.SetText("Total Revenue: " + revenue)
+						totalCostLabel.SetText("Total Cost: " + cost)
+					}),
+					totalRevLabel,
+					totalCostLabel,
+					totalProfitLabel,
 				)),
-		))
+			))
 
-	return scroll
+	return container.NewVScroll(scroll)
 }

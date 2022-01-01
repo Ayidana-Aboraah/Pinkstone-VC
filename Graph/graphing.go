@@ -8,7 +8,7 @@ import (
 )
 
 var Labels *[]string
-var Categories *[]string
+var Categories []string
 var Inputs *[]float64
 var LineInputs *[][]float64
 
@@ -33,20 +33,44 @@ func generatePieItems(tags []string, data []float64) []opts.PieData {
 func CreateLineGraph(w http.ResponseWriter) {
 	line := charts.NewLine()
 
-	// set some global options like Title/Legend/ToolTip or anything else
 	line.SetGlobalOptions(
 		charts.WithInitializationOpts(opts.Initialization{PageTitle: "Bronze Hermes Data", Theme: types.ThemeWesteros}),
 		charts.WithTitleOpts(opts.Title{
-			Title:    "Profit Line Chart",
-			Subtitle: "Dark blue is Revenue, Light blue is Cost, Profit is pink;",
+			Title:    "Line Chart",
+			Subtitle: "The line labeled Series is the total of everything on the chart.",
 		}),
-		charts.WithLegendOpts(opts.Legend{Show: true, InactiveColor: "grey", Data: *LineInputs}),
+		charts.WithTooltipOpts(opts.Tooltip{Show: true}),
+		charts.WithToolboxOpts(opts.Toolbox{
+			Show: true,
+			Right: "20%",
+			Feature: &opts.ToolBoxFeature{
+				SaveAsImage: &opts.ToolBoxFeatureSaveAsImage{
+					Show:  true,
+					Type:  "png",
+					Title: "Save as image",
+				},
+				DataView: &opts.ToolBoxFeatureDataView{
+					Show:  true,
+					Title: "DataView",
+					Lang: []string{"Number view", "turn off", "refresh"},
+				}},
+		}),
+		charts.WithLegendOpts(opts.Legend{Bottom: "0%", Show: true, SelectedMode: "multiple", Orient: "horizontal"}),
 	)
 
 	line.SetXAxis(Labels)
 
-	for _, v := range *LineInputs {
-		line.AddSeries("", generateLineItems("data", v)).SetSeriesOptions(charts.WithLineChartOpts(opts.LineChart{Smooth: true}))
+	for i, v := range *LineInputs {
+		line.AddSeries(Categories[i], generateLineItems(Categories[i], v)).SetSeriesOptions(
+			charts.WithLineChartOpts(opts.LineChart{Smooth: true}),
+			charts.WithMarkPointNameTypeItemOpts(
+				opts.MarkPointNameTypeItem{Name: "Maximum", Type: "max"},
+				opts.MarkPointNameTypeItem{Name: "Average", Type: "average"},
+				opts.MarkPointNameTypeItem{Name: "Minimum", Type: "min"},
+			),
+			charts.WithMarkPointStyleOpts(
+				opts.MarkPointStyle{Label: &opts.Label{Show: true}}	),
+			)
 	}
 
 	line.Render(w)
@@ -61,7 +85,6 @@ func CreatePieGraph(w http.ResponseWriter) {
 			Title:    "Item Popularity",
 			Subtitle: "Hover Over them to see how much they take up the wheel",
 		}),
-		charts.WithLegendOpts(opts.Legend{Show: true, InactiveColor: "grey", Data: *Inputs}),
 	)
 
 	pie.SetSeriesOptions(charts.WithPieChartOpts(opts.PieChart{Radius: 50}))

@@ -8,8 +8,8 @@ import (
 	"time"
 )
 
-//var F, err = excelize.OpenFile("Assets/AppData.xlsx")
-var F, Err = excelize.OpenFile("TestAppData.xlsx")
+var F, Err = excelize.OpenFile("Assets/AppData.xlsx")
+//var F, Err = excelize.OpenFile("TestAppData.xlsx")
 
 //save a back-up.
 //if an error with reading the file is met; save the back up as the file and try reading again.
@@ -33,20 +33,25 @@ func SaveFile() {
 	}
 }
 
-func SaveBackUp(sourceFile, backUpfile string) {
-	input, err := ioutil.ReadFile(sourceFile)
-	//input, err := ioutil.ReadFile("Assets/" + sourceFile)
+func SaveBackUp(sourceFile, backUpfile string) error{
+	//input, err := ioutil.ReadFile(sourceFile)
+	input, err := ioutil.ReadFile("Assets/" + sourceFile)
 	if err != nil {
 		fmt.Println(err)
-		return
+		input, err = ioutil.ReadFile("Assets/"+"TemplateData")
+		if err != nil{
+			fmt.Println(err)
+			return err
+		}
 	}
 
 	err = ioutil.WriteFile("Assets/"+backUpfile, input, 0644)
 	if err != nil {
 		fmt.Println("Error creating", backUpfile)
 		fmt.Println(err)
-		return
+		return err
 	}
+	return nil
 }
 
 func UpdateData(item Sale, targetSheet string, variant int) {

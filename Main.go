@@ -15,6 +15,8 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
 	"github.com/360EntSecGroup-Skylar/excelize"
+	_ "github.com/pion/mediadevices/pkg/driver/camera"
+	_ "image/png"
 	"net/url"
 	"strconv"
 )
@@ -26,7 +28,7 @@ var (
 func main() {
 	a := app.NewWithID("Bronze Hermes")
 	a.SetIcon(appIcon)
-	go Graph.StartServers()
+	//go Graph.StartServers()
 
 	CreateWindow(a)
 }
@@ -35,9 +37,9 @@ func CreateWindow(a fyne.App) {
 	w := a.NewWindow("Bronze Hermes")
 
 	if Data.Err != nil {
-		Data.SaveBackUp("BackupAppData.xlsx", "AppData.xlsx")
+		UI.HandleError(Data.SaveBackUp("BackupAppData.xlsx", "AppData.xlsx"))
 		Data.F, Data.Err = excelize.OpenFile("Assets/AppData.xlsx")
-		dialog.ShowError(Data.Err, w)
+		UI.HandleErrorWithMessage(Data.Err, "Failed to grab data. Failed to also replace Data with Backup Data", w)
 	}
 
 	mainMenu := container.NewVBox(
@@ -144,21 +146,21 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 
 	button := widget.NewButton("New Item", func() {
 		//Get ID and Convert
-		id, err, msg := Cam.OpenCam()
-		if err != nil{
-			dialog.ShowError(err, w)
-			dialog.ShowInformation("Error: 01", "Camera Issue is present: " + msg, w)
+
+		id := Cam.OpenCam()
+
+		if id == "X"{
+			dialog.ShowInformation("Time Up!", "The camera has been open for too long, but you can open it again.", w)
+			return
 		}
 
-		stringID := id.String()
-
-		conID, _ := strconv.Atoi(stringID)
+		conID, _ := strconv.Atoi(id)
 
 		raw := Data.GetAllData("Items", conID)
 		priceEntry := UI.NewNumEntry(fmt.Sprint(raw[0].Price))
 		priceEntry.Text = fmt.Sprint(raw[0].Price)
 
-		dialog.ShowCustomConfirm("Check (Move middle bar)", "Yes", "No",
+		dialog.ShowCustomConfirm("Check", "Yes", "No",
 			container.NewVBox(
 				widget.NewLabel("Is this the right item: "+raw[0].Name),
 				priceEntry,
@@ -249,19 +251,17 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 				createItemMenu(conID, w, boundData, inventoryList)
 			}),
 			widget.NewButton("Camera", func() {
-				id, err, msg := Cam.OpenCam()
-				if err != nil{
-					dialog.ShowError(err, w)
-					dialog.ShowInformation("Error: 01", "Camera Issue is present: " + msg, w)
+				id := Cam.OpenCam()
+				if id == "X"{
+					dialog.ShowInformation("Time Up!", "The camera has been open for too long, but you can open it again.", w)
+					return
 				}
-
-				stringID := id.String()
-				conID, _ := strconv.Atoi(stringID)
+				conID, _ := strconv.Atoi(id)
 
 				results := Data.GetAllData("Items", conID)
 				res := Data.ConvertSaleToString(results[0].Price, results[0].Cost, results[0].Quantity)
 
-				idLabel.SetText(stringID)
+				idLabel.SetText(id)
 				nameLabel.SetText(results[0].Name)
 				priceLabel.SetText(res[0])
 				costLabel.SetText(res[1])

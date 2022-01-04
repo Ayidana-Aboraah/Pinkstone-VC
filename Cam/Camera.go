@@ -1,37 +1,31 @@
 package Cam
 
 import (
-	"github.com/makiuchi-d/gozxing"
-	"gocv.io/x/gocv"
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/canvas"
+	"fyne.io/fyne/v2/widget"
+	_ "github.com/pion/mediadevices/pkg/driver/camera"
+	"image"
 )
 
-func OpenCam() (*gozxing.Result, error, string){
-	webcam, err := gocv.VideoCaptureDevice(0)
-	if err != nil{
-		return nil, err, "You're camera May not be connected"
-	}
+var camRaw image.Image
 
-	window := gocv.NewWindow("Hello")
-	img := gocv.NewMat()
+func OpenCam() string{
+	camRaw = canvas.NewImageFromFile("Assets/icon02.png").Image
+	CamOutput = canvas.NewImageFromImage(camRaw)
+	CamOutput.FillMode = canvas.ImageFillOriginal
+	CamOutput.Refresh()
 
-	for {
-		webcam.Read(&img)
-		window.IMShow(img)
-		imageObject, _ := img.ToImage()
-		results := ReadImage(imageObject)
+	w := fyne.CurrentApp().NewWindow("Camera")
+	w.SetContent(CamOutput)
+	w.Show()
 
-		if results != nil{
-			e := webcam.Close()
-			if e != nil{
-				return results, e, "Your Camera seems to not want to close."
-			}
-			er := window.Close()
-			if er != nil{
-				return results, er, "You're camera window doesn't want to close"
-			}
-			return results, err, "All good"
-		}
+	label := widget.NewLabel(" ")
+	label.SetText(StartCamera())
+	w.Close()
+	return label.Text
+}
 
-		window.WaitKey(3)
-	}
+func MakeCamMenu() string{
+return ""
 }

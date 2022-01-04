@@ -20,7 +20,6 @@ import (
 )
 
 var (
-	mainMenu   = container.NewWithoutLayout()
 	appIcon, _ = fyne.LoadResourceFromPath("Assets/icon02.png")
 )
 
@@ -41,7 +40,7 @@ func CreateWindow(a fyne.App) {
 		dialog.ShowError(Data.Err, w)
 	}
 
-	mainMenu = container.NewVBox(
+	mainMenu := container.NewVBox(
 		container.NewAppTabs(
 			container.NewTabItem("Main", makeMainMenu(a)),
 

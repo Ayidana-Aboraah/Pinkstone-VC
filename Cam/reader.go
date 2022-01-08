@@ -7,7 +7,7 @@ import (
 	"image"
 )
 
-func ReadImage(img image.Image) *gozxing.Result{
+func ReadImage(img image.Image) *gozxing.Result {
 	bmp, _ := gozxing.NewBinaryBitmapFromImage(img)
 	reader := oned.NewUPCAReader()
 

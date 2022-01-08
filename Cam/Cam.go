@@ -12,16 +12,15 @@ import (
 	"time"
 )
 
-func StartCamera() string{
-	stream, errA:= mediadevices.GetUserMedia(mediadevices.MediaStreamConstraints{
+func StartCamera(Output *canvas.Image, done chan bool) string {
+	stream, errA := mediadevices.GetUserMedia(mediadevices.MediaStreamConstraints{
 		Video: func(constraint *mediadevices.MediaTrackConstraints) {
 			constraint.Width = prop.Int(600)
 			constraint.Height = prop.Int(400)
 			constraint.FrameRate = prop.Float(24)
 		},
 	})
-	UI.HandleError(errA)
-
+	UI.HandleError(&errA)
 
 	vidTrack := stream.GetVideoTracks()[0]
 	videoTrack := vidTrack.(*mediadevices.VideoTrack)
@@ -30,37 +29,34 @@ func StartCamera() string{
 	videoReader := videoTrack.NewReader(false)
 
 	result := ""
-	run := func() chan bool{
+	run := func() chan bool {
 		ticker := time.NewTicker(10 * time.Millisecond)
-		done := make(chan bool, 1)
-		defer close(done)
 		defer ticker.Stop()
 
 		time.Sleep(50 * time.Millisecond)
 
 		i := 0
-		for{
-			select{
-			case <- done:
+		for {
+			select {
+			case <-done:
+				time.Sleep(50 * time.Millisecond)
 				return done
-			case <- ticker.C:
+			case <-ticker.C:
 				i += 1
 				frame, release, _ := videoReader.Read()
-				RefreshCam(frame)
+				RefreshCam(Output, frame)
 
 				answer := ReadImage(frame)
 				if answer != nil {
 					result = answer.String()
-					CamOutput.FillMode = canvas.ImageFillStretch
-					CamOutput.Refresh()
+					Output.FillMode = canvas.ImageFillStretch
 					release()
 					return done
 				}
 
-				if i >= 250{
+				if i >= 250 {
 					result = "X"
-					CamOutput.FillMode = canvas.ImageFillStretch
-					CamOutput.Refresh()
+					Output.FillMode = canvas.ImageFillStretch
 					release()
 					return done
 				}
@@ -76,10 +72,7 @@ func StartCamera() string{
 	return result
 }
 
-var CamOutput *canvas.Image
-
-func RefreshCam(newInput image.Image){
-	CamOutput.Image = newInput
-	CamOutput.Refresh()
+func RefreshCam(Output *canvas.Image, newInput image.Image) {
+	Output.Image = newInput
+	Output.Refresh()
 }
-

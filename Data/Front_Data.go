@@ -62,7 +62,7 @@ func FindAll(targetSheet, targetAxis, subStr string, ID int) []int {
 		idCell := F.GetCellValue(targetSheet, "A"+strconv.Itoa(i))
 		conID, _ := strconv.Atoi(idCell)
 
-		if conID == ID  || ID == 0{
+		if conID == ID || ID == 0 {
 			if strings.Contains(cell, subStr) && !strings.Contains(cell, subStr+"0") && !strings.Contains(cell, subStr+"1") {
 				idxes = append(idxes, i)
 			}
@@ -77,7 +77,7 @@ func GetAllData(targetSheet string, id int) []Sale {
 
 	if id == 0 {
 		cell := F.GetCellValue(targetSheet, "A2")
-		for i := 2; cell != "";{
+		for i := 2; cell != ""; {
 			name := F.GetCellValue(targetSheet, "B"+strconv.Itoa(i))
 			price := F.GetCellValue(targetSheet, "C"+strconv.Itoa(i))
 			cost := F.GetCellValue(targetSheet, "D"+strconv.Itoa(i))

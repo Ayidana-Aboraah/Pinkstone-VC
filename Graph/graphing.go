@@ -41,7 +41,7 @@ func CreateLineGraph(w http.ResponseWriter) {
 		}),
 		charts.WithTooltipOpts(opts.Tooltip{Show: true}),
 		charts.WithToolboxOpts(opts.Toolbox{
-			Show: true,
+			Show:  true,
 			Right: "20%",
 			Feature: &opts.ToolBoxFeature{
 				SaveAsImage: &opts.ToolBoxFeatureSaveAsImage{
@@ -52,7 +52,7 @@ func CreateLineGraph(w http.ResponseWriter) {
 				DataView: &opts.ToolBoxFeatureDataView{
 					Show:  true,
 					Title: "DataView",
-					Lang: []string{"Number view", "turn off", "refresh"},
+					Lang:  []string{"Number view", "turn off", "refresh"},
 				}},
 		}),
 		charts.WithLegendOpts(opts.Legend{Bottom: "0%", Show: true, SelectedMode: "multiple", Orient: "horizontal"}),
@@ -69,8 +69,8 @@ func CreateLineGraph(w http.ResponseWriter) {
 				opts.MarkPointNameTypeItem{Name: "Minimum", Type: "min"},
 			),
 			charts.WithMarkPointStyleOpts(
-				opts.MarkPointStyle{Label: &opts.Label{Show: true}}	),
-			)
+				opts.MarkPointStyle{Label: &opts.Label{Show: true}}),
+		)
 	}
 
 	line.Render(w)

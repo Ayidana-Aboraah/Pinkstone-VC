@@ -9,6 +9,7 @@ import (
 )
 
 var F, Err = excelize.OpenFile("Assets/AppData.xlsx")
+
 //var F, Err = excelize.OpenFile("TestAppData.xlsx")
 
 //save a back-up.
@@ -33,13 +34,13 @@ func SaveFile() {
 	}
 }
 
-func SaveBackUp(sourceFile, backUpfile string) error{
+func SaveBackUp(sourceFile, backUpfile string) error {
 	//input, err := ioutil.ReadFile(sourceFile)
 	input, err := ioutil.ReadFile("Assets/" + sourceFile)
 	if err != nil {
 		fmt.Println(err)
-		input, err = ioutil.ReadFile("Assets/"+"TemplateData")
-		if err != nil{
+		input, err = ioutil.ReadFile("Assets/" + "TemplateData")
+		if err != nil {
 			fmt.Println(err)
 			return err
 		}

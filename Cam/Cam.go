@@ -15,8 +15,6 @@ import (
 func StartCamera(Output *canvas.Image, done chan bool) string {
 	stream, errA := mediadevices.GetUserMedia(mediadevices.MediaStreamConstraints{
 		Video: func(constraint *mediadevices.MediaTrackConstraints) {
-			constraint.Width = prop.Int(600)
-			constraint.Height = prop.Int(400)
 			constraint.FrameRate = prop.Float(24)
 		},
 	})

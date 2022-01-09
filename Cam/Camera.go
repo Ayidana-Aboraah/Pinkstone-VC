@@ -1,6 +1,7 @@
 package Cam
 
 import (
+	"fmt"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/widget"
@@ -21,16 +22,20 @@ func OpenCam() string {
 	done := make(chan bool)
 	defer close(done)
 
-	evacuate := false
+	var complete, evacuate bool
 	w.SetOnClosed(func() {
-		done <- true
+		if !complete{
+			done <- true
+			return
+		}
 		evacuate = true
-		label.SetText("V")
 	})
 
 	label.SetText(StartCamera(&CamOutput, done))
+	complete = true
 
 	if evacuate {
+		fmt.Println("Evacuating...")
 		return "V"
 	}
 

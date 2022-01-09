@@ -25,10 +25,10 @@ func OpenCam() string {
 	var complete, evacuate bool
 	w.SetOnClosed(func() {
 		if !complete{
+			evacuate = true
 			done <- true
 			return
 		}
-		evacuate = true
 	})
 
 	label.SetText(StartCamera(&CamOutput, done))

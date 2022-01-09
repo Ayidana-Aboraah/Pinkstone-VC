@@ -6,9 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="44dd9531-3f5e-4b78-ae4c-7dac53db713f" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/BackupAppData.xlsx" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/BronzeHermes.exe" beforeDir="false" afterPath="$PROJECT_DIR$/BronzeHermes.exe" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cam/Cam.go" beforeDir="false" afterPath="$PROJECT_DIR$/Cam/Cam.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Cam/Camera.go" beforeDir="false" afterPath="$PROJECT_DIR$/Cam/Camera.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />

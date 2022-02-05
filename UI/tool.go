@@ -6,13 +6,13 @@ import (
 	"fyne.io/fyne/v2/dialog"
 )
 
-func HandleError(err *error) {
+func HandleError(err error) {
 	if err != nil {
 		fmt.Println(err)
 	}
 }
 
-func HandleErrorWithMessage(err *error, msg string, w fyne.Window) {
-	dialog.ShowError(*err, w)
+func HandleErrorWithMessage(err error, msg string, w fyne.Window) {
+	dialog.ShowError(err, w)
 	dialog.ShowInformation("Error", msg, w)
 }

@@ -6,8 +6,13 @@
   <component name="ChangeListManager">
     <list default="true" id="44dd9531-3f5e-4b78-ae4c-7dac53db713f" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BronzeHermes.exe" beforeDir="false" afterPath="$PROJECT_DIR$/BronzeHermes.exe" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cam/Camera.go" beforeDir="false" afterPath="$PROJECT_DIR$/Cam/Camera.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/AppData.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/AppData.xlsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Data/Front_Data.go" beforeDir="false" afterPath="$PROJECT_DIR$/Data/Front_Data.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Data/Shopping_System.go" beforeDir="false" afterPath="$PROJECT_DIR$/Data/Shopping_System.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Data/Statistics.go" beforeDir="false" afterPath="$PROJECT_DIR$/Data/Statistics.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Main.go" beforeDir="false" afterPath="$PROJECT_DIR$/Main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UI/tool.go" beforeDir="false" afterPath="$PROJECT_DIR$/UI/tool.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -37,12 +42,12 @@
     <option name="indexEntireGoPath" value="false" />
   </component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="file://$PROJECT_DIR$/../../../../Programs/programming_language/GoPath/pkg/mod/fyne.io/fyne/v2@v2.1.2/data/binding/binditems.go" root0="SKIP_INSPECTION" />
-    <setting file="file://$PROJECT_DIR$/../../../../Programs/programming_language/GoPath/pkg/mod/fyne.io/fyne/v2@v2.1.1/data/binding/binditems.go" root0="SKIP_INSPECTION" />
-    <setting file="file://$PROJECT_DIR$/../../../../Programs/programming_language/GoPath/pkg/mod/fyne.io/fyne/v2@v2.1.2/data/binding/bindlists.go" root0="SKIP_INSPECTION" />
-    <setting file="file://$PROJECT_DIR$/../../../../Programs/programming_language/GoPath/pkg/mod/fyne.io/fyne/v2@v2.1.1/data/binding/bindlists.go" root0="SKIP_INSPECTION" />
-    <setting file="file://$PROJECT_DIR$/Main.go" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/../../../../Programs/programming_language/GoPath/pkg/mod/fyne.io/fyne/v2@v2.1.1/data/binding/binding.go" root0="SKIP_INSPECTION" />
+    <setting file="file://$PROJECT_DIR$/../../../../Programs/programming_language/GoPath/pkg/mod/fyne.io/fyne/v2@v2.1.2/data/binding/binditems.go" root0="SKIP_INSPECTION" />
+    <setting file="file://$PROJECT_DIR$/Main.go" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/../../../../Programs/programming_language/GoPath/pkg/mod/fyne.io/fyne/v2@v2.1.2/data/binding/bindlists.go" root0="SKIP_INSPECTION" />
+    <setting file="file://$PROJECT_DIR$/../../../../Programs/programming_language/GoPath/pkg/mod/fyne.io/fyne/v2@v2.1.1/data/binding/binditems.go" root0="SKIP_INSPECTION" />
+    <setting file="file://$PROJECT_DIR$/../../../../Programs/programming_language/GoPath/pkg/mod/fyne.io/fyne/v2@v2.1.1/data/binding/bindlists.go" root0="SKIP_INSPECTION" />
   </component>
   <component name="ProjectId" id="22w0ZEp3y1F7S70rjEPv9RiVtQp" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />

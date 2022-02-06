@@ -18,7 +18,7 @@ func StartCamera(Output *canvas.Image, done chan bool) string {
 			constraint.FrameRate = prop.Float(24)
 		},
 	})
-	UI.HandleError(&errA)
+	UI.HandleError(errA)
 
 	vidTrack := stream.GetVideoTracks()[0]
 	videoTrack := vidTrack.(*mediadevices.VideoTrack)

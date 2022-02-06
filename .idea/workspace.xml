@@ -6,13 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="44dd9531-3f5e-4b78-ae4c-7dac53db713f" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/AppData.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/AppData.xlsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Data/Front_Data.go" beforeDir="false" afterPath="$PROJECT_DIR$/Data/Front_Data.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Data/Shopping_System.go" beforeDir="false" afterPath="$PROJECT_DIR$/Data/Shopping_System.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Data/Statistics.go" beforeDir="false" afterPath="$PROJECT_DIR$/Data/Statistics.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Main.go" beforeDir="false" afterPath="$PROJECT_DIR$/Main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/UI/tool.go" beforeDir="false" afterPath="$PROJECT_DIR$/UI/tool.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cam/Cam.go" beforeDir="false" afterPath="$PROJECT_DIR$/Cam/Cam.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

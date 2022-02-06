@@ -122,3 +122,24 @@ func GetTotalProfit(id int, targetSheet, selectionStr string) []float64 {
 		totalProfit,
 	}
 }
+
+func GetSalesForTime(selectionStr string) ([]float64, []string){
+	targetSheet := "Report Data"
+	var names []string
+	var sales []float64
+
+
+	//GetIDS(targetSheet, selectionStr)
+	//Go through each data and see if it contains selectionStr
+	// If yes -> Take the targetAxis;
+	// If no -> Skip to next
+	// if Null, check next and then return
+
+	items := GetAllIDs(targetSheet, selectionStr)
+
+	for _, v := range items {
+		names = append(names, v.Name)
+		sales = append(sales, float64(v.Quantity))
+	}
+	return sales, names
+}

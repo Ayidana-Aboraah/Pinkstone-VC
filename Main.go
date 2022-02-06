@@ -35,19 +35,16 @@ func CreateWindow(a fyne.App) {
 
 	if Data.Err != nil {
 		err := Data.SaveBackUp("BackupAppData.xlsx", "AppData.xlsx")
-		UI.HandleError(&err)
+		UI.HandleError(err)
 		Data.F, Data.Err = excelize.OpenFile("Assets/AppData.xlsx")
-		UI.HandleErrorWithMessage(&Data.Err, "Failed to grab data. Failed to also replace Data with Backup Data", w)
+		UI.HandleErrorWithMessage(Data.Err, "Failed to grab data. Failed to also replace Data with Backup Data", w)
 	}
 
 	mainMenu := container.NewVBox(
 		container.NewAppTabs(
 			container.NewTabItem("Main", makeMainMenu(a)),
-
 			container.NewTabItem("Shop", makeShoppingMenu(w)),
-
 			container.NewTabItem("Inventory", makeInfoMenu(w)),
-
 			container.NewTabItem("Statistics", makeStatsMenu()),
 		))
 
@@ -61,10 +58,7 @@ func makeMainMenu(a fyne.App) fyne.CanvasObject {
 		widget.NewButton("Back Up App Data", func() {
 			go Data.SaveBackUp("AppData.xlsx", "BackupAppData.xlsx")
 		}),
-		widget.NewButton("Quit", func() {
-			a.Quit()
-		}),
-	)
+		widget.NewButton("Quit", a.Quit))
 	return box
 }
 
@@ -288,13 +282,12 @@ func makeStatsMenu() fyne.CanvasObject {
 
 	var lineDataSelectType int
 	dataSelectOptions := widget.NewSelect([]string{"Revenue", "Cost", "Profit"}, func(dataType string) {
-		if dataType == "Revenue" {
+		switch	dataType{
+		case "Revenue":
 			lineDataSelectType = 0
-		}
-		if dataType == "Cost" {
+		case "Cost":
 			lineDataSelectType = 1
-		}
-		if dataType == "Profit" {
+		case "Profit":
 			lineDataSelectType = 2
 		}
 	})
@@ -302,6 +295,7 @@ func makeStatsMenu() fyne.CanvasObject {
 	totalRevLabel := widget.NewLabelWithStyle("", fyne.TextAlignCenter, fyne.TextStyle{})
 	totalCostLabel := widget.NewLabelWithStyle("", fyne.TextAlignCenter, fyne.TextStyle{})
 	totalProfitLabel := widget.NewLabelWithStyle("", fyne.TextAlignCenter, fyne.TextStyle{})
+
 
 	days := []string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14",
 		"15", "16", "17", "18", "19", "20", "21", "22", "23", "24",
@@ -346,6 +340,17 @@ func makeStatsMenu() fyne.CanvasObject {
 				}),
 				pieLink,
 			)),
+
+			widget.NewCard("Item Sales", "", container.NewVBox(
+				pieSelectionEntry,
+				widget.NewButton("Graph", func() {
+					sales, labels := Data.GetSalesForTime(pieSelectionEntry.Text)
+
+					Graph.Labels = &labels
+					Graph.Inputs = &sales
+				}),
+				pieLink,
+				)),
 			widget.NewCard("Totals", "", container.NewVBox(
 				pieSelectionEntry,
 				widget.NewButton("Graph", func() {

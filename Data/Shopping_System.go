@@ -5,13 +5,12 @@ import (
 	"strconv"
 )
 
-// Defining the Sale info used later
 type Sale struct {
 	ID       int
-	Name     string
+	Quantity int
 	Price    float64
 	Cost     float64
-	Quantity int
+	Name     string
 }
 
 func NewSale(ID int, Name string, Price, Cost float64, Quantity int) Sale {

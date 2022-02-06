@@ -6,8 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="44dd9531-3f5e-4b78-ae4c-7dac53db713f" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BronzeHermes.exe" beforeDir="false" afterPath="$PROJECT_DIR$/BronzeHermes.exe" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cam/Camera.go" beforeDir="false" afterPath="$PROJECT_DIR$/Cam/Camera.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -37,12 +37,12 @@
     <option name="indexEntireGoPath" value="false" />
   </component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="file://$PROJECT_DIR$/../../../../Programs/programming_language/GoPath/pkg/mod/fyne.io/fyne/v2@v2.1.2/data/binding/binditems.go" root0="SKIP_INSPECTION" />
-    <setting file="file://$PROJECT_DIR$/../../../../Programs/programming_language/GoPath/pkg/mod/fyne.io/fyne/v2@v2.1.1/data/binding/binditems.go" root0="SKIP_INSPECTION" />
-    <setting file="file://$PROJECT_DIR$/../../../../Programs/programming_language/GoPath/pkg/mod/fyne.io/fyne/v2@v2.1.2/data/binding/bindlists.go" root0="SKIP_INSPECTION" />
-    <setting file="file://$PROJECT_DIR$/../../../../Programs/programming_language/GoPath/pkg/mod/fyne.io/fyne/v2@v2.1.1/data/binding/bindlists.go" root0="SKIP_INSPECTION" />
-    <setting file="file://$PROJECT_DIR$/Main.go" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/../../../../Programs/programming_language/GoPath/pkg/mod/fyne.io/fyne/v2@v2.1.1/data/binding/binding.go" root0="SKIP_INSPECTION" />
+    <setting file="file://$PROJECT_DIR$/../../../../Programs/programming_language/GoPath/pkg/mod/fyne.io/fyne/v2@v2.1.2/data/binding/binditems.go" root0="SKIP_INSPECTION" />
+    <setting file="file://$PROJECT_DIR$/Main.go" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/../../../../Programs/programming_language/GoPath/pkg/mod/fyne.io/fyne/v2@v2.1.2/data/binding/bindlists.go" root0="SKIP_INSPECTION" />
+    <setting file="file://$PROJECT_DIR$/../../../../Programs/programming_language/GoPath/pkg/mod/fyne.io/fyne/v2@v2.1.1/data/binding/binditems.go" root0="SKIP_INSPECTION" />
+    <setting file="file://$PROJECT_DIR$/../../../../Programs/programming_language/GoPath/pkg/mod/fyne.io/fyne/v2@v2.1.1/data/binding/bindlists.go" root0="SKIP_INSPECTION" />
   </component>
   <component name="ProjectId" id="22w0ZEp3y1F7S70rjEPv9RiVtQp" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
@@ -77,6 +77,25 @@
       <recent name="D:\Projects\Projects Golang\Mobile Apps\MomApp\Test" />
       <recent name="D:\Projects\Projects Golang\Mobile Apps\MomApp\Assets" />
     </key>
+  </component>
+  <component name="RunManager">
+    <configuration default="true" type="GoApplicationRunConfiguration" factoryName="Go Application">
+      <module name="MomApp" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="FILE" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="GoTestRunConfiguration" factoryName="Go Test">
+      <module name="MomApp" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="DIRECTORY" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <method v="2" />
+    </configuration>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TypeScriptGeneratedFilesManager">

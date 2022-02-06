@@ -1,7 +1,6 @@
 package Data
 
 import (
-	"BronzeHermes/UI"
 	"fmt"
 	"strconv"
 	"strings"
@@ -122,34 +121,39 @@ func GetTotalProfit(id int, targetSheet, selectionStr string) []float64 {
 	}
 }
 
-func GetSalesForTime(selectionStr string) ([]int, []string){
+func GetSalesForTime(selectionStr string) ([]float64, []string){
 	targetSheet := "Report Data"
-	var sales []int
+	var sales []float64
 
 	IDs, names := GetAllIDs(targetSheet, selectionStr)
 
-	for id := range IDs{
+	for index := range IDs{
 		checkCell := F.GetCellValue(targetSheet, "G1")
 		mSales := 0
 
 		for i := 1; checkCell != ""; i++{
 			checkCell = F.GetCellValue(targetSheet, "G" + strconv.Itoa(i))
+			println(checkCell)
 
 			if !strings.Contains(checkCell, selectionStr){continue}
 
 			idCell := F.GetCellValue(targetSheet, "A"+strconv.Itoa(i))
-			conID, err := strconv.Atoi(idCell);	UI.HandleError(err)
+			conID, _ := strconv.Atoi(idCell)
 
-			if conID != id{continue}
+			if conID != IDs[index] {continue}
 
 			SalesCell := F.GetCellValue(targetSheet, "C"+strconv.Itoa(i))
-			tempSale, err := strconv.Atoi(SalesCell)
-			UI.HandleError(err)
+			println(SalesCell)
+			tempSale, _ := strconv.Atoi(SalesCell)
+
 
 			mSales += tempSale
+			println(i)
+			println(tempSale)
+			println(mSales)
 		}
 
-		sales = append(sales, mSales)
+		sales = append(sales, float64(mSales))
 	}
 
 	//GetIDS(targetSheet, selectionStr)

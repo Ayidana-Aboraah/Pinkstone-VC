@@ -92,7 +92,7 @@ func createItemMenu(id int, w fyne.Window, boundData binding.ExternalSaleList, l
 		price, cost, inventory := Data.ConvertStringToSale(priceEntry.Text, costEntry.Text, inventoryEntry.Text)
 		Data.UpdateData(Data.NewSale(id, nameEntry.Text, price, cost, inventory), "Items", 2)
 		Data.UpdateData(Data.NewSale(id, nameEntry.Text, price, cost, inventory), "Price Log", 0)
-		boundData.Set(Data.GetAllData("Items", 0))
+		boundData.Set(Data.GetData("Items", 0))
 		list.Refresh()
 
 		Data.ReadVal("Items")
@@ -149,7 +149,7 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 
 		conID, _ := strconv.Atoi(id)
 
-		raw := Data.GetAllData("Items", conID)
+		raw := Data.GetData("Items", conID)
 		priceEntry := UI.NewNumEntry(fmt.Sprint(raw[0].Price))
 		priceEntry.Text = fmt.Sprint(raw[0].Price)
 
@@ -208,7 +208,7 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 
 	title := widget.NewLabelWithStyle("Inventory Info", fyne.TextAlign(1), fyne.TextStyle{Bold: true})
 
-	inventoryData := Data.GetAllData("Items", 0)
+	inventoryData := Data.GetData("Items", 0)
 	boundData := binding.BindSaleList(&inventoryData)
 	inventoryList := widget.NewListWithData(boundData, func() fyne.CanvasObject {
 		return container.NewBorder(nil, nil, nil, nil, widget.NewLabel("name"))
@@ -254,7 +254,7 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 
 				conID, _ := strconv.Atoi(id)
 
-				results := Data.GetAllData("Items", conID)
+				results := Data.GetData("Items", conID)
 				res := Data.ConvertSaleToString(results[0].Price, results[0].Cost, results[0].Quantity)
 
 				idLabel.SetText(id)

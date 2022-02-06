@@ -1,6 +1,7 @@
 package Data
 
 import (
+	"BronzeHermes/UI"
 	"fmt"
 	"strconv"
 	"strings"
@@ -9,17 +10,16 @@ import (
 
 // GetProfitForTimes For the Line chart
 func GetProfitForTimes(variant int, targetSheet, subStr string) ([][]float64, []string) {
-	items := GetAllIDs(targetSheet, subStr)
-	var labels []string
+	IDs, Names := GetAllIDs(targetSheet, subStr)
+
 	var values [][]float64
 
-	for _, v := range items {
-		check := GetProfitForItemTimes(v.ID, targetSheet, subStr)
-		labels = append(labels, v.Name)
+	for i := range IDs {
+		check := GetProfitForItemTimes(IDs[i], targetSheet, subStr)
 		values = append(values, check[variant])
 	}
 
-	return values, labels
+	return values, Names
 }
 
 func GetProfitForItemTimes(id int, targetSheet, subStr string) [][]float64 {
@@ -47,8 +47,7 @@ func GetProfitForItemTimes(id int, targetSheet, subStr string) [][]float64 {
 
 // GetAllProfits For the Pie Chart
 func GetAllProfits(selectionStr string) ([][]float64, []string) {
-	targetSheet := "Report Data"
-	items := GetAllIDs(targetSheet, selectionStr)
+	items := GetAllData("Report Data", selectionStr)
 	fmt.Println(items)
 
 	var names []string
@@ -123,23 +122,40 @@ func GetTotalProfit(id int, targetSheet, selectionStr string) []float64 {
 	}
 }
 
-func GetSalesForTime(selectionStr string) ([]float64, []string){
+func GetSalesForTime(selectionStr string) ([]int, []string){
 	targetSheet := "Report Data"
-	var names []string
-	var sales []float64
+	var sales []int
 
+	IDs, names := GetAllIDs(targetSheet, selectionStr)
+
+	for id := range IDs{
+		checkCell := F.GetCellValue(targetSheet, "G1")
+		mSales := 0
+
+		for i := 1; checkCell != ""; i++{
+			checkCell = F.GetCellValue(targetSheet, "G" + strconv.Itoa(i))
+
+			if !strings.Contains(checkCell, selectionStr){continue}
+
+			idCell := F.GetCellValue(targetSheet, "A"+strconv.Itoa(i))
+			conID, err := strconv.Atoi(idCell);	UI.HandleError(err)
+
+			if conID != id{continue}
+
+			SalesCell := F.GetCellValue(targetSheet, "C"+strconv.Itoa(i))
+			tempSale, err := strconv.Atoi(SalesCell)
+			UI.HandleError(err)
+
+			mSales += tempSale
+		}
+
+		sales = append(sales, mSales)
+	}
 
 	//GetIDS(targetSheet, selectionStr)
 	//Go through each data and see if it contains selectionStr
 	// If yes -> Take the targetAxis;
 	// If no -> Skip to next
 	// if Null, check next and then return
-
-	items := GetAllIDs(targetSheet, selectionStr)
-
-	for _, v := range items {
-		names = append(names, v.Name)
-		sales = append(sales, float64(v.Quantity))
-	}
 	return sales, names
 }

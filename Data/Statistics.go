@@ -13,8 +13,8 @@ func GetProfitForTimes(variant int, targetSheet, subStr string) ([][]float64, []
 
 	var values [][]float64
 
-	for i := range IDs {
-		check := GetProfitForItemTimes(IDs[i], targetSheet, subStr)
+	for _, id := range IDs {
+		check := GetProfitForItemTimes(id, targetSheet, subStr)
 		values = append(values, check[variant])
 	}
 
@@ -75,15 +75,14 @@ func GetTotalProfit(id int, targetSheet, selectionStr string) []float64 {
 
 	var (
 		targetAxis string
-		log        = false
+		log        bool
 	)
 
 	if strings.Contains(targetSheet, "Log") || strings.Contains(targetSheet, "log") {
 		log = true
-	}
-	if log {
 		targetAxis = "E"
-	} else {
+
+	}else {
 		targetSheet = "G"
 	}
 
@@ -107,11 +106,10 @@ func GetTotalProfit(id int, targetSheet, selectionStr string) []float64 {
 		conRev, _ := strconv.ParseFloat(rev, 64)
 		conCos, _ := strconv.ParseFloat(cost, 64)
 		quantity, _ := strconv.Atoi(quan)
-		prof := conRev - conCos
 
 		totalRevenue += conRev * float64(quantity)
 		totalCost += conCos * float64(quantity)
-		totalProfit += prof * float64(quantity)
+		totalProfit += (conRev - conCos) * float64(quantity)
 	}
 
 	return []float64{
@@ -156,10 +154,5 @@ func GetSalesForTime(selectionStr string) ([]float64, []string){
 		sales = append(sales, float64(mSales))
 	}
 
-	//GetIDS(targetSheet, selectionStr)
-	//Go through each data and see if it contains selectionStr
-	// If yes -> Take the targetAxis;
-	// If no -> Skip to next
-	// if Null, check next and then return
 	return sales, names
 }

@@ -6,7 +6,44 @@ import (
 	"strings"
 )
 
-func GetAllIDs(targetSheet, selectionStr string) []Sale {
+func GetAllIDs(targetSheet, selectionStr string) ([]int, []string) {
+	var IDs []int
+	var Names []string
+
+	checkCell := F.GetCellValue(targetSheet, "G2")
+
+	for i := 2; checkCell != ""; i++ {
+		complete := false
+
+		cell := F.GetCellValue(targetSheet, "A"+strconv.Itoa(i))
+		checkCell = F.GetCellValue(targetSheet, "G"+strconv.Itoa(i))
+
+		if !strings.Contains(checkCell, selectionStr) {
+			continue
+		}
+
+		conID, _ := strconv.Atoi(cell)
+
+		for _, v := range IDs {
+			if v != conID {continue}
+			complete = true
+			break
+		}
+
+		if complete {
+			continue
+		}
+
+		name := F.GetCellValue(targetSheet, "B"+strconv.Itoa(i))
+		fmt.Println(conID)
+		IDs = append(IDs, conID)
+		Names = append(Names, name)
+	}
+
+	return IDs, Names
+}
+
+func GetAllData(targetSheet, selectionStr string) []Sale {
 	var Items []Sale
 
 	cell := F.GetCellValue(targetSheet, "A2")
@@ -54,6 +91,7 @@ func GetAllIDs(targetSheet, selectionStr string) []Sale {
 	return Items
 }
 
+
 func FindAll(targetSheet, targetAxis, subStr string, ID int) []int {
 	var idxes []int
 	cell := F.GetCellValue(targetSheet, targetAxis+"2")
@@ -64,19 +102,21 @@ func FindAll(targetSheet, targetAxis, subStr string, ID int) []int {
 		idCell := F.GetCellValue(targetSheet, "A"+strconv.Itoa(i))
 		conID, _ := strconv.Atoi(idCell)
 
-		if conID == ID || ID == 0 {
-			if strings.Contains(cell, subStr) && !strings.Contains(cell, subStr+"0") && !strings.Contains(cell, subStr+"1") {
-				idxes = append(idxes, i)
-			}
+		if conID != ID || ID != 0 {	continue }
+
+		if strings.Contains(cell, subStr) && !strings.Contains(cell, subStr+"0") && !strings.Contains(cell, subStr+"1") {
+			idxes = append(idxes, i)
 		}
 	}
 
 	return idxes
 }
 
-func GetAllData(targetSheet string, id int) []Sale {
+//Gets Data from Items
+func GetData(targetSheet string, id int) []Sale {
 	var data []Sale
 
+	//id 0 means all
 	if id == 0 {
 		cell := F.GetCellValue(targetSheet, "A2")
 		for i := 2; cell != ""; {
@@ -100,7 +140,7 @@ func GetAllData(targetSheet string, id int) []Sale {
 			cell = F.GetCellValue(targetSheet, "A"+strconv.Itoa(i))
 		}
 	} else {
-		i := GetIndex(targetSheet, id, 1)
+		i := GetIndex(targetSheet, id, true)
 
 		name := F.GetCellValue(targetSheet, "B"+strconv.Itoa(i))
 		price := F.GetCellValue(targetSheet, "C"+strconv.Itoa(i))

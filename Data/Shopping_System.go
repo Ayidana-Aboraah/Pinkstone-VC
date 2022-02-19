@@ -35,7 +35,6 @@ func BuyCart(ShoppingCart []Sale) []Sale {
 	return ClearCart(ShoppingCart)
 }
 
-//Must pass as the new value of Shopping Cart similar to appending to an array
 func AddToCart(item Sale, ShoppingCart []Sale) []Sale {
 	for {
 		for i, v := range ShoppingCart {
@@ -66,7 +65,6 @@ func DecreaseFromCart(item Sale, ShoppingCart []Sale) []Sale {
 	return ShoppingCart
 }
 
-// RemoveFromCart [Untested]
 func RemoveFromCart(i int, ShoppingCart []Sale) []Sale {
 	ShoppingCart[i] = ShoppingCart[len(ShoppingCart)-1] // Copy last element to index i.
 	ShoppingCart[len(ShoppingCart)-1] = Sale{}          // Erase last element (write zero value).

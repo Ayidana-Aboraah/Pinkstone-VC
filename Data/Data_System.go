@@ -10,8 +10,6 @@ import (
 
 var F, Err = excelize.OpenFile("Assets/AppData.xlsx")
 
-//var F, Err = excelize.OpenFile("TestAppData.xlsx")
-
 //save a back-up.
 //if an error with reading the file is met; save the back up as the file and try reading again.
 
@@ -56,12 +54,12 @@ func SaveBackUp(sourceFile, backUpfile string) error {
 }
 
 func UpdateData(item Sale, targetSheet string, variant int) {
-	idx := GetIndex(targetSheet, 0, 0)
+	idx := GetIndex(targetSheet, 0, false)
 
 	switch variant {
 	//Update Items
 	case 2:
-		checker := GetIndex(targetSheet, item.ID, 1)
+		checker := GetIndex(targetSheet, item.ID, true)
 		if checker == 0 {
 			F.SetCellValue(targetSheet, "A"+strconv.Itoa(idx), item.ID)
 			F.SetCellValue(targetSheet, "B"+strconv.Itoa(idx), item.Name)
@@ -101,7 +99,7 @@ func UpdateData(item Sale, targetSheet string, variant int) {
 func UpdateInventory(ID, amount int) int {
 	targetSheet := "Items"
 
-	idx := GetIndex(targetSheet, ID, 1)
+	idx := GetIndex(targetSheet, ID, true)
 
 	res := F.GetCellValue(targetSheet, "F"+strconv.Itoa(idx))
 
@@ -113,15 +111,14 @@ func UpdateInventory(ID, amount int) int {
 	return newInventory
 }
 
-func GetIndex(targetSheet string, ID, searchType int) int {
+func GetIndex(targetSheet string, ID int, searchType bool) int {
 	i := 1
-	cell := F.GetCellValue(targetSheet, "A"+strconv.Itoa(i))
 	for {
-		cell = F.GetCellValue(targetSheet, "A"+strconv.Itoa(i))
+		cell := F.GetCellValue(targetSheet, "A"+strconv.Itoa(i))
 		conCell, _ := strconv.Atoi(cell)
 
 		switch searchType {
-		case 1:
+		case true:
 			if conCell == ID {
 				return i
 			}

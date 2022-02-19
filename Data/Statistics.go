@@ -9,17 +9,16 @@ import (
 
 // GetProfitForTimes For the Line chart
 func GetProfitForTimes(variant int, targetSheet, subStr string) ([][]float64, []string) {
-	items := GetAllIDs(targetSheet, subStr)
-	var labels []string
+	IDs, Names := GetAllIDs(targetSheet, subStr)
+
 	var values [][]float64
 
-	for _, v := range items {
-		check := GetProfitForItemTimes(v.ID, targetSheet, subStr)
-		labels = append(labels, v.Name)
+	for _, id := range IDs {
+		check := GetProfitForItemTimes(id, targetSheet, subStr)
 		values = append(values, check[variant])
 	}
 
-	return values, labels
+	return values, Names
 }
 
 func GetProfitForItemTimes(id int, targetSheet, subStr string) [][]float64 {
@@ -27,13 +26,17 @@ func GetProfitForItemTimes(id int, targetSheet, subStr string) [][]float64 {
 	var cost []float64
 	var profit []float64
 
-	for i := 0; i < 32; i++ {
+	for i := 1; i < 32; i++ {
+		if lastSlash := strings.LastIndex(subStr, "/"); lastSlash == 6 || lastSlash == 7{	subStr = subStr[:lastSlash]	}
+
 		newSelect := subStr + "/" + strconv.Itoa(i)
+
 		if !strings.Contains(subStr, "/") {
 			newSelect = strconv.Itoa(time.Now().Year()) + "/" + strconv.Itoa(int(time.Now().Month())) + "/" + strconv.Itoa(i)
 		}
 
 		totals := GetTotalProfit(id, targetSheet, newSelect)
+
 		revenue = append(revenue, totals[0])
 		cost = append(cost, totals[1])
 		profit = append(profit, totals[2])
@@ -47,8 +50,7 @@ func GetProfitForItemTimes(id int, targetSheet, subStr string) [][]float64 {
 
 // GetAllProfits For the Pie Chart
 func GetAllProfits(selectionStr string) ([][]float64, []string) {
-	targetSheet := "Report Data"
-	items := GetAllIDs(targetSheet, selectionStr)
+	items := GetAllData("Report Data", selectionStr)
 	fmt.Println(items)
 
 	var names []string
@@ -77,43 +79,51 @@ func GetTotalProfit(id int, targetSheet, selectionStr string) []float64 {
 
 	var (
 		targetAxis string
-		log        = false
+		log        bool
 	)
 
-	if strings.Contains(targetSheet, "Log") || strings.Contains(targetSheet, "log") {
+	if strings.Contains(targetSheet, "Log") {
 		log = true
-	}
-	if log {
 		targetAxis = "E"
 	} else {
-		targetSheet = "G"
+		targetAxis = "G"
 	}
 
-	results := FindAll(targetSheet, targetAxis, selectionStr, id)
+	cell := F.GetCellValue(targetSheet, targetAxis+"2")
 
-	for _, v := range results {
-		rev := ""
-		cost := ""
-		quan := ""
+	rev := ""
+	cost := ""
+	quan := ""
+
+	for i := 2; cell != ""; i++ {
+		cell = F.GetCellValue(targetSheet, targetAxis+strconv.Itoa(i))
+
+		idCell := F.GetCellValue(targetSheet, "A"+strconv.Itoa(i))
+		conID, _ := strconv.Atoi(idCell)
+
+		if conID != id && id != 0 {continue}
+		if !strings.Contains(cell, selectionStr) {continue}
+		if strings.Contains(cell, selectionStr+"0") {continue}
+		if strings.Contains(cell, selectionStr+"1") {continue}
+		fmt.Println("You made it!")
 
 		if log {
-			rev = F.GetCellValue(targetSheet, "C"+strconv.Itoa(v))
-			cost = F.GetCellValue(targetSheet, "D"+strconv.Itoa(v))
+			rev = F.GetCellValue(targetSheet, "C"+strconv.Itoa(i))
+			cost = F.GetCellValue(targetSheet, "D"+strconv.Itoa(i))
 			quan = "1"
 		} else {
-			rev = F.GetCellValue(targetSheet, "D"+strconv.Itoa(v))
-			cost = F.GetCellValue(targetSheet, "E"+strconv.Itoa(v))
-			quan = F.GetCellValue(targetSheet, "C"+strconv.Itoa(v))
+			rev = F.GetCellValue(targetSheet, "D"+strconv.Itoa(i))
+			cost = F.GetCellValue(targetSheet, "E"+strconv.Itoa(i))
+			quan = F.GetCellValue(targetSheet, "C"+strconv.Itoa(i))
 		}
 
 		conRev, _ := strconv.ParseFloat(rev, 64)
 		conCos, _ := strconv.ParseFloat(cost, 64)
 		quantity, _ := strconv.Atoi(quan)
-		prof := conRev - conCos
 
 		totalRevenue += conRev * float64(quantity)
 		totalCost += conCos * float64(quantity)
-		totalProfit += prof * float64(quantity)
+		totalProfit += (conRev - conCos) * float64(quantity)
 	}
 
 	return []float64{
@@ -125,21 +135,38 @@ func GetTotalProfit(id int, targetSheet, selectionStr string) []float64 {
 
 func GetSalesForTime(selectionStr string) ([]float64, []string){
 	targetSheet := "Report Data"
-	var names []string
 	var sales []float64
 
+	IDs, names := GetAllIDs(targetSheet, selectionStr)
 
-	//GetIDS(targetSheet, selectionStr)
-	//Go through each data and see if it contains selectionStr
-	// If yes -> Take the targetAxis;
-	// If no -> Skip to next
-	// if Null, check next and then return
+	for index := range IDs{
+		checkCell := F.GetCellValue(targetSheet, "G1")
+		mSales := 0
 
-	items := GetAllIDs(targetSheet, selectionStr)
+		for i := 1; checkCell != ""; i++{
+			checkCell = F.GetCellValue(targetSheet, "G" + strconv.Itoa(i))
+			println(checkCell)
 
-	for _, v := range items {
-		names = append(names, v.Name)
-		sales = append(sales, float64(v.Quantity))
+			if !strings.Contains(checkCell, selectionStr){continue}
+
+			idCell := F.GetCellValue(targetSheet, "A"+strconv.Itoa(i))
+			conID, _ := strconv.Atoi(idCell)
+
+			if conID != IDs[index] {continue}
+
+			SalesCell := F.GetCellValue(targetSheet, "C"+strconv.Itoa(i))
+			println(SalesCell)
+			tempSale, _ := strconv.Atoi(SalesCell)
+
+
+			mSales += tempSale
+			println(i)
+			println(tempSale)
+			println(mSales)
+		}
+
+		sales = append(sales, float64(mSales))
 	}
+
 	return sales, names
 }

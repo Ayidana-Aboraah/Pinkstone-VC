@@ -26,11 +26,15 @@ func GetProfitForItemTimes(id int, targetSheet, subStr string) [][]float64 {
 	var cost []float64
 	var profit []float64
 
-	for i := 0; i < 32; i++ {
+	for i := 1; i < 32; i++ {
+		if lastSlash := strings.LastIndex(subStr, "/"); lastSlash == 6 || lastSlash == 7{	subStr = subStr[:lastSlash]	}
+
 		newSelect := subStr + "/" + strconv.Itoa(i)
+
 		if !strings.Contains(subStr, "/") {
 			newSelect = strconv.Itoa(time.Now().Year()) + "/" + strconv.Itoa(int(time.Now().Month())) + "/" + strconv.Itoa(i)
 		}
+
 		totals := GetTotalProfit(id, targetSheet, newSelect)
 
 		revenue = append(revenue, totals[0])
@@ -78,45 +82,49 @@ func GetTotalProfit(id int, targetSheet, selectionStr string) []float64 {
 		log        bool
 	)
 
-	if strings.Contains(targetSheet, "Log"){
-		log = true;	targetAxis = "E"
-	}else {	targetSheet = "G"}
+	if strings.Contains(targetSheet, "Log") {
+		log = true
+		targetAxis = "E"
+	} else {
+		targetAxis = "G"
+	}
 
-		cell := F.GetCellValue(targetSheet, targetAxis+"2")
+	cell := F.GetCellValue(targetSheet, targetAxis+"2")
 
-		rev := ""
-		cost := ""
-		quan := ""
+	rev := ""
+	cost := ""
+	quan := ""
 
-		for i := 2; cell != ""; i++ {
-			cell = F.GetCellValue(targetSheet, targetAxis+strconv.Itoa(i))
+	for i := 2; cell != ""; i++ {
+		cell = F.GetCellValue(targetSheet, targetAxis+strconv.Itoa(i))
 
-			idCell := F.GetCellValue(targetSheet, "A"+strconv.Itoa(i))
-			conID, _ := strconv.Atoi(idCell)
+		idCell := F.GetCellValue(targetSheet, "A"+strconv.Itoa(i))
+		conID, _ := strconv.Atoi(idCell)
 
-			if conID != id || id != 0 {	continue }
-			if !strings.Contains(cell, selectionStr){continue}
-			if strings.Contains(cell, selectionStr+"0") {continue}
-			if strings.Contains(cell, selectionStr+"1"){continue}
+		if conID != id && id != 0 {continue}
+		if !strings.Contains(cell, selectionStr) {continue}
+		if strings.Contains(cell, selectionStr+"0") {continue}
+		if strings.Contains(cell, selectionStr+"1") {continue}
+		fmt.Println("You made it!")
 
-			if log{
-				rev = F.GetCellValue(targetSheet, "C"+strconv.Itoa(i))
-				cost = F.GetCellValue(targetSheet, "D"+strconv.Itoa(i))
-				quan = "1"
-			}else{
-				rev = F.GetCellValue(targetSheet, "D"+strconv.Itoa(i))
-				cost = F.GetCellValue(targetSheet, "E"+strconv.Itoa(i))
-				quan = F.GetCellValue(targetSheet, "C"+strconv.Itoa(i))
-			}
-
-			conRev, _ := strconv.ParseFloat(rev, 64)
-			conCos, _ := strconv.ParseFloat(cost, 64)
-			quantity, _ := strconv.Atoi(quan)
-
-			totalRevenue += conRev * float64(quantity)
-			totalCost += conCos * float64(quantity)
-			totalProfit += (conRev - conCos) * float64(quantity)
+		if log {
+			rev = F.GetCellValue(targetSheet, "C"+strconv.Itoa(i))
+			cost = F.GetCellValue(targetSheet, "D"+strconv.Itoa(i))
+			quan = "1"
+		} else {
+			rev = F.GetCellValue(targetSheet, "D"+strconv.Itoa(i))
+			cost = F.GetCellValue(targetSheet, "E"+strconv.Itoa(i))
+			quan = F.GetCellValue(targetSheet, "C"+strconv.Itoa(i))
 		}
+
+		conRev, _ := strconv.ParseFloat(rev, 64)
+		conCos, _ := strconv.ParseFloat(cost, 64)
+		quantity, _ := strconv.Atoi(quan)
+
+		totalRevenue += conRev * float64(quantity)
+		totalCost += conCos * float64(quantity)
+		totalProfit += (conRev - conCos) * float64(quantity)
+	}
 
 	return []float64{
 		totalRevenue,

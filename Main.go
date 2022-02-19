@@ -25,7 +25,7 @@ func main() {
 	a := app.NewWithID("Bronze Hermes")
 	appIcon, _ := fyne.LoadResourceFromPath("Assets/icon02.png")
 	a.SetIcon(appIcon)
-	go Graph.StartServers()
+	go Graph.StartServer()
 
 	CreateWindow(a)
 }
@@ -47,6 +47,7 @@ func CreateWindow(a fyne.App) {
 			container.NewTabItem("Inventory", makeInfoMenu(w)),
 			container.NewTabItem("Statistics", makeStatsMenu()),
 		))
+	w.SetOnClosed(Graph.StopSever)
 
 	w.SetContent(mainMenu)
 	w.ShowAndRun()
@@ -294,7 +295,7 @@ func makeStatsMenu() fyne.CanvasObject {
 	totalProfitLabel := widget.NewLabelWithStyle("", fyne.TextAlignCenter, fyne.TextStyle{})
 
 
-	days := []string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14",
+	days := []string{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14",
 		"15", "16", "17", "18", "19", "20", "21", "22", "23", "24",
 		"25", "26", "27", "28", "29", "30", "31"}
 
@@ -329,6 +330,7 @@ func makeStatsMenu() fyne.CanvasObject {
 					case 0:
 						results, labels := Data.GetProfitForTimes(lineDataSelectType, "Report Data", selectionEntry.Text)
 
+						fmt.Println(results)
 						Graph.Labels = days
 						Graph.Categories = labels
 						Graph.LineInputs = results

@@ -271,24 +271,21 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 }
 
 func makeStatsMenu() fyne.CanvasObject {
-	u, _ := url.Parse("http://localhost:8081/line")
-	r, _ := url.Parse("http://localhost:8081/pie")
+	u, err := url.Parse("http://localhost:8081/line")
+	UI.HandleError(err)
+	r, err := url.Parse("http://localhost:8081/pie")
+	UI.HandleError(err)
 
-	lineLink := widget.NewHyperlink("Profits Graph", u)
-	pieLink := widget.NewHyperlink("Total Sales graph", r)
+	link := widget.NewHyperlink("Go To Graph", u)
 
-	lineSelectionEntry := UI.NewNumEntry("Year/Month")
-	pieSelectionEntry := UI.NewNumEntry("YYYY/MM/Day")
+	selectionEntry := UI.NewNumEntry("Year/Month")
 
 	var lineDataSelectType int
 	dataSelectOptions := widget.NewSelect([]string{"Revenue", "Cost", "Profit"}, func(dataType string) {
 		switch	dataType{
-		case "Revenue":
-			lineDataSelectType = 0
-		case "Cost":
-			lineDataSelectType = 1
-		case "Profit":
-			lineDataSelectType = 2
+		case "Revenue": lineDataSelectType = 0
+		case "Cost": lineDataSelectType = 1
+		case "Profit": lineDataSelectType = 2
 		}
 	})
 
@@ -301,60 +298,64 @@ func makeStatsMenu() fyne.CanvasObject {
 		"15", "16", "17", "18", "19", "20", "21", "22", "23", "24",
 		"25", "26", "27", "28", "29", "30", "31"}
 
-	scroll := container.NewMax(
-		container.NewVBox(
-			widget.NewCard("Items Graph", "", container.NewVBox(
-				lineSelectionEntry,
+	var buttonType int
+
+	scroll := container.NewMax( container.NewVBox(
+			widget.NewCard("Data Over Time", "", container.NewVBox(
+				selectionEntry,
+				widget.NewSelect([]string{"Items Graph", "Price Changes", "Item Popularity", "Item Sales"}, func(graph string) {
+					switch graph {
+					case "Items Graph":
+						buttonType = 0
+						link.URL = u
+						dataSelectOptions.Hidden = false
+					case "Price Changes":
+						buttonType = 1
+						link.URL = u
+						dataSelectOptions.Hidden = false
+					case "Item Popularity":
+						buttonType = 2
+						link.URL = r
+						dataSelectOptions.Hidden = true
+					case "Item Sales":
+						buttonType = 3
+						link.URL = r
+						dataSelectOptions.Hidden = true
+					}
+				}),
 				dataSelectOptions,
 				widget.NewButton("Graph", func() {
-					results, labels := Data.GetProfitForTimes(lineDataSelectType, "Report Data", lineSelectionEntry.Text)
+					switch buttonType {
+					case 0:
+						results, labels := Data.GetProfitForTimes(lineDataSelectType, "Report Data", selectionEntry.Text)
 
-					Graph.Labels = &days
-					Graph.Categories = labels
-					Graph.LineInputs = &results
+						Graph.Labels = days
+						Graph.Categories = labels
+						Graph.LineInputs = results
+					case 1:
+						results, labels := Data.GetProfitForTimes(lineDataSelectType, "Price Log", selectionEntry.Text)
+
+						Graph.Labels = days
+						Graph.Categories = labels
+						Graph.LineInputs = results
+					case 2:
+						profits, labels := Data.GetAllProfits(selectionEntry.Text)
+
+						Graph.Labels = labels
+						Graph.Inputs = profits[lineDataSelectType]
+					case 3:
+						sales, labels := Data.GetSalesForTime(selectionEntry.Text)
+
+						Graph.Labels = labels
+						Graph.Inputs = sales
+					}
 				}),
-				lineLink,
+				link,
 			)),
-
-			widget.NewCard("Price Changes", "", container.NewVBox(
-				lineSelectionEntry,
-				dataSelectOptions,
-				widget.NewButton("Graph", func() {
-					results, labels := Data.GetProfitForTimes(lineDataSelectType, "Price Log", lineSelectionEntry.Text)
-
-					Graph.Labels = &days
-					Graph.Categories = labels
-					Graph.LineInputs = &results
-				}),
-				lineLink,
-			)),
-
-			widget.NewCard("Item Popularity", "", container.NewVBox(
-				pieSelectionEntry,
-				dataSelectOptions,
-				widget.NewButton("Graph", func() {
-					profits, labels := Data.GetAllProfits(pieSelectionEntry.Text)
-
-					Graph.Labels = &labels
-					Graph.Inputs = &profits[lineDataSelectType]
-				}),
-				pieLink,
-			)),
-
-			widget.NewCard("Item Sales", "", container.NewVBox(
-				pieSelectionEntry,
-				widget.NewButton("Graph", func() {
-					sales, labels := Data.GetSalesForTime(pieSelectionEntry.Text)
-
-					Graph.Labels = &labels
-					Graph.Inputs = &sales
-				}),
-				pieLink,
-				)),
 			widget.NewCard("Totals", "", container.NewVBox(
-				pieSelectionEntry,
+				selectionEntry,
 				widget.NewButton("Graph", func() {
-					data, _ := Data.GetAllProfits(pieSelectionEntry.Text)
+					data, _ := Data.GetAllProfits(selectionEntry.Text)
 
 					revenue := fmt.Sprint(data[0])
 					cost := fmt.Sprint(data[1])

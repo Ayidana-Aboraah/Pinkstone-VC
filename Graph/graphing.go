@@ -7,10 +7,10 @@ import (
 	"net/http"
 )
 
-var Labels *[]string
+var Labels []string
 var Categories []string
-var Inputs *[]float64
-var LineInputs *[][]float64
+var Inputs []float64
+var LineInputs [][]float64
 
 func generateLineItems(label string, r []float64) []opts.LineData {
 	items := make([]opts.LineData, 0)
@@ -60,7 +60,7 @@ func CreateLineGraph(w http.ResponseWriter) {
 
 	line.SetXAxis(Labels)
 
-	for i, v := range *LineInputs {
+	for i, v := range LineInputs {
 		line.AddSeries(Categories[i], generateLineItems(Categories[i], v)).SetSeriesOptions(
 			charts.WithLineChartOpts(opts.LineChart{Smooth: true}),
 			charts.WithMarkPointNameTypeItemOpts(
@@ -89,7 +89,7 @@ func CreatePieGraph(w http.ResponseWriter) {
 
 	pie.SetSeriesOptions(charts.WithPieChartOpts(opts.PieChart{Radius: 50}))
 
-	pie.AddSeries("Tree", generatePieItems(*Labels, *Inputs)).
+	pie.AddSeries("Tree", generatePieItems(Labels, Inputs)).
 		SetSeriesOptions(charts.WithLabelOpts(
 			opts.Label{
 				Show:      true,

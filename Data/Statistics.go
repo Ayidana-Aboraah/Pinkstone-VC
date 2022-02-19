@@ -31,8 +31,8 @@ func GetProfitForItemTimes(id int, targetSheet, subStr string) [][]float64 {
 		if !strings.Contains(subStr, "/") {
 			newSelect = strconv.Itoa(time.Now().Year()) + "/" + strconv.Itoa(int(time.Now().Month())) + "/" + strconv.Itoa(i)
 		}
-
 		totals := GetTotalProfit(id, targetSheet, newSelect)
+
 		revenue = append(revenue, totals[0])
 		cost = append(cost, totals[1])
 		profit = append(profit, totals[2])
@@ -78,39 +78,45 @@ func GetTotalProfit(id int, targetSheet, selectionStr string) []float64 {
 		log        bool
 	)
 
-	if strings.Contains(targetSheet, "Log") || strings.Contains(targetSheet, "log") {
-		log = true
-		targetAxis = "E"
+	if strings.Contains(targetSheet, "Log"){
+		log = true;	targetAxis = "E"
+	}else {	targetSheet = "G"}
 
-	}else {
-		targetSheet = "G"
-	}
+		cell := F.GetCellValue(targetSheet, targetAxis+"2")
 
-	results := FindAll(targetSheet, targetAxis, selectionStr, id)
-
-	for _, v := range results {
 		rev := ""
 		cost := ""
 		quan := ""
 
-		if log {
-			rev = F.GetCellValue(targetSheet, "C"+strconv.Itoa(v))
-			cost = F.GetCellValue(targetSheet, "D"+strconv.Itoa(v))
-			quan = "1"
-		} else {
-			rev = F.GetCellValue(targetSheet, "D"+strconv.Itoa(v))
-			cost = F.GetCellValue(targetSheet, "E"+strconv.Itoa(v))
-			quan = F.GetCellValue(targetSheet, "C"+strconv.Itoa(v))
+		for i := 2; cell != ""; i++ {
+			cell = F.GetCellValue(targetSheet, targetAxis+strconv.Itoa(i))
+
+			idCell := F.GetCellValue(targetSheet, "A"+strconv.Itoa(i))
+			conID, _ := strconv.Atoi(idCell)
+
+			if conID != id || id != 0 {	continue }
+			if !strings.Contains(cell, selectionStr){continue}
+			if strings.Contains(cell, selectionStr+"0") {continue}
+			if strings.Contains(cell, selectionStr+"1"){continue}
+
+			if log{
+				rev = F.GetCellValue(targetSheet, "C"+strconv.Itoa(i))
+				cost = F.GetCellValue(targetSheet, "D"+strconv.Itoa(i))
+				quan = "1"
+			}else{
+				rev = F.GetCellValue(targetSheet, "D"+strconv.Itoa(i))
+				cost = F.GetCellValue(targetSheet, "E"+strconv.Itoa(i))
+				quan = F.GetCellValue(targetSheet, "C"+strconv.Itoa(i))
+			}
+
+			conRev, _ := strconv.ParseFloat(rev, 64)
+			conCos, _ := strconv.ParseFloat(cost, 64)
+			quantity, _ := strconv.Atoi(quan)
+
+			totalRevenue += conRev * float64(quantity)
+			totalCost += conCos * float64(quantity)
+			totalProfit += (conRev - conCos) * float64(quantity)
 		}
-
-		conRev, _ := strconv.ParseFloat(rev, 64)
-		conCos, _ := strconv.ParseFloat(cost, 64)
-		quantity, _ := strconv.Atoi(quan)
-
-		totalRevenue += conRev * float64(quantity)
-		totalCost += conCos * float64(quantity)
-		totalProfit += (conRev - conCos) * float64(quantity)
-	}
 
 	return []float64{
 		totalRevenue,

@@ -92,8 +92,8 @@ func createItemMenu(id int, w fyne.Window, boundData binding.ExternalSaleList, l
 		fmt.Println("Adding to the database")
 
 		price, cost, inventory := Data.ConvertStringToSale(priceEntry.Text, costEntry.Text, inventoryEntry.Text)
-		Data.UpdateData(Data.NewSale(id, nameEntry.Text, price, cost, inventory), "Items", 2)
-		Data.UpdateData(Data.NewSale(id, nameEntry.Text, price, cost, inventory), "Price Log", 0)
+		Data.UpdateData(Data.Sale{ID: id, Name: nameEntry.Text, Price: price, Cost: cost, Quantity: inventory}, "Items", 2)
+		Data.UpdateData(Data.Sale{ID: id, Name: nameEntry.Text, Price: price, Cost: cost, Quantity: inventory}, "Price Log", 0)
 		boundData.Set(Data.GetData("Items", 0))
 		list.Refresh()
 

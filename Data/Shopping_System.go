@@ -13,16 +13,6 @@ type Sale struct {
 	Name     string
 }
 
-func NewSale(ID int, Name string, Price, Cost float64, Quantity int) Sale {
-	return Sale{
-		ID:       ID,
-		Name:     Name,
-		Price:    Price,
-		Cost:     Cost,
-		Quantity: Quantity,
-	}
-}
-
 func BuyCart(ShoppingCart []Sale) []Sale {
 	targetSheet := "Report Data"
 

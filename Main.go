@@ -6,6 +6,10 @@ import (
 	"BronzeHermes/Graph"
 	"BronzeHermes/UI"
 	"fmt"
+	_ "image/png"
+	"net/url"
+	"strconv"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
@@ -16,9 +20,6 @@ import (
 	"fyne.io/fyne/v2/widget"
 	"github.com/360EntSecGroup-Skylar/excelize"
 	_ "github.com/pion/mediadevices/pkg/driver/camera"
-	_ "image/png"
-	"net/url"
-	"strconv"
 )
 
 func main() {
@@ -283,10 +284,13 @@ func makeStatsMenu() fyne.CanvasObject {
 
 	var lineDataSelectType int
 	dataSelectOptions := widget.NewSelect([]string{"Revenue", "Cost", "Profit"}, func(dataType string) {
-		switch	dataType{
-		case "Revenue": lineDataSelectType = 0
-		case "Cost": lineDataSelectType = 1
-		case "Profit": lineDataSelectType = 2
+		switch dataType {
+		case "Revenue":
+			lineDataSelectType = 0
+		case "Cost":
+			lineDataSelectType = 1
+		case "Profit":
+			lineDataSelectType = 2
 		}
 	})
 
@@ -294,84 +298,83 @@ func makeStatsMenu() fyne.CanvasObject {
 	totalCostLabel := widget.NewLabelWithStyle("", fyne.TextAlignCenter, fyne.TextStyle{})
 	totalProfitLabel := widget.NewLabelWithStyle("", fyne.TextAlignCenter, fyne.TextStyle{})
 
-
 	days := []string{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14",
 		"15", "16", "17", "18", "19", "20", "21", "22", "23", "24",
 		"25", "26", "27", "28", "29", "30", "31"}
 
 	var buttonType int
 
-	scroll := container.NewMax( container.NewVBox(
-			widget.NewCard("Data Over Time", "", container.NewVBox(
-				selectionEntry,
-				widget.NewSelect([]string{"Items Graph", "Price Changes", "Item Popularity", "Item Sales"}, func(graph string) {
-					switch graph {
-					case "Items Graph":
-						buttonType = 0
-						link.URL = u
-						dataSelectOptions.Hidden = false
-					case "Price Changes":
-						buttonType = 1
-						link.URL = u
-						dataSelectOptions.Hidden = false
-					case "Item Popularity":
-						buttonType = 2
-						link.URL = r
-						dataSelectOptions.Hidden = true
-					case "Item Sales":
-						buttonType = 3
-						link.URL = r
-						dataSelectOptions.Hidden = true
-					}
-				}),
-				dataSelectOptions,
-				widget.NewButton("Graph", func() {
-					switch buttonType {
-					case 0:
-						results, labels := Data.GetProfitForTimes(lineDataSelectType, "Report Data", selectionEntry.Text)
+	scroll := container.NewMax(container.NewVBox(
+		widget.NewCard("Data Over Time", "", container.NewVBox(
+			selectionEntry,
+			widget.NewSelect([]string{"Items Graph", "Price Changes", "Item Popularity", "Item Sales"}, func(graph string) {
+				switch graph {
+				case "Items Graph":
+					buttonType = 0
+					link.URL = u
+					dataSelectOptions.Hidden = false
+				case "Price Changes":
+					buttonType = 1
+					link.URL = u
+					dataSelectOptions.Hidden = false
+				case "Item Popularity":
+					buttonType = 2
+					link.URL = r
+					dataSelectOptions.Hidden = true
+				case "Item Sales":
+					buttonType = 3
+					link.URL = r
+					dataSelectOptions.Hidden = true
+				}
+			}),
+			dataSelectOptions,
+			widget.NewButton("Graph", func() {
+				switch buttonType {
+				case 0:
+					results, labels := Data.GetProfitForTimes(lineDataSelectType, "Report Data", selectionEntry.Text)
 
-						fmt.Println(results)
-						Graph.Labels = days
-						Graph.Categories = labels
-						Graph.LineInputs = results
-					case 1:
-						results, labels := Data.GetProfitForTimes(lineDataSelectType, "Price Log", selectionEntry.Text)
+					fmt.Println(results)
+					Graph.Labels = days
+					Graph.Categories = labels
+					Graph.LineInputs = results
+				case 1:
+					results, labels := Data.GetProfitForTimes(lineDataSelectType, "Price Log", selectionEntry.Text)
 
-						Graph.Labels = days
-						Graph.Categories = labels
-						Graph.LineInputs = results
-					case 2:
-						profits, labels := Data.GetAllProfits(selectionEntry.Text)
+					Graph.Labels = days
+					Graph.Categories = labels
+					Graph.LineInputs = results
+				case 2:
+					profits, labels := Data.GetAllProfits(selectionEntry.Text)
 
-						Graph.Labels = labels
-						Graph.Inputs = profits[lineDataSelectType]
-					case 3:
-						sales, labels := Data.GetSalesForTime(selectionEntry.Text)
+					Graph.Labels = labels
+					Graph.Inputs = profits[lineDataSelectType]
+				case 3:
+					sales, labels := Data.GetSalesForTime(selectionEntry.Text)
 
-						Graph.Labels = labels
-						Graph.Inputs = sales
-					}
-				}),
-				link,
-			)),
-			widget.NewCard("Totals", "", container.NewVBox(
-				selectionEntry,
-				widget.NewButton("Graph", func() {
-					data, _ := Data.GetAllProfits(selectionEntry.Text)
+					Graph.Labels = labels
+					Graph.Inputs = sales
+				}
+			}),
+			link,
+		)),
+		widget.NewCard("Totals", "", container.NewVBox(
+			selectionEntry,
+			widget.NewButton("Graph", func() {
+				data, _ := Data.GetAllProfits(selectionEntry.Text)
 
-					revenue := fmt.Sprint(data[0])
-					cost := fmt.Sprint(data[1])
-					profit := fmt.Sprint(data[2])
+				revenue := fmt.Sprint(data[0])
+				cost := fmt.Sprint(data[1])
+				profit := fmt.Sprint(data[2])
 
-					totalProfitLabel.SetText("Total Profit: " + profit)
-					totalRevLabel.SetText("Total Revenue: " + revenue)
-					totalCostLabel.SetText("Total Cost: " + cost)
-				}),
-				totalRevLabel,
-				totalCostLabel,
-				totalProfitLabel,
-			)),
-		))
+				totalProfitLabel.SetText("Total Profit: " + profit)
+				totalRevLabel.SetText("Total Revenue: " + revenue)
+				totalCostLabel.SetText("Total Cost: " + cost)
+			}),
+			totalRevLabel,
+			totalCostLabel,
+			totalProfitLabel,
+		)),
+	))
 
 	return container.NewVScroll(scroll)
 }

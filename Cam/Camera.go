@@ -2,10 +2,10 @@ package Cam
 
 import (
 	"fmt"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/widget"
-	_ "github.com/pion/mediadevices/pkg/driver/camera"
 )
 
 func OpenCam() string {
@@ -24,7 +24,7 @@ func OpenCam() string {
 
 	var complete, evacuate bool
 	w.SetOnClosed(func() {
-		if !complete{
+		if !complete {
 			evacuate = true
 			done <- true
 			return

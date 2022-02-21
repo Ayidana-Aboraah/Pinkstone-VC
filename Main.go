@@ -19,7 +19,6 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
 	"github.com/360EntSecGroup-Skylar/excelize"
-	_ "github.com/pion/mediadevices/pkg/driver/camera"
 )
 
 func main() {

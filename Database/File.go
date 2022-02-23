@@ -10,21 +10,25 @@ import (
 
 var NameKeys map[uint32]string
 
-//Database for items
 var Items []Sale
-
-//Database for Reports
 var ReportData []Sale
-
-//Database for Log
 var PriceLog []Sale
 
 type Sale struct {
-	ID       uint32
+	Year     uint8
+	Month    uint8
+	Day      uint8
 	Quantity uint16
-	Price    float64
-	Cost     float64
+	ID       uint32
+	Price    float32
+	Cost     float32
 }
+
+const (
+	ITEMS = iota
+	REPORT
+	LOG
+)
 
 func SaveKeys() error {
 	names, err := os.OpenFile("name_to_keys.json", os.O_CREATE, os.ModePerm)
@@ -46,7 +50,7 @@ func LoadKeys() error {
 	defer names.Close()
 
 	encoder := json.NewDecoder(names)
-	err = encoder.Decode(NameKeys)
+	err = encoder.Decode(&NameKeys)
 	if err != nil {
 		return err
 	}
@@ -58,13 +62,13 @@ func SaveData(variant int) error {
 	var file string
 
 	switch variant {
-	case 0:
+	case ITEMS:
 		database = Items
 		file = "Item_Reference.red"
-	case 1:
+	case REPORT:
 		database = ReportData
 		file = "ReportData.red"
-	case 2:
+	case LOG:
 		database = PriceLog
 		file = "PriceLog.red"
 	}
@@ -77,36 +81,56 @@ func SaveData(variant int) error {
 	}
 	defer save.Close()
 
-	bs := make([]byte, 22*len(database))
+	bs := make([]byte, 17*len(database))
 	for i, x := range database {
-		c := (22 * i)
+		c := (17 * i)
 
-		order.PutUint32(bs[c:c+4], x.ID)
-		order.PutUint16(bs[c+4:c+6], x.Quantity)
-		order.PutUint64(bs[c+6:c+14], math.Float64bits(x.Price))
-		order.PutUint64(bs[c+14:c+22], math.Float64bits(x.Cost))
+		bs[c] = x.Year
+		bs[c+1] = x.Month
+		bs[c+2] = x.Day
+
+		order.PutUint16(bs[c+3:c+5], x.Quantity)
+		order.PutUint32(bs[c+5:c+9], x.ID)
+		order.PutUint32(bs[c+9:c+13], math.Float32bits(x.Price))
+		order.PutUint32(bs[c+13:c+17], math.Float32bits(x.Cost))
 	}
 	_, err = save.Write(bs)
 	return err
 }
 
-func LoadData(variant int) (error, []Sale) {
+func LoadData(variant int) ([]Sale, error) {
+	var file string
+
+	switch variant {
+	case ITEMS:
+		file = "Item_Reference.red"
+	case REPORT:
+		file = "ReportData.red"
+	case LOG:
+		file = "PriceLog.red"
+	}
+
 	order := binary.BigEndian
 
-	buf, err := ioutil.ReadFile("test_save.red")
+	buf, err := ioutil.ReadFile(file)
 	if err != nil {
-		return err, []Sale{}
+		return []Sale{}, err
 	}
 
-	black := make([]Sale, len(buf)/22)
+	black := make([]Sale, len(buf)/17)
 
 	for i := range black {
-		c := 22 * i
-		black[i].ID = order.Uint32(buf[c : c+4])
-		black[i].Quantity = order.Uint16(buf[c+4 : c+6])
-		black[i].Price = math.Float64frombits(order.Uint64(buf[c+6 : c+14]))
-		black[i].Cost = math.Float64frombits(order.Uint64(buf[c+14 : c+22]))
+		c := 17 * i
+
+		black[i].Year = uint8(buf[c])
+		black[i].Month = uint8(buf[c+1])
+		black[i].Day = uint8(buf[c+2])
+
+		black[i].Quantity = order.Uint16(buf[c+3 : c+5])
+		black[i].ID = order.Uint32(buf[c+5 : c+9])
+		black[i].Price = math.Float32frombits(order.Uint32(buf[c+9 : c+13]))
+		black[i].Cost = math.Float32frombits(order.Uint32(buf[c+13 : c+17]))
 	}
 
-	return err, black
+	return black, nil
 }

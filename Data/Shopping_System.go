@@ -26,19 +26,16 @@ func BuyCart(ShoppingCart []Sale) []Sale {
 }
 
 func AddToCart(item Sale, ShoppingCart []Sale) []Sale {
-	for {
-		for i, v := range ShoppingCart {
-			if v.ID == item.ID && v.Price == item.Price {
-				//v.Quantity += 1
-				ShoppingCart[i].Quantity += 1
-				return ShoppingCart
-			}
+	for i, v := range ShoppingCart {
+		if v.ID == item.ID && v.Price == item.Price {
+			ShoppingCart[i].Quantity += 1
+			return ShoppingCart
 		}
-
-		fmt.Println(item)
-		ShoppingCart = append(ShoppingCart, item)
-		return ShoppingCart
 	}
+
+	fmt.Println(item)
+	ShoppingCart = append(ShoppingCart, item)
+	return ShoppingCart
 }
 
 func DecreaseFromCart(item Sale, ShoppingCart []Sale) []Sale {
@@ -83,7 +80,7 @@ func ConvertStringToSale(Price, Cost, Quantity string) (float64, float64, int) {
 	return newPrice, newCost, newQuantity
 }
 
-func ConvertSaleToString(price, cost float64, inventory int) []string {
+func ConvertString(price, cost float64, inventory int) []string {
 	p := fmt.Sprint(price)
 	c := fmt.Sprint(cost)
 	inven := strconv.Itoa(inventory)

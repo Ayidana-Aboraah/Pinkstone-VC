@@ -1,29 +1,30 @@
 package Graph
 
 import (
+	"net/http"
+
 	"github.com/go-echarts/go-echarts/v2/charts"
 	"github.com/go-echarts/go-echarts/v2/opts"
 	"github.com/go-echarts/go-echarts/v2/types"
-	"net/http"
 )
 
 var Labels []string
 var Categories []string
-var Inputs []float64
-var LineInputs [][]float64
+var Inputs []float32
+var LineInputs [][]float32
 
-func generateLineItems(label string, r []float64) []opts.LineData {
+func generateLineItems(label string, r []float32) []opts.LineData {
 	items := make([]opts.LineData, 0)
-	for i, _ := range r {
+	for i := range r {
 		items = append(items, opts.LineData{Name: label, Value: r[i]})
 	}
 	return items
 }
 
-func generatePieItems(tags []string, data []float64) []opts.PieData {
+func generatePieItems(tags []string, data []float32) []opts.PieData {
 	items := make([]opts.PieData, 0)
 
-	for i, _ := range tags {
+	for i := range tags {
 		items = append(items, opts.PieData{Name: tags[i], Value: data[i]})
 	}
 

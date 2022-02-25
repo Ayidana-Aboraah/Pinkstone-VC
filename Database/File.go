@@ -8,7 +8,7 @@ import (
 	"os"
 )
 
-var NameKeys map[uint32]string
+var NameKeys map[uint64]string
 
 var Items []Sale
 var ReportData []Sale
@@ -19,19 +19,13 @@ type Sale struct {
 	Month    uint8
 	Day      uint8
 	Quantity uint16
-	ID       uint32
 	Price    float32
 	Cost     float32
+	ID       uint64
 }
 
-const (
-	ITEMS = iota
-	REPORT
-	LOG
-)
-
 func SaveKeys() error {
-	names, err := os.OpenFile("name_to_keys.json", os.O_CREATE, os.ModePerm)
+	names, err := os.OpenFile("name_keys.json", os.O_CREATE, os.ModePerm)
 	if err != nil {
 		return err
 	}
@@ -43,7 +37,7 @@ func SaveKeys() error {
 }
 
 func LoadKeys() error {
-	names, err := os.OpenFile("name_to_keys.json", os.O_CREATE, os.ModePerm)
+	names, err := os.OpenFile("name_keys.json", os.O_CREATE, os.ModePerm)
 	if err != nil {
 		return err
 	}
@@ -62,13 +56,13 @@ func SaveData(variant int) error {
 	var file string
 
 	switch variant {
-	case ITEMS:
+	case 0:
 		database = Items
 		file = "Item_Reference.red"
-	case REPORT:
+	case 1:
 		database = ReportData
 		file = "ReportData.red"
-	case LOG:
+	case 2:
 		database = PriceLog
 		file = "PriceLog.red"
 	}
@@ -81,18 +75,18 @@ func SaveData(variant int) error {
 	}
 	defer save.Close()
 
-	bs := make([]byte, 17*len(database))
+	bs := make([]byte, 21*len(database))
 	for i, x := range database {
-		c := (17 * i)
+		c := (21 * i)
 
 		bs[c] = x.Year
 		bs[c+1] = x.Month
 		bs[c+2] = x.Day
 
 		order.PutUint16(bs[c+3:c+5], x.Quantity)
-		order.PutUint32(bs[c+5:c+9], x.ID)
-		order.PutUint32(bs[c+9:c+13], math.Float32bits(x.Price))
-		order.PutUint32(bs[c+13:c+17], math.Float32bits(x.Cost))
+		order.PutUint32(bs[c+5:c+9], math.Float32bits(x.Price))
+		order.PutUint32(bs[c+9:c+13], math.Float32bits(x.Cost))
+		order.PutUint64(bs[c+13:c+21], x.ID)
 	}
 	_, err = save.Write(bs)
 	return err
@@ -102,11 +96,11 @@ func LoadData(variant int) ([]Sale, error) {
 	var file string
 
 	switch variant {
-	case ITEMS:
+	case 0:
 		file = "Item_Reference.red"
-	case REPORT:
+	case 1:
 		file = "ReportData.red"
-	case LOG:
+	case 2:
 		file = "PriceLog.red"
 	}
 
@@ -117,19 +111,19 @@ func LoadData(variant int) ([]Sale, error) {
 		return []Sale{}, err
 	}
 
-	black := make([]Sale, len(buf)/17)
+	black := make([]Sale, len(buf)/21)
 
 	for i := range black {
-		c := 17 * i
+		c := 21 * i
 
 		black[i].Year = uint8(buf[c])
 		black[i].Month = uint8(buf[c+1])
 		black[i].Day = uint8(buf[c+2])
 
 		black[i].Quantity = order.Uint16(buf[c+3 : c+5])
-		black[i].ID = order.Uint32(buf[c+5 : c+9])
-		black[i].Price = math.Float32frombits(order.Uint32(buf[c+9 : c+13]))
-		black[i].Cost = math.Float32frombits(order.Uint32(buf[c+13 : c+17]))
+		black[i].Price = math.Float32frombits(order.Uint32(buf[c+5 : c+9]))
+		black[i].Cost = math.Float32frombits(order.Uint32(buf[c+9 : c+13]))
+		black[i].ID = order.Uint64(buf[c+13 : c+21])
 	}
 
 	return black, nil

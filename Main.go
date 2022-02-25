@@ -3,6 +3,7 @@ package main
 import (
 	"BronzeHermes/Cam"
 	"BronzeHermes/Data"
+	"BronzeHermes/Database"
 	"BronzeHermes/Graph"
 	"BronzeHermes/UI"
 	"fmt"
@@ -26,6 +27,14 @@ func main() {
 	appIcon, _ := fyne.LoadResourceFromPath("Assets/icon02.png")
 	a.SetIcon(appIcon)
 	go Graph.StartServer()
+
+	Database.Items, _ = Database.LoadData(0)
+	Database.ReportData, _ = Database.LoadData(1)
+	Database.PriceLog, _ = Database.LoadData(2)
+
+	Database.LoadKeys()
+
+	fmt.Println(Database.ReportData)
 
 	CreateWindow(a)
 }
@@ -63,8 +72,8 @@ func makeMainMenu(a fyne.App) fyne.CanvasObject {
 	return box
 }
 
-func createItemMenu(id int, w fyne.Window, boundData binding.ExternalSaleList, list *widget.List) {
-	idLabel := widget.NewLabel(strconv.Itoa(id))
+func createItemMenu(id uint64, w fyne.Window, boundData binding.ExternalSaleList, list *widget.List) {
+	idLabel := widget.NewLabel(strconv.Itoa(int(id)))
 
 	nameEntry := widget.NewEntry()
 	nameEntry.SetPlaceHolder("Product Name with _ for spaces.")
@@ -90,19 +99,22 @@ func createItemMenu(id int, w fyne.Window, boundData binding.ExternalSaleList, l
 		fmt.Println("Name, Price, Cost and Inventory have all been Authenticated...")
 		fmt.Println("Adding to the database")
 
-		price, cost, inventory := Data.ConvertStringToSale(priceEntry.Text, costEntry.Text, inventoryEntry.Text)
-		Data.UpdateData(Data.Sale{ID: id, Name: nameEntry.Text, Price: price, Cost: cost, Quantity: inventory}, "Items", 2)
-		Data.UpdateData(Data.Sale{ID: id, Name: nameEntry.Text, Price: price, Cost: cost, Quantity: inventory}, "Price Log", 0)
-		boundData.Set(Data.GetData("Items", 0))
+		price, cost, inventory := Database.ConvertString(priceEntry.Text, costEntry.Text, inventoryEntry.Text)
+		Database.ReportData = append(Database.ReportData, Database.Sale{ID: id, Price: price, Cost: cost, Quantity: inventory})
+		Database.PriceLog = append(Database.PriceLog, Database.Sale{ID: id, Price: price, Cost: cost, Quantity: inventory})
+		Database.AddKey(id, nameEntry.Text)
+
+		boundData.Set(Database.Items)
 		list.Refresh()
 
-		Data.ReadVal("Items")
-		Data.SaveFile()
+		// Data.SaveFile()
+		Database.SaveData(1)
+		Database.SaveData(2)
 	}, w)
 }
 
 func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
-	var shoppingCart []Data.Sale
+	var shoppingCart []Database.Sale
 
 	cartList := binding.BindSaleList(&shoppingCart)
 
@@ -117,7 +129,7 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 
 	list.OnSelected = func(id widget.ListItemID) {
 		shoppingCart[id].Quantity++
-		title.SetText(fmt.Sprintf("Cart Total: %f", Data.GetCartTotal(shoppingCart)))
+		title.SetText(fmt.Sprintf("Cart Total: %f", Database.GetCartTotal(shoppingCart)))
 		cartList.Reload()
 		list.Unselect(id)
 	}
@@ -127,11 +139,11 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 		btn := obj.(*fyne.Container).Objects[1].(*widget.Button)
 		val := shoppingCart[id]
 
-		text.SetText(val.Name + " x" + strconv.Itoa(val.Quantity))
+		text.SetText(Database.NameKeys[val.ID] + " x" + strconv.Itoa(int(val.Quantity)))
 		btn.OnTapped = func() {
-			shoppingCart = Data.DecreaseFromCart(val, shoppingCart)
-			title.SetText(fmt.Sprintf("Cart Total: %f", Data.GetCartTotal(shoppingCart)))
-			text.SetText(val.Name + " x" + strconv.Itoa(val.Quantity))
+			shoppingCart = Database.DecreaseFromCart(val, shoppingCart)
+			title.SetText(fmt.Sprintf("Cart Total: %f", Database.GetCartTotal(shoppingCart)))
+			text.SetText(Database.NameKeys[val.ID] + " x" + strconv.Itoa(int(val.Quantity)))
 			cartList.Reload()
 			list.Refresh()
 		}
@@ -150,25 +162,19 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 
 		conID, _ := strconv.Atoi(id)
 
-		raw := Data.GetData("Items", conID)
-		priceEntry := UI.NewNumEntry(fmt.Sprint(raw[0].Price))
-		priceEntry.Text = fmt.Sprint(raw[0].Price)
+		raw := Database.FindItem(uint64(conID))
 
 		dialog.ShowCustomConfirm("Check", "Yes", "No",
 			container.NewVBox(
-				widget.NewLabel("Is this the right item: "+raw[0].Name),
-				priceEntry,
+				widget.NewLabel("Is this the right item: "+Database.NameKeys[raw.ID]),
 			),
 			func(b bool) {
 				if !b {
 					return
 				}
-				newPrice, _, _ := Data.ConvertStringToSale(priceEntry.Text, "", "")
-				raw[0].Price = newPrice
-				raw[0].Quantity = 1
 
-				shoppingCart = Data.AddToCart(raw[0], shoppingCart)
-				title.SetText(fmt.Sprintf("Cart Total: %1.10f", Data.GetCartTotal(shoppingCart)))
+				shoppingCart = Database.AddToCart(raw, shoppingCart)
+				title.SetText(fmt.Sprintf("Cart Total: %1.10f", Database.GetCartTotal(shoppingCart)))
 				cartList.Reload()
 				list.Refresh()
 			}, w)
@@ -183,15 +189,15 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 					if !b {
 						return
 					}
-					shoppingCart = Data.BuyCart(shoppingCart)
-					title.SetText(fmt.Sprintf("Cart Total: %1.1f", Data.GetCartTotal(shoppingCart)))
+					shoppingCart = Database.BuyCart(shoppingCart)
+					title.SetText(fmt.Sprintf("Cart Total: %1.1f", Database.GetCartTotal(shoppingCart)))
 					cartList.Reload()
 					dialog.ShowInformation("Complete", "You're Purchase has been made.", w)
 				}, w)
 			}),
 			widget.NewButton("Clear Cart", func() {
-				shoppingCart = Data.ClearCart(shoppingCart)
-				title.SetText(fmt.Sprintf("Cart Total: %1.1f", Data.GetCartTotal(shoppingCart)))
+				shoppingCart = shoppingCart[:0]
+				title.SetText(fmt.Sprintf("Cart Total: %1.1f", Database.GetCartTotal(shoppingCart)))
 				cartList.Reload()
 			}),
 			button,
@@ -209,23 +215,22 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 
 	title := widget.NewLabelWithStyle("Inventory Info", fyne.TextAlign(1), fyne.TextStyle{Bold: true})
 
-	inventoryData := Data.GetData("Items", 0)
-	boundData := binding.BindSaleList(&inventoryData)
+	boundData := binding.BindSaleList(&Database.Items)
 	inventoryList := widget.NewListWithData(boundData, func() fyne.CanvasObject {
 		return container.NewBorder(nil, nil, nil, nil, widget.NewLabel("name"))
 	},
 		func(item binding.DataItem, obj fyne.CanvasObject) {
 			f := item.(binding.Sale)
 			val, _ := f.Get()
-			obj.(*fyne.Container).Objects[0].(*widget.Label).SetText(val.Name)
+			obj.(*fyne.Container).Objects[0].(*widget.Label).SetText(Database.NameKeys[val.ID])
 		})
 
 	inventoryList.OnSelected = func(id widget.ListItemID) {
-		item := inventoryData[id]
-		values := Data.ConvertSaleToString(item.Price, item.Cost, item.Quantity)
+		item := Database.Items[id]
+		values := Database.ConvertSale(item)
 
-		idLabel.SetText(strconv.Itoa(item.ID))
-		nameLabel.SetText(item.Name)
+		idLabel.SetText(strconv.Itoa(int(item.ID)))
+		nameLabel.SetText(Database.NameKeys[item.ID])
 		priceLabel.SetText(values[0])
 		costLabel.SetText(values[1])
 		inventoryLabel.SetText(values[2])
@@ -241,7 +246,7 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 			inventoryLabel,
 			widget.NewButton("Modify", func() {
 				conID, _ := strconv.Atoi(idLabel.Text)
-				createItemMenu(conID, w, boundData, inventoryList)
+				createItemMenu(uint64(conID), w, boundData, inventoryList)
 			}),
 			widget.NewButton("Camera", func() {
 				id := Cam.OpenCam()
@@ -256,7 +261,7 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 				conID, _ := strconv.Atoi(id)
 
 				results := Data.GetData("Items", conID)
-				res := Data.ConvertSaleToString(results[0].Price, results[0].Cost, results[0].Quantity)
+				res := Data.ConvertString(results[0].Price, results[0].Cost, results[0].Quantity)
 
 				idLabel.SetText(id)
 				nameLabel.SetText(results[0].Name)
@@ -293,10 +298,6 @@ func makeStatsMenu() fyne.CanvasObject {
 		}
 	})
 
-	totalRevLabel := widget.NewLabelWithStyle("", fyne.TextAlignCenter, fyne.TextStyle{})
-	totalCostLabel := widget.NewLabelWithStyle("", fyne.TextAlignCenter, fyne.TextStyle{})
-	totalProfitLabel := widget.NewLabelWithStyle("", fyne.TextAlignCenter, fyne.TextStyle{})
-
 	days := []string{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14",
 		"15", "16", "17", "18", "19", "20", "21", "22", "23", "24",
 		"25", "26", "27", "28", "29", "30", "31"}
@@ -319,7 +320,7 @@ func makeStatsMenu() fyne.CanvasObject {
 				case "Item Popularity":
 					buttonType = 2
 					link.URL = r
-					dataSelectOptions.Hidden = true
+					dataSelectOptions.Hidden = false
 				case "Item Sales":
 					buttonType = 3
 					link.URL = r
@@ -330,48 +331,37 @@ func makeStatsMenu() fyne.CanvasObject {
 			widget.NewButton("Graph", func() {
 				switch buttonType {
 				case 0:
-					results, labels := Data.GetProfitForTimes(lineDataSelectType, "Report Data", selectionEntry.Text)
+					labels, results := Database.GetLine(selectionEntry.Text, lineDataSelectType, Database.ReportData)
+					fmt.Println(results)
 
 					fmt.Println(results)
 					Graph.Labels = days
 					Graph.Categories = labels
 					Graph.LineInputs = results
 				case 1:
-					results, labels := Data.GetProfitForTimes(lineDataSelectType, "Price Log", selectionEntry.Text)
+					labels, results := Database.GetLine(selectionEntry.Text, lineDataSelectType, Database.PriceLog)
 
 					Graph.Labels = days
 					Graph.Categories = labels
 					Graph.LineInputs = results
 				case 2:
-					profits, labels := Data.GetAllProfits(selectionEntry.Text)
+					labels, profits := Database.GetPricePie(selectionEntry.Text, lineDataSelectType)
 
 					Graph.Labels = labels
-					Graph.Inputs = profits[lineDataSelectType]
+					Graph.Inputs = profits
 				case 3:
-					sales, labels := Data.GetSalesForTime(selectionEntry.Text)
+					labels, sales := Database.GetSalesPie(selectionEntry.Text)
 
 					Graph.Labels = labels
 					Graph.Inputs = sales
+				case 4:
+					labels, sales := Database.GetSalesLine(selectionEntry.Text)
+
+					Graph.Labels = labels
+					Graph.LineInputs = sales
 				}
 			}),
 			link,
-		)),
-		widget.NewCard("Totals", "", container.NewVBox(
-			selectionEntry,
-			widget.NewButton("Graph", func() {
-				data, _ := Data.GetAllProfits(selectionEntry.Text)
-
-				revenue := fmt.Sprint(data[0])
-				cost := fmt.Sprint(data[1])
-				profit := fmt.Sprint(data[2])
-
-				totalProfitLabel.SetText("Total Profit: " + profit)
-				totalRevLabel.SetText("Total Revenue: " + revenue)
-				totalCostLabel.SetText("Total Cost: " + cost)
-			}),
-			totalRevLabel,
-			totalCostLabel,
-			totalProfitLabel,
 		)),
 	))
 

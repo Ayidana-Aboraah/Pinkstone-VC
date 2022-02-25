@@ -5,44 +5,31 @@ import (
 	"strings"
 )
 
-func GetSalesLine(selection string) ([]string, [][]uint16) {
-	raw := strings.Split(selection, "/")
-
-	yr, err := strconv.Atoi(raw[0][1:])
-	if err != nil {
-		return nil, nil
-	}
-
-	mon, err := strconv.Atoi(raw[1])
-	if err != nil {
-		return nil, nil
-	}
-
-	year := uint8(yr)
-	month := uint8(mon)
+func GetSalesLine(selection string) ([]string, [][]float32) {
+	date := ConvertDateForLine(selection)
 
 	//Change the error handling for this to show that you can't convert
-	var sales [][]uint16
+	var sales [][]float32
 	var names []string
 
 	for id, name := range NameKeys {
-		var totals []uint16
+		var totals []float32
 
 		for i := uint8(1); i < 32; i++ {
 			var total uint16
 			for _, v := range ReportData {
 
-				if v.ID != id || v.Day != i || v.Month != month || v.Year != year {
+				if v.ID != id || v.Day != i || v.Month != date[1] || v.Year != date[0] {
 					continue
 				}
 
 				total += v.Quantity
 			}
 
-			totals = append(totals, total)
+			totals = append(totals, float32(total))
 		}
 
-		if totals != nil {
+		if totals == nil {
 			continue
 		}
 
@@ -53,21 +40,8 @@ func GetSalesLine(selection string) ([]string, [][]uint16) {
 	return names, sales
 }
 
-func GetPriceLine(selection string, dataType int) ([]string, [][]float32) {
-	raw := strings.Split(selection, "/")
-
-	yr, err := strconv.Atoi(raw[0][1:])
-	if err != nil {
-		return nil, nil
-	}
-
-	mon, err := strconv.Atoi(raw[1])
-	if err != nil {
-		return nil, nil
-	}
-
-	year := uint8(yr)
-	month := uint8(mon)
+func GetLine(selection string, dataType int, database []Sale) ([]string, [][]float32) {
+	date := ConvertDateForLine(selection)
 
 	//Change the error handling for this to show that you can't convert
 	var sales [][]float32
@@ -78,9 +52,9 @@ func GetPriceLine(selection string, dataType int) ([]string, [][]float32) {
 
 		for i := uint8(1); i < 32; i++ {
 			var total float32
-			for _, v := range ReportData {
+			for _, v := range database {
 
-				if v.ID != id || v.Day != i || v.Month != month || v.Year != year {
+				if v.ID != id || v.Day != i || v.Month != date[1] || v.Year != date[0] {
 					continue
 				}
 
@@ -98,7 +72,7 @@ func GetPriceLine(selection string, dataType int) ([]string, [][]float32) {
 			totals = append(totals, total)
 		}
 
-		if totals != nil {
+		if totals == nil {
 			continue
 		}
 
@@ -107,4 +81,139 @@ func GetPriceLine(selection string, dataType int) ([]string, [][]float32) {
 	}
 
 	return names, sales
+}
+
+func GetSalesPie(selection string) ([]string, []float32) {
+	date := ConvertDateForPie(selection)
+
+	//Change the error handling for this to show that you can't convert
+	var sales []float32
+	var names []string
+
+	for id, name := range NameKeys {
+		var total uint16
+
+		for _, v := range ReportData {
+
+			if v.ID != id || v.Day != date[2] || v.Month != date[1] || v.Year != date[0] {
+				continue
+			}
+
+			total += v.Quantity
+		}
+
+		if total == 0 {
+			continue
+		}
+
+		names = append(names, name)
+		sales = append(sales, float32(total))
+	}
+
+	return names, sales
+}
+
+func GetPricePie(selection string, dataType int) ([]string, []float32) {
+	date := ConvertDateForPie(selection)
+
+	var sales []float32
+	var names []string
+
+	for id, name := range NameKeys {
+		var total float32
+
+		for _, v := range ReportData {
+
+			if v.ID != id || v.Day != date[2] || v.Month != date[1] || v.Year != date[0] {
+				continue
+			}
+
+			switch dataType {
+			case 0:
+				total += v.Price
+			case 1:
+				total += v.Cost
+			case 2:
+				total += v.Price - v.Cost
+			}
+		}
+
+		if total == 0 {
+			continue
+		}
+
+		names = append(names, name)
+		sales = append(sales, total)
+	}
+
+	return names, sales
+}
+
+func ConvertDateForPie(date string) []uint8 {
+	if date == "" {
+		return nil
+	}
+
+	raw := strings.Split(date, "/")
+
+	year, err := strconv.Atoi(raw[0][1:])
+	if err != nil {
+		return nil
+	}
+
+	month, err := strconv.Atoi(raw[1])
+	if err != nil {
+		return nil
+	}
+
+	day, err := strconv.Atoi(raw[1])
+	if err != nil {
+		return nil
+	}
+
+	return []uint8{
+		uint8(year),
+		uint8(month),
+		uint8(day),
+	}
+}
+
+func ConvertDateForLine(date string) []uint8 {
+	if date == "" {
+		return nil
+	}
+
+	raw := strings.Split(date, "/")
+
+	year, err := strconv.Atoi(raw[0][1:])
+	if err != nil {
+		return nil
+	}
+
+	month, err := strconv.Atoi(raw[1])
+	if err != nil {
+		return nil
+	}
+
+	return []uint8{
+		uint8(year),
+		uint8(month),
+	}
+}
+
+func AddKey(id uint64, name string) {
+	newKeys := make(map[uint64]string, len(NameKeys)+1)
+	for idx, name := range NameKeys {
+		newKeys[idx] = name
+	}
+	newKeys[id] = name
+}
+
+func FindItem(ID uint64) Sale {
+	for _, v := range Items {
+		if v.ID == ID {
+			return v
+		}
+	}
+	return Sale{}
 }

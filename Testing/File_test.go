@@ -120,3 +120,36 @@ func TestBlue(t *testing.T) {
 	//Change to log the uint
 	t.Log(res.GetText())
 }
+
+func TestBackUp(t *testing.T) {
+	Database.Items = []Database.Sale{}
+	Database.ReportData = []Database.Sale{}
+	Database.PriceLog = []Database.Sale{}
+
+	err := Database.BackUpAllData()
+	if err != nil {
+		t.Error(err)
+	}
+
+	initial := [][]Database.Sale{Database.Items, Database.ReportData, Database.PriceLog}
+
+	Database.LoadBackUp()
+
+	for e, database := range initial {
+		for i, _ := range database {
+			var current []Database.Sale
+			switch e {
+			case 0:
+				current = Database.Items
+			case 1:
+				current = Database.ReportData
+			case 2:
+				current = Database.PriceLog
+			}
+
+			if database[i] == current[i] {
+				t.Errorf("%v doesn't match %v", database, current)
+			}
+		}
+	}
+}

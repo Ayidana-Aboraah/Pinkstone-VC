@@ -2,7 +2,6 @@ package main
 
 import (
 	"BronzeHermes/Cam"
-	"BronzeHermes/Data"
 	"BronzeHermes/Database"
 	"BronzeHermes/Graph"
 	"BronzeHermes/UI"
@@ -19,7 +18,6 @@ import (
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
-	"github.com/360EntSecGroup-Skylar/excelize"
 )
 
 func main() {
@@ -42,13 +40,6 @@ func main() {
 func CreateWindow(a fyne.App) {
 	w := a.NewWindow("Bronze Hermes")
 
-	if Data.Err != nil {
-		err := Data.SaveBackUp("BackupAppData.xlsx", "AppData.xlsx")
-		UI.HandleError(err)
-		Data.F, Data.Err = excelize.OpenFile("Assets/AppData.xlsx")
-		UI.HandleErrorWithMessage(Data.Err, "Failed to grab data. Failed to also replace Data with Backup Data", w)
-	}
-
 	mainMenu := container.NewVBox(
 		container.NewAppTabs(
 			container.NewTabItem("Main", makeMainMenu(a)),
@@ -65,8 +56,11 @@ func CreateWindow(a fyne.App) {
 func makeMainMenu(a fyne.App) fyne.CanvasObject {
 	box := container.NewVBox(
 		widget.NewLabelWithStyle("Welcome", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
-		widget.NewButton("Back Up App Data", func() {
-			go Data.SaveBackUp("AppData.xlsx", "BackupAppData.xlsx")
+		widget.NewButton("Save Backup Data", func() {
+			go Database.BackUpAllData()
+		}),
+		widget.NewButton("Load Backup Data", func() {
+			Database.LoadBackUp()
 		}),
 		widget.NewButton("Quit", a.Quit))
 	return box
@@ -107,7 +101,6 @@ func createItemMenu(id uint64, w fyne.Window, boundData binding.ExternalSaleList
 		boundData.Set(Database.Items)
 		list.Refresh()
 
-		// Data.SaveFile()
 		Database.SaveData(1)
 		Database.SaveData(2)
 	}, w)
@@ -260,11 +253,11 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 
 				conID, _ := strconv.Atoi(id)
 
-				results := Data.GetData("Items", conID)
-				res := Data.ConvertString(results[0].Price, results[0].Cost, results[0].Quantity)
+				result := Database.FindItem(uint64(conID))
+				res := Database.ConvertSale(result)
 
 				idLabel.SetText(id)
-				nameLabel.SetText(results[0].Name)
+				nameLabel.SetText(Database.NameKeys[result.ID])
 				priceLabel.SetText(res[0])
 				costLabel.SetText(res[1])
 				inventoryLabel.SetText(res[2])

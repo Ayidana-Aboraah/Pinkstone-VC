@@ -167,7 +167,7 @@ func BackUpAllData() error {
 			order.PutUint32(bs[initial+9:initial+13], math.Float32bits(x.Cost))
 			order.PutUint64(bs[initial+13:initial+21], x.ID)
 		}
-		previousLength = len(database)
+		previousLength += len(database)
 	}
 
 	_, err = save.Write(bs)

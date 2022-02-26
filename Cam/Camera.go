@@ -2,13 +2,15 @@ package Cam
 
 import (
 	"fmt"
+	"strconv"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
 )
 
-func OpenCam() string {
+func OpenCam(origin *fyne.Window) int {
 	CamOutput := canvas.Image{}
 	CamOutput.FillMode = canvas.ImageFillOriginal
 	CamOutput.Refresh()
@@ -34,11 +36,18 @@ func OpenCam() string {
 	label.SetText(StartCamera(&CamOutput, done))
 	complete = true
 
+	w.Close()
+
 	if evacuate {
 		fmt.Println("Evacuating...")
-		return "V"
+		return 0
 	}
 
-	w.Close()
-	return label.Text
+	if label.Text == "X" {
+		dialog.ShowInformation("Time Up!", "The camera has been open for too long, but you can open it again.", *origin)
+		return 0
+	}
+
+	conID, _ := strconv.Atoi(label.Text)
+	return conID
 }

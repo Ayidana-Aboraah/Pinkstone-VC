@@ -6,7 +6,6 @@ import (
 	"BronzeHermes/Graph"
 	"BronzeHermes/UI"
 	"fmt"
-	_ "image/png"
 	"net/url"
 	"strconv"
 
@@ -22,8 +21,6 @@ import (
 
 func main() {
 	a := app.NewWithID("Bronze Hermes")
-	appIcon, _ := fyne.LoadResourceFromPath("Assets/icon02.png")
-	a.SetIcon(appIcon)
 	go Graph.StartServer()
 
 	Database.Items, _ = Database.LoadData(0)
@@ -66,7 +63,7 @@ func makeMainMenu(a fyne.App) fyne.CanvasObject {
 	return box
 }
 
-func createItemMenu(id uint64, w fyne.Window, boundData binding.ExternalSaleList, list *widget.List) {
+func createItemMenu(id int, w fyne.Window, boundData binding.ExternalSaleList, list *widget.List) {
 	idLabel := widget.NewLabel(strconv.Itoa(int(id)))
 
 	nameEntry := widget.NewEntry()
@@ -94,9 +91,11 @@ func createItemMenu(id uint64, w fyne.Window, boundData binding.ExternalSaleList
 		fmt.Println("Adding to the database")
 
 		price, cost, inventory := Database.ConvertString(priceEntry.Text, costEntry.Text, inventoryEntry.Text)
-		Database.ReportData = append(Database.ReportData, Database.Sale{ID: id, Price: price, Cost: cost, Quantity: inventory})
-		Database.PriceLog = append(Database.PriceLog, Database.Sale{ID: id, Price: price, Cost: cost, Quantity: inventory})
-		Database.AddKey(id, nameEntry.Text)
+		newItem := Database.Sale{ID: uint64(id), Price: price, Cost: cost, Quantity: inventory}
+
+		Database.ReportData = append(Database.ReportData, newItem)
+		Database.PriceLog = append(Database.PriceLog, newItem)
+		Database.AddKey(uint64(id), nameEntry.Text)
 
 		boundData.Set(Database.Items)
 		list.Refresh()
@@ -143,31 +142,24 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 	}
 
 	button := widget.NewButton("New Item", func() {
-		id := Cam.OpenCam()
-
-		if id == "X" {
-			dialog.ShowInformation("Time Up!", "The camera has been open for too long, but you can open it again.", w)
-			return
-		}
-		if id == "V" {
+		id := Cam.OpenCam(&w)
+		if id == 0 {
 			return
 		}
 
-		conID, _ := strconv.Atoi(id)
-
-		raw := Database.FindItem(uint64(conID))
+		item := Database.FindItem(uint64(id))
 
 		dialog.ShowCustomConfirm("Check", "Yes", "No",
 			container.NewVBox(
-				widget.NewLabel("Is this the right item: "+Database.NameKeys[raw.ID]),
+				widget.NewLabel("Is this the right item: "+Database.NameKeys[item.ID]),
 			),
 			func(b bool) {
 				if !b {
 					return
 				}
 
-				shoppingCart = Database.AddToCart(raw, shoppingCart)
-				title.SetText(fmt.Sprintf("Cart Total: %1.10f", Database.GetCartTotal(shoppingCart)))
+				shoppingCart = Database.AddToCart(item, shoppingCart)
+				title.SetText(fmt.Sprintf("Cart Total: %1.1f", Database.GetCartTotal(shoppingCart)))
 				cartList.Reload()
 				list.Refresh()
 			}, w)
@@ -183,8 +175,8 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 						return
 					}
 					shoppingCart = Database.BuyCart(shoppingCart)
-					title.SetText(fmt.Sprintf("Cart Total: %1.1f", Database.GetCartTotal(shoppingCart)))
 					cartList.Reload()
+					title.SetText(fmt.Sprintf("Cart Total: %1.1f", Database.GetCartTotal(shoppingCart)))
 					dialog.ShowInformation("Complete", "You're Purchase has been made.", w)
 				}, w)
 			}),
@@ -239,24 +231,18 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 			inventoryLabel,
 			widget.NewButton("Modify", func() {
 				conID, _ := strconv.Atoi(idLabel.Text)
-				createItemMenu(uint64(conID), w, boundData, inventoryList)
+				createItemMenu(conID, w, boundData, inventoryList)
 			}),
 			widget.NewButton("Camera", func() {
-				id := Cam.OpenCam()
-				if id == "X" {
-					dialog.ShowInformation("Time Up!", "The camera has been open for too long, but you can open it again.", w)
-					return
-				}
-				if id == "V" {
+				id := Cam.OpenCam(&w)
+				if id == 0 {
 					return
 				}
 
-				conID, _ := strconv.Atoi(id)
-
-				result := Database.FindItem(uint64(conID))
+				result := Database.FindItem(uint64(id))
 				res := Database.ConvertSale(result)
 
-				idLabel.SetText(id)
+				idLabel.SetText(strconv.Itoa(id))
 				nameLabel.SetText(Database.NameKeys[result.ID])
 				priceLabel.SetText(res[0])
 				costLabel.SetText(res[1])
@@ -318,6 +304,10 @@ func makeStatsMenu() fyne.CanvasObject {
 					buttonType = 3
 					link.URL = r
 					dataSelectOptions.Hidden = true
+				case "Sales Over Time":
+					buttonType = 4
+					link.URL = u
+					dataSelectOptions.Hidden = true
 				}
 			}),
 			dataSelectOptions,
@@ -325,9 +315,7 @@ func makeStatsMenu() fyne.CanvasObject {
 				switch buttonType {
 				case 0:
 					labels, results := Database.GetLine(selectionEntry.Text, lineDataSelectType, Database.ReportData)
-					fmt.Println(results)
 
-					fmt.Println(results)
 					Graph.Labels = days
 					Graph.Categories = labels
 					Graph.LineInputs = results

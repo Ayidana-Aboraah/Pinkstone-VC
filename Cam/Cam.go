@@ -3,13 +3,14 @@ package Cam
 import (
 	"BronzeHermes/UI"
 	"fmt"
+	"image"
+	"strconv"
+	"time"
+
 	"fyne.io/fyne/v2/canvas"
 	"github.com/pion/mediadevices"
 	_ "github.com/pion/mediadevices/pkg/driver/camera"
 	"github.com/pion/mediadevices/pkg/prop"
-	"image"
-	"strconv"
-	"time"
 )
 
 func StartCamera(Output *canvas.Image, done chan bool) string {

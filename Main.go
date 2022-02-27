@@ -21,46 +21,45 @@ import (
 
 func main() {
 	a := app.NewWithID("Bronze Hermes")
+
+	UI.HandleErrorWithMessage(Database.LoadData(), "Failed to Load Data", a.NewWindow("Error MSG"))
+
 	go Graph.StartServer()
 
-	Database.Items, _ = Database.LoadData(0)
-	Database.ReportData, _ = Database.LoadData(1)
-	Database.PriceLog, _ = Database.LoadData(2)
-
-	Database.LoadKeys()
-
-	fmt.Println(Database.ReportData)
+	fmt.Println(Database.Databases)
 
 	CreateWindow(a)
 }
 
 func CreateWindow(a fyne.App) {
 	w := a.NewWindow("Bronze Hermes")
-
-	mainMenu := container.NewVBox(
-		container.NewAppTabs(
-			container.NewTabItem("Main", makeMainMenu(a)),
-			container.NewTabItem("Shop", makeShoppingMenu(w)),
-			container.NewTabItem("Inventory", makeInfoMenu(w)),
-			container.NewTabItem("Statistics", makeStatsMenu()),
-		))
 	w.SetOnClosed(Graph.StopSever)
 
-	w.SetContent(mainMenu)
+	w.SetContent(container.NewVBox(container.NewAppTabs(
+		container.NewTabItem("Main", makeMainMenu(a)),
+		container.NewTabItem("Shop", makeShoppingMenu(w)),
+		container.NewTabItem("Inventory", makeInfoMenu(w)),
+		container.NewTabItem("Statistics", makeStatsMenu()),
+	)))
+
 	w.ShowAndRun()
 }
 
 func makeMainMenu(a fyne.App) fyne.CanvasObject {
-	box := container.NewVBox(
+	return container.NewVBox(
 		widget.NewLabelWithStyle("Welcome", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
 		widget.NewButton("Save Backup Data", func() {
-			go Database.BackUpAllData()
+			go func() {
+				err := Database.BackUpAllData()
+				UI.HandleErrorWithMessage(err, "Failed to Load Data", a.NewWindow("Error MSG"))
+			}()
 		}),
 		widget.NewButton("Load Backup Data", func() {
-			Database.LoadBackUp()
+			err := Database.LoadBackUp()
+			UI.HandleErrorWithMessage(err, "Failed to Load Data", a.NewWindow("Error MSG"))
 		}),
+		widget.NewButton("Display Database", func() { fmt.Println(Database.Databases) }),
 		widget.NewButton("Quit", a.Quit))
-	return box
 }
 
 func createItemMenu(id int, w fyne.Window, boundData binding.ExternalSaleList, list *widget.List) {
@@ -87,35 +86,30 @@ func createItemMenu(id int, w fyne.Window, boundData binding.ExternalSaleList, l
 			return
 		}
 
-		fmt.Println("Name, Price, Cost and Inventory have all been Authenticated...")
-		fmt.Println("Adding to the database")
-
 		price, cost, inventory := Database.ConvertString(priceEntry.Text, costEntry.Text, inventoryEntry.Text)
 		newItem := Database.Sale{ID: uint64(id), Price: price, Cost: cost, Quantity: inventory}
 
-		Database.ReportData = append(Database.ReportData, newItem)
-		Database.PriceLog = append(Database.PriceLog, newItem)
+		Database.Databases[0] = append(Database.Databases[0], newItem)
+		Database.Databases[2] = append(Database.Databases[2], newItem)
 		Database.AddKey(uint64(id), nameEntry.Text)
 
-		boundData.Set(Database.Items)
+		boundData.Set(Database.Databases[0])
 		list.Refresh()
 
-		Database.SaveData(1)
-		Database.SaveData(2)
+		Database.SaveData()
+		fmt.Println("Saved to Database.")
 	}, w)
 }
 
 func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 	var shoppingCart []Database.Sale
+	title := widget.NewLabelWithStyle("Cart Total: 0.0", fyne.TextAlignCenter, fyne.TextStyle{})
 
 	cartList := binding.BindSaleList(&shoppingCart)
 
-	title := widget.NewLabelWithStyle("Cart Total: 0.0", fyne.TextAlignCenter, fyne.TextStyle{})
-
 	list := widget.NewListWithData(cartList,
 		func() fyne.CanvasObject {
-			return container.NewBorder(nil, nil, nil, widget.NewButton("X", nil),
-				widget.NewLabel(""))
+			return container.NewBorder(nil, nil, nil, widget.NewButton("X", nil), widget.NewLabel(""))
 		},
 		func(item binding.DataItem, obj fyne.CanvasObject) {})
 
@@ -141,30 +135,6 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 		}
 	}
 
-	button := widget.NewButton("New Item", func() {
-		id := Cam.OpenCam(&w)
-		if id == 0 {
-			return
-		}
-
-		item := Database.FindItem(uint64(id))
-
-		dialog.ShowCustomConfirm("Check", "Yes", "No",
-			container.NewVBox(
-				widget.NewLabel("Is this the right item: "+Database.NameKeys[item.ID]),
-			),
-			func(b bool) {
-				if !b {
-					return
-				}
-
-				shoppingCart = Database.AddToCart(item, shoppingCart)
-				title.SetText(fmt.Sprintf("Cart Total: %1.1f", Database.GetCartTotal(shoppingCart)))
-				cartList.Reload()
-				list.Refresh()
-			}, w)
-	})
-
 	screen := container.New(layout.NewGridLayoutWithRows(3),
 		title,
 		container.NewMax(list),
@@ -185,7 +155,26 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 				title.SetText(fmt.Sprintf("Cart Total: %1.1f", Database.GetCartTotal(shoppingCart)))
 				cartList.Reload()
 			}),
-			button,
+			widget.NewButton("New Item", func() {
+				id := Cam.OpenCam(&w)
+				if id == 0 {
+					return
+				}
+
+				item := Database.FindItem(uint64(id))
+
+				dialog.ShowCustomConfirm("Check", "Yes", "No", container.NewVBox(widget.NewLabel("Is this the right item: "+Database.NameKeys[item.ID])),
+					func(b bool) {
+						if !b {
+							return
+						}
+
+						shoppingCart = Database.AddToCart(item, shoppingCart)
+						title.SetText(fmt.Sprintf("Cart Total: %1.1f", Database.GetCartTotal(shoppingCart)))
+						cartList.Reload()
+						list.Refresh()
+					}, w)
+			}),
 		),
 	)
 	return screen
@@ -200,7 +189,7 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 
 	title := widget.NewLabelWithStyle("Inventory Info", fyne.TextAlign(1), fyne.TextStyle{Bold: true})
 
-	boundData := binding.BindSaleList(&Database.Items)
+	boundData := binding.BindSaleList(&Database.Databases[0])
 	inventoryList := widget.NewListWithData(boundData, func() fyne.CanvasObject {
 		return container.NewBorder(nil, nil, nil, nil, widget.NewLabel("name"))
 	},
@@ -211,7 +200,7 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 		})
 
 	inventoryList.OnSelected = func(id widget.ListItemID) {
-		item := Database.Items[id]
+		item := Database.Databases[0][id]
 		values := Database.ConvertSale(item)
 
 		idLabel.SetText(strconv.Itoa(int(item.ID)))
@@ -314,13 +303,13 @@ func makeStatsMenu() fyne.CanvasObject {
 			widget.NewButton("Graph", func() {
 				switch buttonType {
 				case 0:
-					labels, results := Database.GetLine(selectionEntry.Text, lineDataSelectType, Database.ReportData)
+					labels, results := Database.GetLine(selectionEntry.Text, lineDataSelectType, Database.Databases[1])
 
 					Graph.Labels = days
 					Graph.Categories = labels
 					Graph.LineInputs = results
 				case 1:
-					labels, results := Database.GetLine(selectionEntry.Text, lineDataSelectType, Database.PriceLog)
+					labels, results := Database.GetLine(selectionEntry.Text, lineDataSelectType, Database.Databases[2])
 
 					Graph.Labels = days
 					Graph.Categories = labels

@@ -57,7 +57,11 @@ func TestSaveData(t *testing.T) {
 		{ID: 674398202423, Year: 021, Day: 1, Month: 12, Price: 24, Cost: 43, Quantity: 2},
 	}
 
-	save, err := os.OpenFile("test_save.red", os.O_CREATE, os.ModePerm)
+	if _, err := os.ReadDir("Beep"); err != nil {
+		os.Mkdir("Beep", os.ModeDir)
+	}
+
+	save, err := os.OpenFile("Beep/test_save.red", os.O_CREATE, os.ModePerm)
 	if err != nil {
 		t.Error(err)
 	}
@@ -122,16 +126,16 @@ func TestBlue(t *testing.T) {
 }
 
 func TestBackUp(t *testing.T) {
-	Database.Items = []Database.Sale{}
-	Database.ReportData = []Database.Sale{}
-	Database.PriceLog = []Database.Sale{}
+	Items := []Database.Sale{}
+	PriceLog := []Database.Sale{}
+	ReportData := []Database.Sale{}
 
 	err := Database.BackUpAllData()
 	if err != nil {
 		t.Error(err)
 	}
 
-	initial := [][]Database.Sale{Database.Items, Database.ReportData, Database.PriceLog}
+	initial := [][]Database.Sale{Items, ReportData, PriceLog}
 
 	Database.LoadBackUp()
 
@@ -140,11 +144,11 @@ func TestBackUp(t *testing.T) {
 			var current []Database.Sale
 			switch e {
 			case 0:
-				current = Database.Items
+				current = Items
 			case 1:
-				current = Database.ReportData
+				current = ReportData
 			case 2:
-				current = Database.PriceLog
+				current = PriceLog
 			}
 
 			if database[i] == current[i] {

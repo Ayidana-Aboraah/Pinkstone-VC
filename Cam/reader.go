@@ -1,6 +1,7 @@
 package Cam
 
 import (
+	"fmt"
 	"image"
 
 	"github.com/makiuchi-d/gozxing"
@@ -12,5 +13,7 @@ func ReadImage(img image.Image) *gozxing.Result {
 	reader := oned.NewUPCAReader()
 
 	result, _ := reader.Decode(bmp, nil)
+
+	fmt.Println(result)
 	return result
 }

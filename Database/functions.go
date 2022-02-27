@@ -17,7 +17,7 @@ func GetSalesLine(selection string) ([]string, [][]float32) {
 
 		for i := uint8(1); i < 32; i++ {
 			var total uint16
-			for _, v := range ReportData {
+			for _, v := range Databases[1] {
 
 				if v.ID != id || v.Day != i || v.Month != date[1] || v.Year != date[0] {
 					continue
@@ -93,7 +93,7 @@ func GetSalesPie(selection string) ([]string, []float32) {
 	for id, name := range NameKeys {
 		var total uint16
 
-		for _, v := range ReportData {
+		for _, v := range Databases[1] {
 
 			if v.ID != id || v.Day != date[2] || v.Month != date[1] || v.Year != date[0] {
 				continue
@@ -122,7 +122,7 @@ func GetPricePie(selection string, dataType int) ([]string, []float32) {
 	for id, name := range NameKeys {
 		var total float32
 
-		for _, v := range ReportData {
+		for _, v := range Databases[1] {
 
 			if v.ID != id || v.Day != date[2] || v.Month != date[1] || v.Year != date[0] {
 				continue
@@ -210,7 +210,7 @@ func AddKey(id uint64, name string) {
 }
 
 func FindItem(ID uint64) Sale {
-	for _, v := range Items {
+	for _, v := range Databases[0] {
 		if v.ID == ID {
 			return v
 		}

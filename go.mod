@@ -3,7 +3,7 @@ module BronzeHermes
 go 1.17
 
 require (
-	fyne.io/fyne/v2 v2.1.2
+	fyne.io/fyne/v2 v2.1.3
 	github.com/go-echarts/go-echarts/v2 v2.2.4
 	github.com/makiuchi-d/gozxing v0.1.1
 	github.com/pion/mediadevices v0.3.2

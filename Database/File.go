@@ -10,9 +10,12 @@ import (
 
 var NameKeys map[uint64]string
 
-var Items []Sale
-var ReportData []Sale
-var PriceLog []Sale
+// var Items []Sale
+// var ReportData []Sale
+// var PriceLog []Sale
+
+//0 Items; 1 ReportData; 2 PriceLog
+var Databases [3][]Sale
 
 type Sale struct {
 	Year     uint8
@@ -25,7 +28,7 @@ type Sale struct {
 }
 
 func SaveKeys() error {
-	names, err := os.OpenFile("name_keys.json", os.O_CREATE, os.ModePerm)
+	names, err := os.OpenFile("Saves/name_keys.json", os.O_CREATE, os.ModePerm)
 	if err != nil {
 		return err
 	}
@@ -37,7 +40,7 @@ func SaveKeys() error {
 }
 
 func LoadKeys() error {
-	names, err := os.OpenFile("name_keys.json", os.O_CREATE, os.ModePerm)
+	names, err := os.OpenFile("Saves/name_keys.json", os.O_CREATE, os.ModePerm)
 	if err != nil {
 		return err
 	}
@@ -51,110 +54,130 @@ func LoadKeys() error {
 	return nil
 }
 
-func SaveData(variant int) error {
-	var database []Sale
+func SaveData() error {
+	order := binary.BigEndian
 	var file string
 
-	switch variant {
-	case 0:
-		database = Items
-		file = "Item_Reference.red"
-	case 1:
-		database = ReportData
-		file = "ReportData.red"
-	case 2:
-		database = PriceLog
-		file = "PriceLog.red"
+	if _, err := os.ReadDir("Saves"); err != nil {
+		os.Mkdir("Saves", os.ModeDir)
 	}
 
-	order := binary.BigEndian
+	for idx, database := range Databases {
+		switch idx {
+		case 0:
+			file = "Item_Reference.red"
+		case 1:
+			file = "Report_Data.red"
+		case 2:
+			file = "Price_Log.red"
+		}
 
-	save, err := os.OpenFile(file, os.O_CREATE, os.ModePerm)
-	if err != nil {
-		return err
+		save, err := os.OpenFile("Saves/"+file, os.O_CREATE, os.ModePerm)
+		defer save.Close()
+		if err != nil {
+			return err
+		}
+
+		bs := make([]byte, 21*len(database))
+		for i, x := range database {
+			c := (21 * i)
+
+			bs[c] = x.Year
+			bs[c+1] = x.Month
+			bs[c+2] = x.Day
+
+			order.PutUint16(bs[c+3:c+5], x.Quantity)
+			order.PutUint32(bs[c+5:c+9], math.Float32bits(x.Price))
+			order.PutUint32(bs[c+9:c+13], math.Float32bits(x.Cost))
+			order.PutUint64(bs[c+13:c+21], x.ID)
+		}
+
+		_, err = save.Write(bs)
+
+		save.Close()
+
+		if err != nil {
+			return err
+		}
 	}
-	defer save.Close()
 
-	bs := make([]byte, 21*len(database))
-	for i, x := range database {
-		c := (21 * i)
-
-		bs[c] = x.Year
-		bs[c+1] = x.Month
-		bs[c+2] = x.Day
-
-		order.PutUint16(bs[c+3:c+5], x.Quantity)
-		order.PutUint32(bs[c+5:c+9], math.Float32bits(x.Price))
-		order.PutUint32(bs[c+9:c+13], math.Float32bits(x.Cost))
-		order.PutUint64(bs[c+13:c+21], x.ID)
-	}
-	_, err = save.Write(bs)
+	err := SaveKeys()
 	return err
 }
 
-func LoadData(variant int) ([]Sale, error) {
+func LoadData() error {
 	var file string
-
-	switch variant {
-	case 0:
-		file = "Item_Reference.red"
-	case 1:
-		file = "ReportData.red"
-	case 2:
-		file = "PriceLog.red"
-	}
-
 	order := binary.BigEndian
 
-	buf, err := ioutil.ReadFile(file)
-	if err != nil {
-		return []Sale{}, err
+	for idx := range Databases {
+		switch idx {
+		case 0:
+			file = "Item_Reference.red"
+		case 1:
+			file = "ReportData.red"
+		case 2:
+			file = "PriceLog.red"
+		}
+
+		buf, err := ioutil.ReadFile("Saves/" + file)
+
+		if err != nil {
+			return err
+		}
+
+		black := make([]Sale, len(buf)/21)
+
+		for i := range black {
+			c := 21 * i
+
+			black[i].Year = uint8(buf[c])
+			black[i].Month = uint8(buf[c+1])
+			black[i].Day = uint8(buf[c+2])
+
+			black[i].Quantity = order.Uint16(buf[c+3 : c+5])
+			black[i].Price = math.Float32frombits(order.Uint32(buf[c+5 : c+9]))
+			black[i].Cost = math.Float32frombits(order.Uint32(buf[c+9 : c+13]))
+			black[i].ID = order.Uint64(buf[c+13 : c+21])
+		}
+
+		Databases[idx] = black
 	}
 
-	black := make([]Sale, len(buf)/21)
-
-	for i := range black {
-		c := 21 * i
-
-		black[i].Year = uint8(buf[c])
-		black[i].Month = uint8(buf[c+1])
-		black[i].Day = uint8(buf[c+2])
-
-		black[i].Quantity = order.Uint16(buf[c+3 : c+5])
-		black[i].Price = math.Float32frombits(order.Uint32(buf[c+5 : c+9]))
-		black[i].Cost = math.Float32frombits(order.Uint32(buf[c+9 : c+13]))
-		black[i].ID = order.Uint64(buf[c+13 : c+21])
-	}
-
-	return black, nil
+	err := LoadKeys()
+	return err
 }
 
 func BackUpAllData() error {
-	names, err := os.OpenFile("Backup_Keys.json", os.O_CREATE, os.ModePerm)
-	if err != nil {
-		return err
-	}
-	defer names.Close()
+	err := func() error {
+		names, err := os.OpenFile("Saves/Backup_Keys.json", os.O_CREATE, os.ModePerm)
+		if err != nil {
+			return err
+		}
+		defer names.Close()
 
-	encoder := json.NewEncoder(names)
-	err = encoder.Encode(NameKeys)
+		encoder := json.NewEncoder(names)
+		err = encoder.Encode(NameKeys)
+		if err != nil {
+			return err
+		}
+		return nil
+	}()
 	if err != nil {
 		return err
 	}
 
 	order := binary.BigEndian
 
-	save, err := os.OpenFile("BackUp.red", os.O_CREATE, os.ModePerm)
+	save, err := os.OpenFile("Saves/BackUp.red", os.O_CREATE, os.ModePerm)
 	if err != nil {
 		return err
 	}
 	defer save.Close()
 
-	databases := [][]Sale{Items, ReportData, PriceLog}
-	bs := make([]byte, ((21 * len(databases[0])) + (21 * len(databases[1])) + (21 * len(databases[2]))))
+	bs := make([]byte, ((21 * len(Databases[0])) + (21 * len(Databases[1])) + (21 * len(Databases[2]))))
 
 	previousLength := 0
-	for _, database := range databases {
+	for _, database := range Databases {
 		for i, x := range database {
 			initial := (previousLength * 21) + (21 * i)
 
@@ -177,7 +200,7 @@ func BackUpAllData() error {
 func LoadBackUp() error {
 	order := binary.BigEndian
 
-	buf, err := ioutil.ReadFile("BackUp.red")
+	buf, err := ioutil.ReadFile("Saves/BackUp.red")
 	if err != nil {
 		return err
 	}
@@ -197,11 +220,11 @@ func LoadBackUp() error {
 		black[i].ID = order.Uint64(buf[c+13 : c+21])
 
 		if v.Year == 0 {
-			Items = append(Items, v)
+			Databases[0] = append(Databases[0], v)
 		} else if v.Quantity == 0 {
-			PriceLog = append(PriceLog, v)
+			Databases[2] = append(Databases[2], v)
 		} else {
-			ReportData = append(ReportData, v)
+			Databases[1] = append(Databases[1], v)
 		}
 	}
 

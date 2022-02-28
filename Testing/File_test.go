@@ -1,12 +1,9 @@
 package Test
 
 import (
-	"BronzeHermes/Cam"
 	"BronzeHermes/Database"
 	"encoding/binary"
 	"encoding/json"
-	"image"
-	_ "image/jpeg"
 	"io/ioutil"
 	"math"
 	"os"
@@ -112,47 +109,29 @@ func TestLoadData(t *testing.T) {
 	t.Log(black)
 }
 
-func TestBlue(t *testing.T) {
-	file, _ := os.Open("TestCode.jpg")
-	defer file.Close()
-	img, _, err := image.Decode(file)
-	if err != nil {
-		t.Error(err)
-	}
-
-	res := Cam.ReadImage(img)
-	//Change to log the uint
-	t.Log(res.GetText())
-}
-
 func TestBackUp(t *testing.T) {
-	Items := []Database.Sale{}
-	PriceLog := []Database.Sale{}
-	ReportData := []Database.Sale{}
+	Database.Databases = [3][]Database.Sale{
+		{},
+		{},
+		{},
+	}
 
 	err := Database.BackUpAllData()
 	if err != nil {
 		t.Error(err)
 	}
 
-	initial := [][]Database.Sale{Items, ReportData, PriceLog}
+	initial := Database.Databases
 
-	Database.LoadBackUp()
+	err = Database.LoadBackUp()
+	if err != nil {
+		t.Error(err)
+	}
 
 	for e, database := range initial {
-		for i, _ := range database {
-			var current []Database.Sale
-			switch e {
-			case 0:
-				current = Items
-			case 1:
-				current = ReportData
-			case 2:
-				current = PriceLog
-			}
-
-			if database[i] == current[i] {
-				t.Errorf("%v doesn't match %v", database, current)
+		for i := range database {
+			if database[i] != Database.Databases[e][i] {
+				t.Errorf("%v doesn't match %v", database, Database.Databases[e][i])
 			}
 		}
 	}

@@ -62,45 +62,6 @@ func makeMainMenu(a fyne.App) fyne.CanvasObject {
 		widget.NewButton("Quit", a.Quit))
 }
 
-func createItemMenu(id int, w fyne.Window, boundData binding.ExternalSaleList, list *widget.List) {
-	idLabel := widget.NewLabel(strconv.Itoa(int(id)))
-
-	nameEntry := widget.NewEntry()
-	nameEntry.SetPlaceHolder("Product Name with _ for spaces.")
-	nameEntry.Validator = validation.NewRegexp(`^[A-Za-z0-9_-]+$`, "username can only contain letters, numbers, '_', and '-'")
-
-	priceEntry := UI.NewNumEntry("The Price it will be sold.")
-	costEntry := UI.NewNumEntry("The Cost of buying this item.")
-	inventoryEntry := UI.NewNumEntry("The Amount currently in inventory.")
-
-	items := []*widget.FormItem{
-		widget.NewFormItem("ID", idLabel),
-		widget.NewFormItem("Name", nameEntry),
-		widget.NewFormItem("Price", priceEntry),
-		widget.NewFormItem("Cost", costEntry),
-		widget.NewFormItem("Inventory", inventoryEntry),
-	}
-
-	dialog.ShowForm("New Item", "Add", "Cancel", items, func(b bool) {
-		if !b {
-			return
-		}
-
-		price, cost, inventory := Database.ConvertString(priceEntry.Text, costEntry.Text, inventoryEntry.Text)
-		newItem := Database.Sale{ID: uint64(id), Price: price, Cost: cost, Quantity: inventory}
-
-		Database.Databases[0] = append(Database.Databases[0], newItem)
-		Database.Databases[2] = append(Database.Databases[2], newItem)
-		Database.AddKey(uint64(id), nameEntry.Text)
-
-		boundData.Set(Database.Databases[0])
-		list.Refresh()
-
-		Database.SaveData()
-		fmt.Println("Saved to Database.")
-	}, w)
-}
-
 func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 	var shoppingCart []Database.Sale
 	title := widget.NewLabelWithStyle("Cart Total: 0.0", fyne.TextAlignCenter, fyne.TextStyle{})
@@ -219,8 +180,47 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 			costLabel,
 			inventoryLabel,
 			widget.NewButton("Modify", func() {
-				conID, _ := strconv.Atoi(idLabel.Text)
-				createItemMenu(conID, w, boundData, inventoryList)
+				//Creates item menu
+				func() {
+					conID, _ := strconv.Atoi(idLabel.Text)
+
+					idLabel := widget.NewLabel(strconv.Itoa(conID))
+
+					nameEntry := widget.NewEntry()
+					nameEntry.SetPlaceHolder("Product Name with _ for spaces.")
+					nameEntry.Validator = validation.NewRegexp(`^[A-Za-z0-9_-]+$`, "username can only contain letters, numbers, '_', and '-'")
+
+					priceEntry := UI.NewNumEntry("The Price it will be sold.")
+					costEntry := UI.NewNumEntry("The Cost of buying this item.")
+					inventoryEntry := UI.NewNumEntry("The Amount currently in inventory.")
+
+					items := []*widget.FormItem{
+						widget.NewFormItem("ID", idLabel),
+						widget.NewFormItem("Name", nameEntry),
+						widget.NewFormItem("Price", priceEntry),
+						widget.NewFormItem("Cost", costEntry),
+						widget.NewFormItem("Inventory", inventoryEntry),
+					}
+
+					dialog.ShowForm("New Item", "Add", "Cancel", items, func(b bool) {
+						if !b {
+							return
+						}
+
+						price, cost, inventory := Database.ConvertString(priceEntry.Text, costEntry.Text, inventoryEntry.Text)
+						newItem := Database.Sale{ID: uint64(conID), Price: price, Cost: cost, Quantity: inventory}
+
+						Database.Databases[0] = append(Database.Databases[0], newItem)
+						Database.Databases[2] = append(Database.Databases[2], newItem)
+						Database.AddKey(uint64(conID), nameEntry.Text)
+
+						boundData.Set(Database.Databases[0])
+						inventoryList.Refresh()
+
+						Database.SaveData()
+						fmt.Println("Saved to Database.")
+					}, w)
+				}()
 			}),
 			widget.NewButton("Camera", func() {
 				id := Cam.OpenCam(&w)

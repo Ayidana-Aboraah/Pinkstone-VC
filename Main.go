@@ -315,17 +315,17 @@ func makeStatsMenu() fyne.CanvasObject {
 					Graph.Categories = labels
 					Graph.LineInputs = results
 				case 2:
-					labels, profits := Database.GetPricePie(selectionEntry.Text, lineDataSelectType)
+					labels, profits := Database.GetPie(selectionEntry.Text, lineDataSelectType)
 
 					Graph.Labels = labels
 					Graph.Inputs = profits
 				case 3:
-					labels, sales := Database.GetSalesPie(selectionEntry.Text)
+					labels, sales := Database.GetPie(selectionEntry.Text, 3)
 
 					Graph.Labels = labels
 					Graph.Inputs = sales
 				case 4:
-					labels, sales := Database.GetSalesLine(selectionEntry.Text)
+					labels, sales := Database.GetLine(selectionEntry.Text, 3, Database.Databases[1])
 
 					Graph.Labels = labels
 					Graph.LineInputs = sales

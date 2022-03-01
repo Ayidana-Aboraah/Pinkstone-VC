@@ -6,7 +6,28 @@ import (
 )
 
 func GetLine(selection string, dataType int, database []Sale) ([]string, [][]float32) {
-	date := ConvertDateForLine(selection)
+	date := func() []uint8 {
+		if selection == "" {
+			return nil
+		}
+
+		raw := strings.Split(selection, "/")
+
+		year, err := strconv.Atoi(raw[0][1:])
+		if err != nil {
+			return nil
+		}
+
+		month, err := strconv.Atoi(raw[1])
+		if err != nil {
+			return nil
+		}
+
+		return []uint8{
+			uint8(year),
+			uint8(month),
+		}
+	}()
 
 	//Change the error handling for this to show that you can't convert
 	var sales [][]float32
@@ -51,7 +72,34 @@ func GetLine(selection string, dataType int, database []Sale) ([]string, [][]flo
 }
 
 func GetPie(selection string, dataType int) ([]string, []float32) {
-	date := ConvertDateForPie(selection)
+	date := func() []uint8 {
+		if selection == "" {
+			return nil
+		}
+
+		raw := strings.Split(selection, "/")
+
+		year, err := strconv.Atoi(raw[0][1:])
+		if err != nil {
+			return nil
+		}
+
+		month, err := strconv.Atoi(raw[1])
+		if err != nil {
+			return nil
+		}
+
+		day, err := strconv.Atoi(raw[1])
+		if err != nil {
+			return nil
+		}
+
+		return []uint8{
+			uint8(year),
+			uint8(month),
+			uint8(day),
+		}
+	}()
 
 	var sales []float32
 	var names []string
@@ -88,64 +136,13 @@ func GetPie(selection string, dataType int) ([]string, []float32) {
 	return names, sales
 }
 
-func ConvertDateForPie(date string) []uint8 {
-	if date == "" {
-		return nil
-	}
-
-	raw := strings.Split(date, "/")
-
-	year, err := strconv.Atoi(raw[0][1:])
-	if err != nil {
-		return nil
-	}
-
-	month, err := strconv.Atoi(raw[1])
-	if err != nil {
-		return nil
-	}
-
-	day, err := strconv.Atoi(raw[1])
-	if err != nil {
-		return nil
-	}
-
-	return []uint8{
-		uint8(year),
-		uint8(month),
-		uint8(day),
-	}
-}
-
-func ConvertDateForLine(date string) []uint8 {
-	if date == "" {
-		return nil
-	}
-
-	raw := strings.Split(date, "/")
-
-	year, err := strconv.Atoi(raw[0][1:])
-	if err != nil {
-		return nil
-	}
-
-	month, err := strconv.Atoi(raw[1])
-	if err != nil {
-		return nil
-	}
-
-	return []uint8{
-		uint8(year),
-		uint8(month),
-	}
-}
-
 func AddKey(id uint64, name string) {
 	newKeys := make(map[uint64]string, len(NameKeys)+1)
 	for idx, name := range NameKeys {
 		newKeys[idx] = name
 	}
 	newKeys[id] = name
+	NameKeys = newKeys
 }
 
 func FindItem(ID uint64) Sale {

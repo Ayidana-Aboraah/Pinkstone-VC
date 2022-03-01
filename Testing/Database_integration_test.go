@@ -14,15 +14,15 @@ import (
 func GenerateTestData(t *testing.T) {
 	//Create Sale List
 	database := []Database.Sale{
-		{ID: 121},
-		{ID: 491289},
-		{ID: 101983},
-		{ID: 128001},
-		{ID: 410283},
-		{ID: 184098},
-		{ID: 194820},
-		{ID: 222222},
-		{ID: 492780},
+		{ID: 108499092, Year: 20, Day: 30, Month: 10},
+		{ID: 491289142},
+		{ID: 101984123},
+		{ID: 128004121},
+		{ID: 410283561},
+		{ID: 184098561},
+		{ID: 194820512},
+		{ID: 222222313},
+		{ID: 492780612},
 	}
 
 	//Create Keys from Sale List
@@ -53,6 +53,7 @@ func GenerateTestData(t *testing.T) {
 		order.PutUint16(bs[c+3:c+5], x.Quantity)
 		order.PutUint32(bs[c+5:c+9], math.Float32bits(x.Price))
 		order.PutUint32(bs[c+9:c+13], math.Float32bits(x.Cost))
+		order.PutUint64(bs[c+13:c+21], x.ID)
 	}
 	_, err = save.Write(bs)
 
@@ -125,7 +126,6 @@ func TestKeyCreationFromDatabases(t *testing.T) {
 	keyTotal := len(black) - 2
 	currentKeys := 0
 
-	//Compare Keys and sales
 	for _, v := range black {
 		if _, found := blue[v.ID]; found {
 			currentKeys++

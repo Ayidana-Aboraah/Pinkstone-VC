@@ -59,6 +59,7 @@ func makeMainMenu(a fyne.App) fyne.CanvasObject {
 			UI.HandleErrorWithMessage(err, "Failed to Load Data", a.NewWindow("Error MSG"))
 		}),
 		widget.NewButton("Display Database", func() { fmt.Println(Database.Databases) }),
+		widget.NewButton("Display Names", func() { fmt.Println(Database.NameKeys) }),
 		widget.NewButton("Quit", a.Quit))
 }
 
@@ -210,9 +211,23 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 						price, cost, inventory := Database.ConvertString(priceEntry.Text, costEntry.Text, inventoryEntry.Text)
 						newItem := Database.Sale{ID: uint64(conID), Price: price, Cost: cost, Quantity: inventory}
 
-						Database.Databases[0] = append(Database.Databases[0], newItem)
 						Database.Databases[2] = append(Database.Databases[2], newItem)
 						Database.AddKey(uint64(conID), nameEntry.Text)
+
+						func(found bool) {
+							for i, v := range Database.Databases[0] {
+								if v.ID != newItem.ID {
+									continue
+								}
+
+								Database.Databases[0][i] = newItem
+								found = true
+								break
+							}
+							if !found {
+								Database.Databases[0] = append(Database.Databases[0], newItem)
+							}
+						}(false)
 
 						boundData.Set(Database.Databases[0])
 						inventoryList.Refresh()
@@ -236,6 +251,7 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 				priceLabel.SetText(res[0])
 				costLabel.SetText(res[1])
 				inventoryLabel.SetText(res[2])
+
 			}),
 		),
 		container.NewMax(

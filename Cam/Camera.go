@@ -1,44 +1,77 @@
 package Cam
 
 import (
+	"BronzeHermes/UI"
 	"fmt"
-	"fyne.io/fyne/v2"
+	"image"
+	"strconv"
+	"time"
+
 	"fyne.io/fyne/v2/canvas"
-	"fyne.io/fyne/v2/widget"
+	"github.com/pion/mediadevices"
 	_ "github.com/pion/mediadevices/pkg/driver/camera"
+	"github.com/pion/mediadevices/pkg/prop"
 )
 
-func OpenCam() string {
-	CamOutput := canvas.Image{}
-	CamOutput.FillMode = canvas.ImageFillOriginal
-	CamOutput.Refresh()
-
-	w := fyne.CurrentApp().NewWindow("Camera")
-	w.SetContent(&CamOutput)
-	w.Show()
-
-	label := widget.NewLabel(" ")
-
-	done := make(chan bool)
-	defer close(done)
-
-	var complete, evacuate bool
-	w.SetOnClosed(func() {
-		if !complete{
-			evacuate = true
-			done <- true
-			return
-		}
+func StartCamera(Output *canvas.Image, done chan bool) string {
+	stream, errA := mediadevices.GetUserMedia(mediadevices.MediaStreamConstraints{
+		Video: func(constraint *mediadevices.MediaTrackConstraints) {
+			constraint.FrameRate = prop.Float(24)
+		},
 	})
+	UI.HandleError(errA)
 
-	label.SetText(StartCamera(&CamOutput, done))
-	complete = true
+	vidTrack := stream.GetVideoTracks()[0]
+	videoTrack := vidTrack.(*mediadevices.VideoTrack)
+	defer videoTrack.Close()
 
-	if evacuate {
-		fmt.Println("Evacuating...")
-		return "V"
+	videoReader := videoTrack.NewReader(false)
+
+	result := ""
+	run := func() chan bool {
+		ticker := time.NewTicker(10 * time.Millisecond)
+		defer ticker.Stop()
+
+		time.Sleep(50 * time.Millisecond)
+
+		i := 0
+		for {
+			select {
+			case <-done:
+				time.Sleep(50 * time.Millisecond)
+				return done
+			case <-ticker.C:
+				i += 1
+				frame, release, _ := videoReader.Read()
+				RefreshCam(Output, frame)
+
+				answer := ReadImage(frame)
+				if answer != nil {
+					result = answer.String()
+					Output.FillMode = canvas.ImageFillStretch
+					release()
+					return done
+				}
+
+				if i >= 250 {
+					result = "X"
+					Output.FillMode = canvas.ImageFillStretch
+					release()
+					return done
+				}
+
+				fmt.Println("Iteration: " + strconv.Itoa(i))
+				release()
+			}
+		}
 	}
+	run()
 
-	w.Close()
-	return label.Text
+	fmt.Println("Complete")
+	return result
+}
+
+func RefreshCam(Output *canvas.Image, newInput image.Image) {
+	Output.Image = newInput
+	Output.Refresh()
 }

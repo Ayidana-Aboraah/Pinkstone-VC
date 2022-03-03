@@ -2,9 +2,10 @@ package Cam
 
 import (
 	"fmt"
+	"image"
+
 	"github.com/makiuchi-d/gozxing"
 	"github.com/makiuchi-d/gozxing/oned"
-	"image"
 )
 
 func ReadImage(img image.Image) *gozxing.Result {

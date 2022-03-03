@@ -27,33 +27,6 @@ type Sale struct {
 	ID       uint64
 }
 
-func SaveKeys() error {
-	names, err := os.OpenFile("Saves/name_keys.json", os.O_CREATE, os.ModePerm)
-	if err != nil {
-		return err
-	}
-	defer names.Close()
-
-	encoder := json.NewEncoder(names)
-	encoder.Encode(NameKeys)
-	return nil
-}
-
-func LoadKeys() error {
-	names, err := os.OpenFile("Saves/name_keys.json", os.O_CREATE, os.ModePerm)
-	if err != nil {
-		return err
-	}
-	defer names.Close()
-
-	encoder := json.NewDecoder(names)
-	err = encoder.Decode(&NameKeys)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func SaveData() error {
 	order := binary.BigEndian
 	var file string
@@ -94,14 +67,23 @@ func SaveData() error {
 
 		_, err = save.Write(bs)
 
-		save.Close()
-
 		if err != nil {
 			return err
 		}
 	}
 
-	err := SaveKeys()
+	err := func() error {
+		names, err := os.OpenFile("Saves/name_keys.json", os.O_CREATE, os.ModePerm)
+		if err != nil {
+			return err
+		}
+		defer names.Close()
+
+		encoder := json.NewEncoder(names)
+		encoder.Encode(NameKeys)
+		return nil
+	}()
+
 	return err
 }
 
@@ -114,9 +96,9 @@ func LoadData() error {
 		case 0:
 			file = "Item_Reference.red"
 		case 1:
-			file = "ReportData.red"
+			file = "Report_Data.red"
 		case 2:
-			file = "PriceLog.red"
+			file = "Price_Log.red"
 		}
 
 		buf, err := ioutil.ReadFile("Saves/" + file)
@@ -143,7 +125,21 @@ func LoadData() error {
 		Databases[idx] = black
 	}
 
-	err := LoadKeys()
+	err := func() error {
+		names, err := os.OpenFile("Saves/name_keys.json", os.O_CREATE, os.ModePerm)
+		if err != nil {
+			return err
+		}
+		defer names.Close()
+
+		encoder := json.NewDecoder(names)
+		err = encoder.Decode(&NameKeys)
+		if err != nil {
+			return err
+		}
+		return nil
+	}()
+
 	return err
 }
 
@@ -228,5 +224,20 @@ func LoadBackUp() error {
 		}
 	}
 
-	return nil
+	err = func() error {
+		names, err := os.OpenFile("Saves/Backup_Keys.json", os.O_CREATE, os.ModePerm)
+		if err != nil {
+			return err
+		}
+		defer names.Close()
+
+		encoder := json.NewDecoder(names)
+		err = encoder.Decode(&NameKeys)
+		if err != nil {
+			return err
+		}
+		return nil
+	}()
+
+	return err
 }

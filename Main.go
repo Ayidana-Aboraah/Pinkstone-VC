@@ -22,7 +22,10 @@ import (
 func main() {
 	a := app.NewWithID("Bronze Hermes")
 
-	UI.HandleErrorWithMessage(Database.LoadData(), "Failed to Load Data", a.NewWindow("Error MSG"))
+	if err := Database.LoadData(); err != nil {
+		err := Database.LoadBackUp()
+		UI.HandleErrorWithMessage(err, "Failed to Load Backup", "BackUp be corrupt or not present, starting from Scratch.", a.NewWindow("Error MSG 2"))
+	}
 
 	go Graph.StartServer()
 
@@ -51,12 +54,12 @@ func makeMainMenu(a fyne.App) fyne.CanvasObject {
 		widget.NewButton("Save Backup Data", func() {
 			go func() {
 				err := Database.BackUpAllData()
-				UI.HandleErrorWithMessage(err, "Failed to Load Data", a.NewWindow("Error MSG"))
+				UI.HandleErrorWithMessage(err, "Error", "Failed to backup Data", a.NewWindow("Error MSG"))
 			}()
 		}),
 		widget.NewButton("Load Backup Data", func() {
 			err := Database.LoadBackUp()
-			UI.HandleErrorWithMessage(err, "Failed to Load Data", a.NewWindow("Error MSG"))
+			UI.HandleErrorWithMessage(err, "Error", "Failed to Load Data", a.NewWindow("Error MSG"))
 		}),
 		widget.NewButton("Display Database", func() { fmt.Println(Database.Databases) }),
 		widget.NewButton("Display Names", func() { fmt.Println(Database.NameKeys) }),
@@ -149,8 +152,6 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 	costLabel := widget.NewLabel("Cost")
 	inventoryLabel := widget.NewLabel("Inventory")
 
-	title := widget.NewLabelWithStyle("Inventory Info", fyne.TextAlign(1), fyne.TextStyle{Bold: true})
-
 	boundData := binding.BindSaleList(&Database.Databases[0])
 	inventoryList := widget.NewListWithData(boundData, func() fyne.CanvasObject {
 		return container.NewBorder(nil, nil, nil, nil, widget.NewLabel("name"))
@@ -174,7 +175,7 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 
 	box := container.New(layout.NewGridLayout(2),
 		container.NewVBox(
-			title,
+			widget.NewLabelWithStyle("Inventory Info", fyne.TextAlign(1), fyne.TextStyle{Bold: true}),
 			idLabel,
 			nameLabel,
 			priceLabel,

@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"math"
 	"os"
+
+	"fyne.io/fyne/v2/storage"
 )
 
 var NameKeys map[uint64]string
@@ -45,11 +47,20 @@ func SaveData() error {
 			file = "Price_Log.red"
 		}
 
-		save, err := os.OpenFile("Saves/"+file, os.O_CREATE, os.ModePerm)
-		defer save.Close()
+		uri, err := storage.ParseURI("root/sdcard/Android/obb/com.redstoneagx.bronzehermes/Saves" + file)
 		if err != nil {
 			return err
 		}
+
+		save, err := storage.Writer(uri)
+		if err != nil {
+			return err
+		}
+
+		// save, err := os.OpenFile("Saves/"+file, os.O_CREATE, os.ModePerm)
+		// if err != nil {
+		// 	return err
+		// }
 
 		bs := make([]byte, 21*len(database))
 		for i, x := range database {
@@ -66,6 +77,7 @@ func SaveData() error {
 		}
 
 		_, err = save.Write(bs)
+		save.Close()
 
 		if err != nil {
 			return err
@@ -73,7 +85,10 @@ func SaveData() error {
 	}
 
 	err := func() error {
-		names, err := os.OpenFile("Saves/name_keys.json", os.O_CREATE, os.ModePerm)
+		uri, err := storage.ParseURI("root/sdcard/Android/obb/com.redstoneagx.bronzehermes/Saves/name_keys.json")
+		names, err := storage.Writer(uri)
+
+		// names, err := os.OpenFile("Saves/name_keys.json", os.O_CREATE, os.ModePerm)
 		if err != nil {
 			return err
 		}
@@ -101,7 +116,18 @@ func LoadData() error {
 			file = "Price_Log.red"
 		}
 
-		buf, err := ioutil.ReadFile("Saves/" + file)
+		uri, err := storage.ParseURI("root/sdcard/Android/obb/com.redstoneagx.bronzehermes/Saves" + file)
+		if err != nil {
+			return err
+		}
+
+		file, err := storage.Reader(uri)
+		if err != nil {
+			return err
+		}
+
+		buf, err := ioutil.ReadAll(file)
+		file.Close()
 
 		if err != nil {
 			return err
@@ -126,7 +152,9 @@ func LoadData() error {
 	}
 
 	err := func() error {
-		names, err := os.OpenFile("Saves/name_keys.json", os.O_CREATE, os.ModePerm)
+		uri, err := storage.ParseURI("root/sdcard/Android/obb/com.redstoneagx.bronzehermes/Saves/name_keys.json")
+		names, err := storage.Reader(uri)
+		// names, err := os.OpenFile("Saves/name_keys.json", os.O_CREATE, os.ModePerm)
 		if err != nil {
 			return err
 		}
@@ -164,10 +192,20 @@ func BackUpAllData() error {
 
 	order := binary.BigEndian
 
-	save, err := os.OpenFile("Saves/BackUp.red", os.O_CREATE, os.ModePerm)
+	// save, err := os.OpenFile("Saves/BackUp.red", os.O_CREATE, os.ModePerm)
+	// if err != nil {
+	// 	return err
+	// }
+	uri, err := storage.ParseURI("root/sdcard/Android/obb/com.redstoneagx.bronzehermes/Saves/BackUp.red")
 	if err != nil {
 		return err
 	}
+
+	save, err := storage.Writer(uri)
+	if err != nil {
+		return err
+	}
+
 	defer save.Close()
 
 	bs := make([]byte, ((21 * len(Databases[0])) + (21 * len(Databases[1])) + (21 * len(Databases[2]))))
@@ -196,7 +234,20 @@ func BackUpAllData() error {
 func LoadBackUp() error {
 	order := binary.BigEndian
 
-	buf, err := ioutil.ReadFile("Saves/BackUp.red")
+	uri, err := storage.ParseURI("root/sdcard/Android/obb/com.redstoneagx.bronzehermes/Saves/BackUp.red")
+	if err != nil {
+		return err
+	}
+
+	file, err := storage.Reader(uri)
+	if err != nil {
+		return err
+	}
+
+	buf, err := ioutil.ReadAll(file)
+	file.Close()
+
+	// buf, err := ioutil.ReadFile("Saves/BackUp.red")
 	if err != nil {
 		return err
 	}
@@ -225,7 +276,9 @@ func LoadBackUp() error {
 	}
 
 	err = func() error {
-		names, err := os.OpenFile("Saves/Backup_Keys.json", os.O_CREATE, os.ModePerm)
+		uri, err := storage.ParseURI("root/sdcard/Android/obb/com.redstoneagx.bronzehermes/Saves/Backup_Keys.json")
+		names, err := storage.Reader(uri)
+		// names, err := os.OpenFile("Saves/Backup_Keys.json", os.O_CREATE, os.ModePerm)
 		if err != nil {
 			return err
 		}

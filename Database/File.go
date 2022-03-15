@@ -30,18 +30,18 @@ type Sale struct {
 	ID       uint64
 }
 
-func LocationCheck() bool {
-	uri, err := storage.ParseURI("file://Android/obb/com.redstoneagx.bronzehermes")
-	if err != nil {
-		fmt.Println(err)
-	}
-	if check, err := storage.Exists(uri); !check {
-		fmt.Println(check)
-		if err != nil {
-			fmt.Println(err)
-		}
-	}
-}
+// func LocationCheck() bool {
+// 	uri, err := storage.ParseURI("file://Android/obb/com.redstoneagx.bronzehermes")
+// 	if err != nil {
+// 		fmt.Println(err)
+// 	}
+// 	if check, err := storage.Exists(uri); !check {
+// 		fmt.Println(check)
+// 		if err != nil {
+// 			fmt.Println(err)
+// 		}
+// 	}
+// }
 
 func SaveData() error {
 	order := binary.BigEndian

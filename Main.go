@@ -53,16 +53,14 @@ func makeMainMenu(a fyne.App) fyne.CanvasObject {
 		widget.NewLabelWithStyle("Welcome", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
 		widget.NewButton("Save Backup Data", func() {
 			go func() {
-				err := Database.BackUpAllData()
-				UI.HandleErrorWithMessage(err, "Error", "Failed to backup Data", a.NewWindow("Error MSG"))
+				UI.HandleErrorWithMessage(Database.BackUpAllData(), "Error", "Failed to backup Data", a.NewWindow("Error MSG"))
 			}()
 		}),
 		widget.NewButton("Load Backup Data", func() {
-			err := Database.LoadBackUp()
-			UI.HandleErrorWithMessage(err, "Error", "Failed to Load Data", a.NewWindow("Error MSG"))
+			UI.HandleErrorWithMessage(Database.LoadBackUp(), "Error", "Failed to Load Data", a.NewWindow("Error MSG"))
 		}),
-		widget.NewButton("Display Database", func() { fmt.Println(Database.Databases) }),
-		widget.NewButton("Display Names", func() { fmt.Println(Database.NameKeys) }),
+		// widget.NewButton("Display Database", func() { fmt.Println(Database.Databases) }),
+		// widget.NewButton("Display Names", func() { fmt.Println(Database.NameKeys) }),
 		widget.NewButton("Quit", a.Quit))
 }
 
@@ -216,6 +214,7 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 						Database.AddKey(uint64(conID), nameEntry.Text)
 
 						func(found bool) {
+
 							for i, v := range Database.Databases[0] {
 								if v.ID != newItem.ID {
 									continue
@@ -233,8 +232,8 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 						boundData.Set(Database.Databases[0])
 						inventoryList.Refresh()
 
-						Database.SaveData()
-						fmt.Println("Saved to Database.")
+						UI.HandleErrorWithMessage(Database.SaveData(), "Saving Error", "There was a problem saving your data", w)
+						dialog.NewInformation("Success!", "Your data has been saved successfully!", w)
 					}, w)
 				}()
 			}),

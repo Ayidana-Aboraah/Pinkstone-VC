@@ -3,6 +3,7 @@ package Database
 import (
 	"encoding/binary"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"math"
 	"os"
@@ -29,13 +30,22 @@ type Sale struct {
 	ID       uint64
 }
 
+func LocationCheck() bool {
+	uri, err := storage.ParseURI("file://Android/obb/com.redstoneagx.bronzehermes")
+	if err != nil {
+		fmt.Println(err)
+	}
+	if check, err := storage.Exists(uri); !check {
+		fmt.Println(check)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+}
+
 func SaveData() error {
 	order := binary.BigEndian
 	var file string
-
-	if _, err := os.ReadDir("Saves"); err != nil {
-		os.Mkdir("Saves", os.ModeDir)
-	}
 
 	for idx, database := range Databases {
 		switch idx {
@@ -47,7 +57,23 @@ func SaveData() error {
 			file = "Price_Log.red"
 		}
 
-		uri, err := storage.ParseURI("root/sdcard/Android/obb/com.redstoneagx.bronzehermes/Saves" + file)
+		func() bool {
+			uri, err := storage.ParseURI("file://Android/obb/com.redstoneagx.bronzehermes")
+			if err != nil {
+				fmt.Println(err)
+			}
+
+			if check, err := storage.Exists(uri); !check {
+				fmt.Println(check)
+				if err != nil {
+					fmt.Println(err)
+				}
+				return check
+			}
+			return true
+		}()
+
+		uri, err := storage.ParseURI("file://Android/obb/com.redstoneagx.bronzehermes" + file)
 		if err != nil {
 			return err
 		}
@@ -85,7 +111,10 @@ func SaveData() error {
 	}
 
 	err := func() error {
-		uri, err := storage.ParseURI("root/sdcard/Android/obb/com.redstoneagx.bronzehermes/Saves/name_keys.json")
+		uri, err := storage.ParseURI("file://Android/obb/com.redstoneagx.bronzehermes/name_keys.json")
+		if err != nil {
+			return err
+		}
 		names, err := storage.Writer(uri)
 
 		// names, err := os.OpenFile("Saves/name_keys.json", os.O_CREATE, os.ModePerm)
@@ -116,7 +145,7 @@ func LoadData() error {
 			file = "Price_Log.red"
 		}
 
-		uri, err := storage.ParseURI("root/sdcard/Android/obb/com.redstoneagx.bronzehermes/Saves" + file)
+		uri, err := storage.ParseURI("file://Android/obb/com.redstoneagx.bronzehermes" + file)
 		if err != nil {
 			return err
 		}
@@ -152,7 +181,7 @@ func LoadData() error {
 	}
 
 	err := func() error {
-		uri, err := storage.ParseURI("root/sdcard/Android/obb/com.redstoneagx.bronzehermes/Saves/name_keys.json")
+		uri, err := storage.ParseURI("file://Android/obb/com.redstoneagx.bronzehermes/name_keys.json")
 		names, err := storage.Reader(uri)
 		// names, err := os.OpenFile("Saves/name_keys.json", os.O_CREATE, os.ModePerm)
 		if err != nil {
@@ -196,7 +225,7 @@ func BackUpAllData() error {
 	// if err != nil {
 	// 	return err
 	// }
-	uri, err := storage.ParseURI("root/sdcard/Android/obb/com.redstoneagx.bronzehermes/Saves/BackUp.red")
+	uri, err := storage.ParseURI("file://Android/obb/com.redstoneagx.bronzehermes/BackUp.red")
 	if err != nil {
 		return err
 	}
@@ -234,7 +263,7 @@ func BackUpAllData() error {
 func LoadBackUp() error {
 	order := binary.BigEndian
 
-	uri, err := storage.ParseURI("root/sdcard/Android/obb/com.redstoneagx.bronzehermes/Saves/BackUp.red")
+	uri, err := storage.ParseURI("file://Android/obb/com.redstoneagx.bronzehermes/BackUp.red")
 	if err != nil {
 		return err
 	}
@@ -276,7 +305,7 @@ func LoadBackUp() error {
 	}
 
 	err = func() error {
-		uri, err := storage.ParseURI("root/sdcard/Android/obb/com.redstoneagx.bronzehermes/Saves/Backup_Keys.json")
+		uri, err := storage.ParseURI("file://Android/obb/com.redstoneagx.bronzehermes/Backup_Keys.json")
 		names, err := storage.Reader(uri)
 		// names, err := os.OpenFile("Saves/Backup_Keys.json", os.O_CREATE, os.ModePerm)
 		if err != nil {

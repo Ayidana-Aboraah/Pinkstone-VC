@@ -22,9 +22,8 @@ import (
 func main() {
 	a := app.NewWithID("Bronze Hermes")
 
-	if err := Database.LoadData(); err != nil {
-		err := Database.LoadBackUp()
-		UI.HandleErrorWithMessage(err, "Failed to Load Backup", "BackUp be corrupt or not present, starting from Scratch.", a.NewWindow("Error MSG 2"))
+	if !a.Driver().Device().IsMobile() {
+		Database.Path = "file:///c:/BH_Saves"
 	}
 
 	go Graph.StartServer()
@@ -45,7 +44,12 @@ func CreateWindow(a fyne.App) {
 		container.NewTabItem("Statistics", makeStatsMenu()),
 	)))
 
-	UI.HandleErrorWithMessage(Database.InitCheck(), "Error", "beep", w)
+	dialog.ShowError(Database.InitCheck(), w)
+
+	if err := Database.LoadData(); err != nil {
+		dialog.ShowError(err, w)
+		dialog.ShowError(Database.LoadBackUp(), w)
+	}
 
 	w.ShowAndRun()
 }
@@ -56,13 +60,13 @@ func makeMainMenu(a fyne.App, w fyne.Window) fyne.CanvasObject {
 	return container.NewVBox(
 		widget.NewLabelWithStyle("Welcome", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
 		widget.NewButton("Save Backup Data", func() {
-			go func() {
-				UI.HandleErrorWithMessage(Database.BackUpAllData(), "Error", "Failed to backup Data", a.NewWindow("Error MSG"))
-			}()
+			go dialog.ShowError(Database.BackUpAllData(), w)
 		}),
 		widget.NewButton("Load Backup Data", func() {
-			UI.HandleErrorWithMessage(Database.LoadBackUp(), "Error", "Failed to Load Data", a.NewWindow("Error MSG"))
+			dialog.ShowInformation("Loading Data Asynchonously", "The BackUp will be loaded in the background", w)
+			go dialog.ShowError(Database.LoadBackUp(), w)
 		}),
+		//DEBUGGING
 		widget.NewButton("Save File?", func() {
 			dialog.ShowFileSave(func(uc fyne.URIWriteCloser, err error) {
 				beep = uc.URI()
@@ -73,8 +77,10 @@ func makeMainMenu(a fyne.App, w fyne.Window) fyne.CanvasObject {
 				dialog.ShowInformation("Bang", beep.String(), w)
 			}
 		}),
-		// widget.NewButton("Display Database", func() { fmt.Println(Database.Databases) }),
-		// widget.NewButton("Display Names", func() { fmt.Println(Database.NameKeys) }),
+		widget.NewButton("Display Database", func() {
+			dialog.ShowInformation("Databases", fmt.Sprint(Database.Databases), w)
+			dialog.ShowInformation("Name Keys", fmt.Sprint(Database.NameKeys), w)
+		}),
 		widget.NewButton("Quit", a.Quit))
 }
 
@@ -246,7 +252,7 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 						boundData.Set(Database.Databases[0])
 						inventoryList.Refresh()
 
-						UI.HandleErrorWithMessage(Database.SaveData(), "Saving Error", "There was a problem saving your data", w)
+						dialog.ShowError(Database.SaveData(), w)
 						dialog.NewInformation("Success!", "Your data has been saved successfully!", w)
 					}, w)
 				}()
@@ -275,10 +281,8 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 }
 
 func makeStatsMenu() fyne.CanvasObject {
-	u, err := url.Parse("http://localhost:8081/line")
-	UI.HandleError(err)
-	r, err := url.Parse("http://localhost:8081/pie")
-	UI.HandleError(err)
+	u, _ := url.Parse("http://localhost:8081/line")
+	r, _ := url.Parse("http://localhost:8081/pie")
 
 	link := widget.NewHyperlink("Go To Graph", u)
 

@@ -9,7 +9,7 @@ import (
 	"fyne.io/fyne/v2/storage"
 )
 
-var path = "file:///sdcard/Android/BH_Saves/"
+var Path = "file:///sdcard/Android/BH_Saves/"
 
 var NameKeys map[uint64]string
 
@@ -27,7 +27,7 @@ type Sale struct {
 }
 
 func InitCheck() error {
-	uri, err := storage.ParseURI(path)
+	uri, err := storage.ParseURI(Path)
 	if err != nil {
 		return err
 	}
@@ -96,7 +96,7 @@ func SaveData() error {
 	}
 
 	err := func() error {
-		uri, err := storage.ParseURI(path + "name_keys.json")
+		uri, err := storage.ParseURI(Path + "name_keys.json")
 		if err != nil {
 			return err
 		}
@@ -130,7 +130,7 @@ func LoadData() error {
 			file = "Price_Log.red"
 		}
 
-		uri, err := storage.ParseURI(path + file)
+		uri, err := storage.ParseURI(Path + file)
 		if err != nil {
 			return err
 		}
@@ -166,7 +166,7 @@ func LoadData() error {
 	}
 
 	err := func() error {
-		uri, err := storage.ParseURI(path + "name_keys.json")
+		uri, err := storage.ParseURI(Path + "name_keys.json")
 		if err != nil {
 			return err
 		}
@@ -190,7 +190,7 @@ func LoadData() error {
 
 func BackUpAllData() error {
 	err := func() error {
-		uri, err := storage.ParseURI(path + "BackUp.red")
+		uri, err := storage.ParseURI(Path + "BackUp.red")
 		if err != nil {
 			return err
 		}
@@ -218,7 +218,7 @@ func BackUpAllData() error {
 	// if err != nil {
 	// 	return err
 	// }
-	uri, err := storage.ParseURI(path + "BackUp.red")
+	uri, err := storage.ParseURI(Path + "BackUp.red")
 	if err != nil {
 		return err
 	}
@@ -256,7 +256,7 @@ func BackUpAllData() error {
 func LoadBackUp() error {
 	order := binary.BigEndian
 
-	uri, err := storage.ParseURI(path + "BackUp.red")
+	uri, err := storage.ParseURI(Path + "BackUp.red")
 	if err != nil {
 		return err
 	}
@@ -298,7 +298,7 @@ func LoadBackUp() error {
 	}
 
 	err = func() error {
-		uri, err := storage.ParseURI(path + "Backup_Keys.json")
+		uri, err := storage.ParseURI(Path + "Backup_Keys.json")
 		names, err := storage.Reader(uri)
 		// names, err := os.OpenFile("Saves/Backup_Keys.json", os.O_CREATE, os.ModePerm)
 		if err != nil {

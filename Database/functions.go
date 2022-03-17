@@ -136,18 +136,18 @@ func GetPie(selection string, dataType int) ([]string, []float32) {
 	return names, sales
 }
 
-func AddKey(id uint64, name string) {
+func AddKey(id int, name string) {
 	newKeys := make(map[uint64]string, len(NameKeys)+1)
 	for idx, name := range NameKeys {
 		newKeys[idx] = name
 	}
-	newKeys[id] = name
+	newKeys[uint64(id)] = name
 	NameKeys = newKeys
 }
 
-func FindItem(ID uint64) Sale {
+func FindItem(ID int) Sale {
 	for _, v := range Databases[0] {
-		if v.ID == ID {
+		if int(v.ID) == ID {
 			return v
 		}
 	}

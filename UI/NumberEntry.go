@@ -11,7 +11,7 @@ type NumEntry struct {
 }
 
 func (n *NumEntry) Keyboard() mobile.KeyboardType {
-	return mobile.NumberKeyboard
+	return mobile.DefaultKeyboard
 }
 
 func NewNumEntry(placeHolder string) *NumEntry {

@@ -7,6 +7,7 @@ import (
 	"BronzeHermes/UI"
 	"fmt"
 	"net/url"
+	"os"
 	"strconv"
 
 	"fyne.io/fyne/v2"
@@ -23,11 +24,14 @@ func main() {
 	a := app.NewWithID("Bronze Hermes")
 
 	if !a.Driver().Device().IsMobile() {
-		Database.Path = "file:///c:/BH_Saves"
+		wd, _ := os.Getwd()
+		//Maybe add "/"" before BH_Saves
+		Database.Path = "file:///" + wd + "BH_Saves"
 	}
 
 	go Graph.StartServer()
 
+	// TODO: Rmeove during Debugging
 	fmt.Println(Database.Databases)
 
 	CreateWindow(a)
@@ -55,6 +59,7 @@ func CreateWindow(a fyne.App) {
 }
 
 func makeMainMenu(a fyne.App, w fyne.Window) fyne.CanvasObject {
+	//TODO: Remove During Debugging
 	var beep fyne.URI
 
 	return container.NewVBox(
@@ -144,9 +149,9 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 					return
 				}
 
-				item := Database.FindItem(uint64(id))
+				item := Database.FindItem(id)
 
-				dialog.ShowCustomConfirm("Check", "Yes", "No", container.NewVBox(widget.NewLabel("Is this the right item: "+Database.NameKeys[item.ID])),
+				dialog.ShowCustomConfirm("Just Checking...", "Yes", "No", container.NewVBox(widget.NewLabel("Is this the right item: "+Database.NameKeys[item.ID])),
 					func(b bool) {
 						if !b {
 							return
@@ -199,20 +204,34 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 			priceLabel,
 			costLabel,
 			inventoryLabel,
-			widget.NewButton("Modify", func() {
-				//Creates item menu
-				func() {
-					conID, _ := strconv.Atoi(idLabel.Text)
+			widget.NewButton("New", func() {
+				id := Cam.OpenCam(&w)
+				if id == 0 {
+					return
+				}
 
+				result := Database.FindItem(id)
+				//TODO: Try returning 3 strings and then mannually equalling each label {Not the most readiable but smaller}
+				labels := Database.ConvertSale(result)
+
+				idLabel.SetText(strconv.Itoa(id))
+				nameLabel.SetText(Database.NameKeys[result.ID])
+				priceLabel.SetText(labels[0])
+				costLabel.SetText(labels[1])
+				inventoryLabel.SetText(labels[2])
+
+			}),
+			widget.NewButton("Modify", func() {
+					conID, _ := strconv.Atoi(idLabel.Text)
 					idLabel := widget.NewLabel(strconv.Itoa(conID))
 
 					nameEntry := widget.NewEntry()
 					nameEntry.SetPlaceHolder("Product Name with _ for spaces.")
 					nameEntry.Validator = validation.NewRegexp(`^[A-Za-z0-9_-]+$`, "username can only contain letters, numbers, '_', and '-'")
 
-					priceEntry := UI.NewNumEntry("The Price it will be sold.")
-					costEntry := UI.NewNumEntry("The Cost of buying this item.")
-					inventoryEntry := UI.NewNumEntry("The Amount currently in inventory.")
+					priceEntry := UI.NewNumEntry("Selling Price")
+					costEntry := UI.NewNumEntry("How much you bought it for")
+					inventoryEntry := UI.NewNumEntry("Current Inventory")
 
 					items := []*widget.FormItem{
 						widget.NewFormItem("ID", idLabel),
@@ -222,7 +241,7 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 						widget.NewFormItem("Inventory", inventoryEntry),
 					}
 
-					dialog.ShowForm("New Item", "Add", "Cancel", items, func(b bool) {
+					dialog.ShowForm("Item", "Save", "Cancel", items, func(b bool) {
 						if !b {
 							return
 						}
@@ -231,10 +250,9 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 						newItem := Database.Sale{ID: uint64(conID), Price: price, Cost: cost, Quantity: inventory}
 
 						Database.Databases[2] = append(Database.Databases[2], newItem)
-						Database.AddKey(uint64(conID), nameEntry.Text)
+						Database.AddKey(conID, nameEntry.Text)
 
 						func(found bool) {
-
 							for i, v := range Database.Databases[0] {
 								if v.ID != newItem.ID {
 									continue
@@ -244,6 +262,7 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 								found = true
 								break
 							}
+
 							if !found {
 								Database.Databases[0] = append(Database.Databases[0], newItem)
 							}
@@ -255,24 +274,7 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 						dialog.ShowError(Database.SaveData(), w)
 						dialog.NewInformation("Success!", "Your data has been saved successfully!", w)
 					}, w)
-				}()
-			}),
-			widget.NewButton("Camera", func() {
-				id := Cam.OpenCam(&w)
-				if id == 0 {
-					return
-				}
-
-				result := Database.FindItem(uint64(id))
-				res := Database.ConvertSale(result)
-
-				idLabel.SetText(strconv.Itoa(id))
-				nameLabel.SetText(Database.NameKeys[result.ID])
-				priceLabel.SetText(res[0])
-				costLabel.SetText(res[1])
-				inventoryLabel.SetText(res[2])
-
-			}),
+				}),
 		),
 		container.NewMax(
 			inventoryList,
@@ -288,21 +290,17 @@ func makeStatsMenu() fyne.CanvasObject {
 
 	selectionEntry := UI.NewNumEntry("Year/Month")
 
-	var lineDataSelectType int
+	var profitDataSelect int
 	dataSelectOptions := widget.NewSelect([]string{"Revenue", "Cost", "Profit"}, func(dataType string) {
 		switch dataType {
 		case "Revenue":
-			lineDataSelectType = 0
+			profitDataSelect = 0
 		case "Cost":
-			lineDataSelectType = 1
+			profitDataSelect = 1
 		case "Profit":
-			lineDataSelectType = 2
+			profitDataSelect = 2
 		}
 	})
-
-	days := []string{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14",
-		"15", "16", "17", "18", "19", "20", "21", "22", "23", "24",
-		"25", "26", "27", "28", "29", "30", "31"}
 
 	var buttonType int
 
@@ -337,32 +335,15 @@ func makeStatsMenu() fyne.CanvasObject {
 			widget.NewButton("Graph", func() {
 				switch buttonType {
 				case 0:
-					labels, results := Database.GetLine(selectionEntry.Text, lineDataSelectType, Database.Databases[1])
-
-					Graph.Labels = days
-					Graph.Categories = labels
-					Graph.LineInputs = results
+					Graph.Labels, Graph.LineInputs = Database.GetLine(selectionEntry.Text, profitDataSelect, Database.Databases[1])
 				case 1:
-					labels, results := Database.GetLine(selectionEntry.Text, lineDataSelectType, Database.Databases[2])
-
-					Graph.Labels = days
-					Graph.Categories = labels
-					Graph.LineInputs = results
-				case 2:
-					labels, profits := Database.GetPie(selectionEntry.Text, lineDataSelectType)
-
-					Graph.Labels = labels
-					Graph.Inputs = profits
-				case 3:
-					labels, sales := Database.GetPie(selectionEntry.Text, 3)
-
-					Graph.Labels = labels
-					Graph.Inputs = sales
+					Graph.Labels, Graph.LineInputs = Database.GetLine(selectionEntry.Text, profitDataSelect, Database.Databases[2])
 				case 4:
-					labels, sales := Database.GetLine(selectionEntry.Text, 3, Database.Databases[1])
-
-					Graph.Labels = labels
-					Graph.LineInputs = sales
+					Graph.Labels, Graph.LineInputs = Database.GetLine(selectionEntry.Text, 3, Database.Databases[1])
+				case 2:
+					Graph.Labels, Graph.Inputs = Database.GetPie(selectionEntry.Text, profitDataSelect)
+				case 3:
+					Graph.Labels, Graph.Inputs = Database.GetPie(selectionEntry.Text, 3)
 				}
 			}),
 			link,

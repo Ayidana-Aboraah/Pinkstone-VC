@@ -39,16 +39,20 @@ func CreateWindow(a fyne.App) {
 	w.SetOnClosed(Graph.StopSever)
 
 	w.SetContent(container.NewVBox(container.NewAppTabs(
-		container.NewTabItem("Main", makeMainMenu(a)),
+		container.NewTabItem("Main", makeMainMenu(a, w)),
 		container.NewTabItem("Shop", makeShoppingMenu(w)),
 		container.NewTabItem("Inventory", makeInfoMenu(w)),
 		container.NewTabItem("Statistics", makeStatsMenu()),
 	)))
 
+	UI.HandleErrorWithMessage(Database.InitCheck(), "Error", "beep", w)
+
 	w.ShowAndRun()
 }
 
-func makeMainMenu(a fyne.App) fyne.CanvasObject {
+func makeMainMenu(a fyne.App, w fyne.Window) fyne.CanvasObject {
+	var beep fyne.URI
+
 	return container.NewVBox(
 		widget.NewLabelWithStyle("Welcome", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
 		widget.NewButton("Save Backup Data", func() {
@@ -58,6 +62,16 @@ func makeMainMenu(a fyne.App) fyne.CanvasObject {
 		}),
 		widget.NewButton("Load Backup Data", func() {
 			UI.HandleErrorWithMessage(Database.LoadBackUp(), "Error", "Failed to Load Data", a.NewWindow("Error MSG"))
+		}),
+		widget.NewButton("Save File?", func() {
+			dialog.ShowFileSave(func(uc fyne.URIWriteCloser, err error) {
+				beep = uc.URI()
+			}, w)
+		}),
+		widget.NewButton("Display path", func() {
+			if beep != nil {
+				dialog.ShowInformation("Bang", beep.String(), w)
+			}
 		}),
 		// widget.NewButton("Display Database", func() { fmt.Println(Database.Databases) }),
 		// widget.NewButton("Display Names", func() { fmt.Println(Database.NameKeys) }),

@@ -5,16 +5,13 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"math"
-	"os"
 
 	"fyne.io/fyne/v2/storage"
 )
 
-var NameKeys map[uint64]string
+var path = "file:///sdcard/Android/BH_Saves/"
 
-// var Items []Sale
-// var ReportData []Sale
-// var PriceLog []Sale
+var NameKeys map[uint64]string
 
 //0 Items; 1 ReportData; 2 PriceLog
 var Databases [3][]Sale
@@ -30,7 +27,7 @@ type Sale struct {
 }
 
 func InitCheck() error {
-	uri, err := storage.ParseURI("file://com.android.externalstorage.documents/documents/primary%3AAndroid%2ABH_Saves")
+	uri, err := storage.ParseURI(path)
 	if err != nil {
 		return err
 	}
@@ -61,23 +58,7 @@ func SaveData() error {
 			file = "Price_Log.red"
 		}
 
-		// func() bool {
-		// 	uri, err := storage.ParseURI("Android/obb/com.redstoneagx.bronzehermes")
-		// 	if err != nil {
-		// 		fmt.Println(err)
-		// 	}
-
-		// 	if check, err := storage.Exists(uri); !check {
-		// 		fmt.Println(check)
-		// 		if err != nil {
-		// 			fmt.Println(err)
-		// 		}
-		// 		return check
-		// 	}
-		// 	return true
-		// }()
-
-		uri, err := storage.ParseURI("file://com.android.externalstorage.documents/documents/primary%3AAndroid%2ABH_Saves%2F" + file)
+		uri, err := storage.ParseURI("path" + file)
 		if err != nil {
 			return err
 		}
@@ -115,7 +96,7 @@ func SaveData() error {
 	}
 
 	err := func() error {
-		uri, err := storage.ParseURI("file://com.android.externalstorage.documents/documents/primary%3AAndroid%2ABH_Saves%F2name_keys.json")
+		uri, err := storage.ParseURI(path + "name_keys.json")
 		if err != nil {
 			return err
 		}
@@ -149,7 +130,7 @@ func LoadData() error {
 			file = "Price_Log.red"
 		}
 
-		uri, err := storage.ParseURI("file://com.android.externalstorage.documents/documents/primary%3AAndroid%2ABH_Saves%2F" + file)
+		uri, err := storage.ParseURI(path + file)
 		if err != nil {
 			return err
 		}
@@ -185,7 +166,10 @@ func LoadData() error {
 	}
 
 	err := func() error {
-		uri, err := storage.ParseURI("file://com.android.externalstorage.documents/documents/primary%3AAndroid%2ABH_Saves%2Fname_keys.json")
+		uri, err := storage.ParseURI(path + "name_keys.json")
+		if err != nil {
+			return err
+		}
 		names, err := storage.Reader(uri)
 		// names, err := os.OpenFile("Saves/name_keys.json", os.O_CREATE, os.ModePerm)
 		if err != nil {
@@ -206,7 +190,12 @@ func LoadData() error {
 
 func BackUpAllData() error {
 	err := func() error {
-		names, err := os.OpenFile("file://com.android.externalstorage.documents/documents/primary%3AAndroid%2ABH_Saves%2FBackup_Keys.json", os.O_CREATE, os.ModePerm)
+		uri, err := storage.ParseURI(path + "BackUp.red")
+		if err != nil {
+			return err
+		}
+		names, err := storage.Writer(uri)
+		// names, err := os.OpenFile("file:///com.android.externalstorage.documents/documents/primary%3AAndroid%2ABH_Saves%2FBackup_Keys.json", os.O_CREATE, os.ModePerm)
 		if err != nil {
 			return err
 		}
@@ -229,7 +218,7 @@ func BackUpAllData() error {
 	// if err != nil {
 	// 	return err
 	// }
-	uri, err := storage.ParseURI("file://com.android.externalstorage.documents/documents/primary%3AAndroid%2ABH_Saves%2FBackUp.red")
+	uri, err := storage.ParseURI(path + "BackUp.red")
 	if err != nil {
 		return err
 	}
@@ -267,7 +256,7 @@ func BackUpAllData() error {
 func LoadBackUp() error {
 	order := binary.BigEndian
 
-	uri, err := storage.ParseURI("file://com.android.externalstorage.documents/documents/primary%3AAndroid%2ABH_Saves%2FBackUp.red")
+	uri, err := storage.ParseURI(path + "BackUp.red")
 	if err != nil {
 		return err
 	}
@@ -309,7 +298,7 @@ func LoadBackUp() error {
 	}
 
 	err = func() error {
-		uri, err := storage.ParseURI("file://com.android.externalstorage.documents/documents/primary%3AAndroid%2ABH_Saves%2FBackup_Keys.json")
+		uri, err := storage.ParseURI(path + "Backup_Keys.json")
 		names, err := storage.Reader(uri)
 		// names, err := os.OpenFile("Saves/Backup_Keys.json", os.O_CREATE, os.ModePerm)
 		if err != nil {

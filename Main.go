@@ -7,7 +7,6 @@ import (
 	"BronzeHermes/UI"
 	"fmt"
 	"net/url"
-	"os"
 	"strconv"
 
 	"fyne.io/fyne/v2"
@@ -22,17 +21,11 @@ import (
 
 func main() {
 	a := app.NewWithID("Bronze Hermes")
-
-	if !a.Driver().Device().IsMobile() {
-		wd, _ := os.Getwd()
-		//Maybe add "/"" before BH_Saves
-		Database.Path = "file:///" + wd + "BH_Saves"
-	}
+	fmt.Println(a.Storage().RootURI())
 
 	go Graph.StartServer()
 
-	// TODO: Rmeove during Debugging
-	fmt.Println(Database.Databases)
+	Database.DataInit()
 
 	CreateWindow(a)
 }
@@ -41,6 +34,11 @@ func CreateWindow(a fyne.App) {
 	w := a.NewWindow("Bronze Hermes")
 	w.SetOnClosed(Graph.StopSever)
 
+	if UI.HandleErrorWindow(Database.LoadData(), w) {
+		dialog.ShowInformation("Back Up", "Loading BackUp", w)
+		UI.HandleErrorWindow(Database.LoadBackUp(), w)
+	}
+
 	w.SetContent(container.NewVBox(container.NewAppTabs(
 		container.NewTabItem("Main", makeMainMenu(a, w)),
 		container.NewTabItem("Shop", makeShoppingMenu(w)),
@@ -48,45 +46,19 @@ func CreateWindow(a fyne.App) {
 		container.NewTabItem("Statistics", makeStatsMenu()),
 	)))
 
-	dialog.ShowError(Database.InitCheck(), w)
-
-	if err := Database.LoadData(); err != nil {
-		dialog.ShowError(err, w)
-		dialog.ShowError(Database.LoadBackUp(), w)
-	}
-
 	w.ShowAndRun()
 }
 
 func makeMainMenu(a fyne.App, w fyne.Window) fyne.CanvasObject {
-	//TODO: Remove During Debugging
-	var beep fyne.URI
-
 	return container.NewVBox(
 		widget.NewLabelWithStyle("Welcome", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
 		widget.NewButton("Save Backup Data", func() {
-			go dialog.ShowError(Database.BackUpAllData(), w)
-		}),
-		widget.NewButton("Load Backup Data", func() {
-			dialog.ShowInformation("Loading Data Asynchonously", "The BackUp will be loaded in the background", w)
-			go dialog.ShowError(Database.LoadBackUp(), w)
-		}),
-		//DEBUGGING
-		widget.NewButton("Save File?", func() {
-			dialog.ShowFileSave(func(uc fyne.URIWriteCloser, err error) {
-				beep = uc.URI()
-			}, w)
-		}),
-		widget.NewButton("Display path", func() {
-			if beep != nil {
-				dialog.ShowInformation("Bang", beep.String(), w)
-			}
+			go UI.HandleErrorWindow(Database.BackUpAllData(), w)
 		}),
 		widget.NewButton("Display Database", func() {
 			dialog.ShowInformation("Databases", fmt.Sprint(Database.Databases), w)
 			dialog.ShowInformation("Name Keys", fmt.Sprint(Database.NameKeys), w)
-		}),
-		widget.NewButton("Quit", a.Quit))
+		}))
 }
 
 func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
@@ -176,6 +148,10 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 	inventoryLabel := widget.NewLabel("Inventory")
 
 	boundData := binding.BindSaleList(&Database.Databases[0])
+
+	//TODO: REMOVE AFTER DEBUGGING
+	fmt.Println(boundData.Get())
+
 	inventoryList := widget.NewListWithData(boundData, func() fyne.CanvasObject {
 		return container.NewBorder(nil, nil, nil, nil, widget.NewLabel("name"))
 	},
@@ -183,7 +159,8 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 			f := item.(binding.Sale)
 			val, _ := f.Get()
 			obj.(*fyne.Container).Objects[0].(*widget.Label).SetText(Database.NameKeys[val.ID])
-		})
+		},
+	)
 
 	inventoryList.OnSelected = func(id widget.ListItemID) {
 		item := Database.Databases[0][id]
@@ -222,59 +199,66 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 
 			}),
 			widget.NewButton("Modify", func() {
-					conID, _ := strconv.Atoi(idLabel.Text)
-					idLabel := widget.NewLabel(strconv.Itoa(conID))
+				conID, _ := strconv.Atoi(idLabel.Text)
+				idLabel := widget.NewLabel(strconv.Itoa(conID))
 
-					nameEntry := widget.NewEntry()
-					nameEntry.SetPlaceHolder("Product Name with _ for spaces.")
-					nameEntry.Validator = validation.NewRegexp(`^[A-Za-z0-9_-]+$`, "username can only contain letters, numbers, '_', and '-'")
+				nameEntry := widget.NewEntry()
+				nameEntry.SetPlaceHolder("Product Name with _ for spaces.")
+				nameEntry.Validator = validation.NewRegexp(`^[A-Za-z0-9_-]+$`, "username can only contain letters, numbers, '_', and '-'")
 
-					priceEntry := UI.NewNumEntry("Selling Price")
-					costEntry := UI.NewNumEntry("How much you bought it for")
-					inventoryEntry := UI.NewNumEntry("Current Inventory")
+				priceEntry := UI.NewNumEntry("Selling Price")
+				costEntry := UI.NewNumEntry("How much you bought it for")
+				inventoryEntry := UI.NewNumEntry("Current Inventory")
 
-					items := []*widget.FormItem{
-						widget.NewFormItem("ID", idLabel),
-						widget.NewFormItem("Name", nameEntry),
-						widget.NewFormItem("Price", priceEntry),
-						widget.NewFormItem("Cost", costEntry),
-						widget.NewFormItem("Inventory", inventoryEntry),
+				items := []*widget.FormItem{
+					widget.NewFormItem("ID", idLabel),
+					widget.NewFormItem("Name", nameEntry),
+					widget.NewFormItem("Price", priceEntry),
+					widget.NewFormItem("Cost", costEntry),
+					widget.NewFormItem("Inventory", inventoryEntry),
+				}
+
+				dialog.ShowForm("Item", "Save", "Cancel", items, func(b bool) {
+					if !b {
+						return
 					}
 
-					dialog.ShowForm("Item", "Save", "Cancel", items, func(b bool) {
-						if !b {
-							return
+					price, cost, inventory := Database.ConvertString(priceEntry.Text, costEntry.Text, inventoryEntry.Text)
+					newItem := Database.Sale{ID: uint64(conID), Price: price, Cost: cost, Quantity: inventory}
+
+					Database.Databases[2] = append(Database.Databases[2], newItem)
+					Database.AddKey(conID, nameEntry.Text)
+
+					func(found bool) {
+						for i, v := range Database.Databases[0] {
+							if v.ID != newItem.ID {
+								continue
+							}
+
+							Database.Databases[0][i] = newItem
+							found = true
+							break
 						}
 
-						price, cost, inventory := Database.ConvertString(priceEntry.Text, costEntry.Text, inventoryEntry.Text)
-						newItem := Database.Sale{ID: uint64(conID), Price: price, Cost: cost, Quantity: inventory}
+						if !found {
+							Database.Databases[0] = append(Database.Databases[0], newItem)
+						}
+					}(false)
 
-						Database.Databases[2] = append(Database.Databases[2], newItem)
-						Database.AddKey(conID, nameEntry.Text)
+					boundData.Set(Database.Databases[0])
+					inventoryList.Refresh()
 
-						func(found bool) {
-							for i, v := range Database.Databases[0] {
-								if v.ID != newItem.ID {
-									continue
-								}
+					UI.HandleErrorWindow(Database.SaveData(), w)
 
-								Database.Databases[0][i] = newItem
-								found = true
-								break
-							}
+					//Updating Entries
+					nameLabel.Text = nameEntry.Text
+					priceLabel.Text = priceEntry.Text
+					costLabel.Text = costEntry.Text
+					inventoryLabel.Text = inventoryEntry.Text
 
-							if !found {
-								Database.Databases[0] = append(Database.Databases[0], newItem)
-							}
-						}(false)
-
-						boundData.Set(Database.Databases[0])
-						inventoryList.Refresh()
-
-						dialog.ShowError(Database.SaveData(), w)
-						dialog.NewInformation("Success!", "Your data has been saved successfully!", w)
-					}, w)
-				}),
+					dialog.NewInformation("Success!", "Your data has been saved successfully!", w)
+				}, w)
+			}),
 		),
 		container.NewMax(
 			inventoryList,

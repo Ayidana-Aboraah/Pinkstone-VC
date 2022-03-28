@@ -13,6 +13,10 @@ func HandleError(err error) {
 	}
 }
 
-func HandleErrorWithMessage(err error, w fyne.Window) {
-	dialog.ShowError(err, w)
+func HandleErrorWindow(err error, w fyne.Window) bool {
+	if err != nil {
+		dialog.ShowError(err, w)
+		return true
+	}
+	return false
 }

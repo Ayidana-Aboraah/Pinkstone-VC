@@ -10,8 +10,7 @@ import (
 )
 
 func OpenCam(origin *fyne.Window) int {
-	CamOutput := canvas.Image{}
-	CamOutput.FillMode = canvas.ImageFillOriginal
+	CamOutput := canvas.Image{FillMode: canvas.ImageFillOriginal}
 	CamOutput.Refresh()
 
 	w := fyne.CurrentApp().NewWindow("Camera")
@@ -26,11 +25,14 @@ func OpenCam(origin *fyne.Window) int {
 		if !complete {
 			evacuate = true
 			done <- true
+			fmt.Println("Happneed")
 			return
 		}
 	})
 
 	text := StartCamera(&CamOutput, done)
+	fmt.Println("Complete")
+
 	complete = true
 
 	if evacuate {

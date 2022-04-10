@@ -12,7 +12,7 @@ import (
 	"github.com/pion/mediadevices/pkg/prop"
 )
 
-func StartCamera(Output *canvas.Image, done chan bool) string {
+func StartTestCamera(Output *canvas.Image, done chan bool) string {
 	stream, errA := mediadevices.GetUserMedia(mediadevices.MediaStreamConstraints{
 		Video: func(constraint *mediadevices.MediaTrackConstraints) {
 			constraint.FrameRate = prop.Float(24)
@@ -26,31 +26,48 @@ func StartCamera(Output *canvas.Image, done chan bool) string {
 
 	videoReader := videoTrack.NewReader(false)
 
-	return func() string {
+	result := ""
+	func() chan bool {
 		ticker := time.NewTicker(10 * time.Millisecond)
 		defer ticker.Stop()
 
 		time.Sleep(50 * time.Millisecond)
 
-		for i := 0; i < 100; i++ {
+		i := 0
+		for {
 			select {
 			case <-done:
-				return "X"
+				time.Sleep(50 * time.Millisecond)
+				return done
 			case <-ticker.C:
+				i += 1
 				frame, release, _ := videoReader.Read()
 
 				//Update Camera UI
 				Output.Image = frame
 				Output.Refresh()
 
-				if answer := ReadImage(frame); answer != nil {
-					return answer.String()
+				answer := ReadImage(frame)
+				if answer != nil {
+					result = answer.String()
+					Output.FillMode = canvas.ImageFillStretch
+					release()
+					return done
 				}
 
-				release()
+				if i >= 250 {
+					result = "X"
+					Output.FillMode = canvas.ImageFillStretch
+					release()
+					return done
+				}
+
 				fmt.Println("Iteration: " + strconv.Itoa(i))
+				release()
 			}
 		}
-		return "X"
 	}()
+
+	fmt.Println("Complete")
+	return result
 }

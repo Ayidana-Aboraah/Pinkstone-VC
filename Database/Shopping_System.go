@@ -42,12 +42,12 @@ func DecreaseFromCart(item Sale, ShoppingCart []Sale) []Sale {
 	return ShoppingCart
 }
 
-func GetCartTotal(ShoppingCart []Sale) float32 {
+func GetCartTotal(ShoppingCart []Sale) float64 {
 	var total float32
 	for _, v := range ShoppingCart {
 		total += v.Price * float32(v.Quantity)
 	}
-	return total
+	return float64(total)
 }
 
 func ConvertString(Price, Cost, Quantity string) (float32, float32, uint16) {

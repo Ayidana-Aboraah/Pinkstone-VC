@@ -63,12 +63,12 @@ func makeMainMenu(a fyne.App, w fyne.Window) fyne.CanvasObject {
 
 func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 	var shoppingCart []Database.Sale
-	cartList := binding.BindSaleList(&shoppingCart)
+	// cartList := binding.BindSaleList(&shoppingCart)
 
 	title := widget.NewLabelWithStyle("Cart Total: 0.0", fyne.TextAlignCenter, fyne.TextStyle{})
 
-	// var shoppingCart []interface{}
-	// cartList := binding.BindUntypedList(&shoppingCart)
+	var interCart []interface{}
+	cartList := binding.BindUntypedList(&interCart)
 
 	shoppingList := widget.NewListWithData(cartList,
 		func() fyne.CanvasObject {
@@ -90,7 +90,7 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 
 		text.SetText(Database.NameKeys[val.ID] + " x" + strconv.Itoa(int(val.Quantity)))
 		btn.OnTapped = func() {
-			cartList.Set(Database.DecreaseFromCart(val, shoppingCart))
+			cartList.Set(Database.ConvertCart(Database.DecreaseFromCart(val, shoppingCart)))
 			title.SetText(fmt.Sprintf("Cart Total: %1.1f", Database.GetCartTotal(shoppingCart)))
 			text.SetText(Database.NameKeys[val.ID] + " x" + strconv.Itoa(int(val.Quantity)))
 			shoppingList.Refresh()
@@ -106,13 +106,13 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 					if !b {
 						return
 					}
-					cartList.Set(Database.BuyCart(shoppingCart))
+					cartList.Set(Database.ConvertCart(Database.BuyCart(shoppingCart)))
 					title.SetText(fmt.Sprintf("Cart Total: %1.1f", Database.GetCartTotal(shoppingCart)))
 					dialog.ShowInformation("Complete", "You're Purchase has been made.", w)
 				}, w)
 			}),
 			widget.NewButton("Clear Cart", func() {
-				cartList.Set(shoppingCart[:0])
+				cartList.Set(Database.ConvertCart(shoppingCart[:0]))
 				title.SetText(fmt.Sprintf("Cart Total: %1.1f", Database.GetCartTotal(shoppingCart)))
 			}),
 			widget.NewButton("New Item", func() {
@@ -128,7 +128,7 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 						if !b {
 							return
 						}
-						cartList.Set(Database.AddToCart(item, shoppingCart))
+						cartList.Set(Database.ConvertCart(Database.AddToCart(item, shoppingCart)))
 						title.SetText(fmt.Sprintf("Cart Total: %1.1f", Database.GetCartTotal(shoppingCart)))
 						shoppingList.Refresh()
 					}, w)

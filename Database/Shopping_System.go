@@ -50,6 +50,16 @@ func GetCartTotal(ShoppingCart []Sale) float64 {
 	return float64(total)
 }
 
+func ConvertCart(shoppingCart []Sale) []interface{} {
+	var intercart []interface{}
+
+	for i := range shoppingCart {
+		intercart[i] = shoppingCart[i]
+	}
+
+	return intercart
+}
+
 func ConvertString(Price, Cost, Quantity string) (float32, float32, uint16) {
 	newPrice, _ := strconv.ParseFloat(Price, 64)
 	newCost, _ := strconv.ParseFloat(Cost, 64)

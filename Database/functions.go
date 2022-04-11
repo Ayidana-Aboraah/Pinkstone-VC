@@ -5,6 +5,24 @@ import (
 	"strings"
 )
 
+func AddKey(id int, name string) {
+	newKeys := make(map[uint64]string, len(NameKeys)+1)
+	for idx, name := range NameKeys {
+		newKeys[idx] = name
+	}
+	newKeys[uint64(id)] = name
+	NameKeys = newKeys
+}
+
+func FindItem(ID int) Sale {
+	for _, v := range Databases[0] {
+		if int(v.ID) == ID {
+			return v
+		}
+	}
+	return Sale{}
+}
+
 func GetLine(selection string, dataType int, database []Sale) ([]string, [][]float32) {
 	date := func() []uint8 {
 		if selection == "" {
@@ -134,22 +152,4 @@ func GetPie(selection string, dataType int) ([]string, []float32) {
 	}
 
 	return names, sales
-}
-
-func AddKey(id int, name string) {
-	newKeys := make(map[uint64]string, len(NameKeys)+1)
-	for idx, name := range NameKeys {
-		newKeys[idx] = name
-	}
-	newKeys[uint64(id)] = name
-	NameKeys = newKeys
-}
-
-func FindItem(ID int) Sale {
-	for _, v := range Databases[0] {
-		if int(v.ID) == ID {
-			return v
-		}
-	}
-	return Sale{}
 }

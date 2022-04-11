@@ -2,11 +2,15 @@ package Cam
 
 import (
 	"fmt"
+	"image"
 	"strconv"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/dialog"
+
+	"github.com/makiuchi-d/gozxing"
+	"github.com/makiuchi-d/gozxing/oned"
 )
 
 func OpenCam(origin *fyne.Window) int {
@@ -25,31 +29,38 @@ func OpenCam(origin *fyne.Window) int {
 		if !complete {
 			evacuate = true
 			done <- true
-			fmt.Println("Happneed")
 			return
 		}
 	})
 
 	text := StartCamera(&CamOutput, done)
-	fmt.Println("Complete")
 
 	complete = true
 
 	if evacuate {
-		fmt.Println("Evacuating...")
 		return 0
 	}
 
 	w.Close()
 
 	if text == "X" {
-		dialog.ShowInformation("Time Up!", "The camera has been open for too long, but you can open it again.", *origin)
+		dialog.ShowInformation("Time Up!", "The camera has been open for too long, open again.", *origin)
 		return 0
 	} else if text == "E" {
-		dialog.ShowInformation("Oops", "Camera not found", w)
+		dialog.ShowInformation("Oops", "Camera not found.", w)
 		return 0
 	}
 
 	conID, _ := strconv.Atoi(text)
 	return conID
+}
+
+func ReadImage(img image.Image) *gozxing.Result {
+	bmp, _ := gozxing.NewBinaryBitmapFromImage(img)
+	reader := oned.NewUPCAReader()
+
+	result, _ := reader.Decode(bmp, nil)
+
+	fmt.Println(result)
+	return result
 }

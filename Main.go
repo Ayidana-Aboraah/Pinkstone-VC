@@ -63,7 +63,6 @@ func makeMainMenu(a fyne.App, w fyne.Window) fyne.CanvasObject {
 
 func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 	var shoppingCart []Database.Sale
-	// cartList := binding.BindSaleList(&shoppingCart)
 
 	title := widget.NewLabelWithStyle("Cart Total: 0.0", fyne.TextAlignCenter, fyne.TextStyle{})
 

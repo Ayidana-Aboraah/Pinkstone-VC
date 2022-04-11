@@ -16,6 +16,7 @@ func AddToCart(item Sale, ShoppingCart []Sale) []Sale {
 		if v.ID != item.ID || v.Price != item.Price {
 			continue
 		}
+
 		ShoppingCart[i].Quantity++
 		return ShoppingCart
 	}

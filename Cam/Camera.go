@@ -1,7 +1,6 @@
 package Cam
 
 import (
-	"BronzeHermes/UI"
 	"fmt"
 	"strconv"
 	"time"
@@ -13,13 +12,10 @@ import (
 )
 
 func StartCamera(Output *canvas.Image, done chan bool) string {
-	stream, errA := mediadevices.GetUserMedia(mediadevices.MediaStreamConstraints{
+	stream, _ := mediadevices.GetUserMedia(mediadevices.MediaStreamConstraints{
 		Video: func(constraint *mediadevices.MediaTrackConstraints) {
 			constraint.FrameRate = prop.Float(24)
 		}})
-
-	//TODO:REMOVE AFTER DEBUGGING
-	UI.HandleError(errA)
 
 	if stream.GetVideoTracks() == nil || len(stream.GetVideoTracks()) == 0 {
 		return "E"
@@ -42,10 +38,7 @@ func StartCamera(Output *canvas.Image, done chan bool) string {
 			case <-done:
 				return "X"
 			case <-ticker.C:
-				frame, release, err := videoReader.Read()
-
-				//TODO:REMOVE AFTER DEBUGGING
-				UI.HandleError(err)
+				frame, release, _ := videoReader.Read()
 
 				//Update Camera UI
 				Output.Image = frame

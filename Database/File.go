@@ -69,11 +69,6 @@ func SaveData() error {
 			return err
 		}
 
-		// save, err := os.OpenFile("Saves/"+file, os.O_CREATE, os.ModePerm)
-		// if err != nil {
-		// 	return err
-		// }
-
 		bs := make([]byte, 21*len(database))
 		for i, x := range database {
 			c := (21 * i)
@@ -99,7 +94,6 @@ func SaveData() error {
 	err := func() error {
 		names, err := fyne.CurrentApp().Storage().Save("name_keys.json")
 
-		// names, err := os.OpenFile("Saves/name_keys.json", os.O_CREATE, os.ModePerm)
 		if err != nil {
 			return err
 		}
@@ -159,7 +153,6 @@ func LoadData() error {
 
 	err := func() error {
 		names, err := fyne.CurrentApp().Storage().Open("name_keys.json")
-		// names, err := os.OpenFile("Saves/name_keys.json", os.O_CREATE, os.ModePerm)
 		if err != nil && err != io.EOF {
 			return err
 		}
@@ -196,11 +189,6 @@ func BackUpAllData() error {
 	}
 
 	order := binary.BigEndian
-
-	// save, err := os.OpenFile("Saves/BackUp.red", os.O_CREATE, os.ModePerm)
-	// if err != nil {
-	// 	return err
-	// }
 
 	save, err := fyne.CurrentApp().Storage().Save("BackUp.red")
 	if err != nil {
@@ -243,7 +231,6 @@ func LoadBackUp() error {
 	buf, err := ioutil.ReadAll(file)
 	file.Close()
 
-	// buf, err := ioutil.ReadFile("Saves/BackUp.red")
 	if err != nil {
 		return err
 	}
@@ -273,7 +260,6 @@ func LoadBackUp() error {
 
 	err = func() error {
 		names, err := fyne.CurrentApp().Storage().Open("BackUp_Keys.red")
-		// names, err := os.OpenFile("Saves/Backup_Keys.json", os.O_CREATE, os.ModePerm)
 		if err != nil {
 			return err
 		}

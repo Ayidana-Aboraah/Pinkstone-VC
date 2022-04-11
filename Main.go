@@ -188,7 +188,6 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 				}
 
 				result := Database.FindItem(id)
-				//TODO: Try returning 3 strings and then mannually equalling each label {Not the most readiable but smaller}
 				labels := Database.ConvertSale(result)
 
 				idLabel.SetText(strconv.Itoa(id))

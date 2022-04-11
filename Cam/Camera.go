@@ -16,15 +16,20 @@ func StartCamera(Output *canvas.Image, done chan bool) string {
 	stream, errA := mediadevices.GetUserMedia(mediadevices.MediaStreamConstraints{
 		Video: func(constraint *mediadevices.MediaTrackConstraints) {
 			constraint.FrameRate = prop.Float(24)
-		},
-	})
+		}})
+
+	//TODO:REMOVE AFTER DEBUGGING
 	UI.HandleError(errA)
+
+	if stream.GetVideoTracks() == nil || len(stream.GetVideoTracks()) == 0 {
+		return "E"
+	}
 
 	vidTrack := stream.GetVideoTracks()[0]
 	videoTrack := vidTrack.(*mediadevices.VideoTrack)
-	defer videoTrack.Close()
-
 	videoReader := videoTrack.NewReader(false)
+
+	defer vidTrack.Close()
 
 	return func() string {
 		ticker := time.NewTicker(10 * time.Millisecond)
@@ -37,7 +42,10 @@ func StartCamera(Output *canvas.Image, done chan bool) string {
 			case <-done:
 				return "X"
 			case <-ticker.C:
-				frame, release, _ := videoReader.Read()
+				frame, release, err := videoReader.Read()
+
+				//TODO:REMOVE AFTER DEBUGGING
+				UI.HandleError(err)
 
 				//Update Camera UI
 				Output.Image = frame

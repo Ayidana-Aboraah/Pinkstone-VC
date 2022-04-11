@@ -45,6 +45,9 @@ func OpenCam(origin *fyne.Window) int {
 	if text == "X" {
 		dialog.ShowInformation("Time Up!", "The camera has been open for too long, but you can open it again.", *origin)
 		return 0
+	} else if text == "E" {
+		dialog.ShowInformation("Oops", "Camera not found", w)
+		return 0
 	}
 
 	conID, _ := strconv.Atoi(text)

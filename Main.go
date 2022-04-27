@@ -21,7 +21,6 @@ import (
 
 func main() {
 	a := app.NewWithID("Bronze Hermes")
-
 	go Graph.StartServer()
 
 	Database.DataInit()
@@ -65,8 +64,7 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 
 	title := widget.NewLabelWithStyle("Cart Total: 0.0", fyne.TextAlignCenter, fyne.TextStyle{})
 
-	var interCart []interface{}
-	cartList := binding.BindUntypedList(&interCart)
+	cartList := binding.BindUntypedList(&[]interface{}{})
 
 	shoppingList := widget.NewListWithData(cartList,
 		func() fyne.CanvasObject {
@@ -110,7 +108,8 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 				}, w)
 			}),
 			widget.NewButton("Clear Cart", func() {
-				cartList.Set(Database.ConvertCart(shoppingCart[:0]))
+				cartList.Set([]interface{}{})
+				shoppingCart = shoppingCart[:0]
 				title.SetText(fmt.Sprintf("Cart Total: %1.1f", Database.GetCartTotal(shoppingCart)))
 			}),
 			widget.NewButton("New Item", func() {
@@ -143,8 +142,8 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 	costLabel := widget.NewLabel("Cost")
 	inventoryLabel := widget.NewLabel("Inventory")
 
-	data := Database.ConvertCart(Database.Databases[0])
-	boundData := binding.BindUntypedList(&data)
+	boundData := binding.BindUntypedList(&[]interface{}{})
+	boundData.Set(Database.ConvertCart(Database.Databases[0]))
 
 	inventoryList := widget.NewListWithData(boundData, func() fyne.CanvasObject {
 		return container.NewBorder(nil, nil, nil, nil, widget.NewLabel("name"))
@@ -223,13 +222,11 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 
 					func(found bool) {
 						for i, v := range Database.Databases[0] {
-							if v.ID != newItem.ID {
-								continue
+							if v.ID == newItem.ID {
+								Database.Databases[0][i] = newItem
+								found = true
+								break
 							}
-
-							Database.Databases[0][i] = newItem
-							found = true
-							break
 						}
 
 						if !found {

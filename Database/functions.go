@@ -61,7 +61,6 @@ func GetLine(selection string, dataType int, database []Sale) ([]string, [][]flo
 				if v.ID != id || v.Day != i || v.Month != date[1] || v.Year != date[0] {
 					continue
 				}
-
 				switch dataType {
 				case 0:
 					total += v.Price
@@ -72,18 +71,15 @@ func GetLine(selection string, dataType int, database []Sale) ([]string, [][]flo
 				case 3:
 					total += float32(v.Quantity)
 				}
-
 			}
 
 			totals = append(totals, total)
 		}
 
-		if totals == nil {
-			continue
+		if totals != nil {
+			names = append(names, name)
+			sales = append(sales, totals)
 		}
-
-		names = append(names, name)
-		sales = append(sales, totals)
 	}
 
 	return names, sales
@@ -130,7 +126,6 @@ func GetPie(selection string, dataType int) ([]string, []float32) {
 			if v.ID != id || v.Day != date[2] || v.Month != date[1] || v.Year != date[0] {
 				continue
 			}
-
 			switch dataType {
 			case 0:
 				total += v.Price
@@ -143,12 +138,10 @@ func GetPie(selection string, dataType int) ([]string, []float32) {
 			}
 		}
 
-		if total == 0 {
-			continue
+		if total > 0 {
+			names = append(names, name)
+			sales = append(sales, total)
 		}
-
-		names = append(names, name)
-		sales = append(sales, total)
 	}
 
 	return names, sales

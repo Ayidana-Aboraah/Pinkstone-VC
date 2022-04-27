@@ -61,6 +61,6 @@ func ReadImage(img image.Image) *gozxing.Result {
 
 	result, _ := reader.Decode(bmp, nil)
 
-	fmt.Println(result)
+	fmt.Println(result) //Remove after debugging
 	return result
 }

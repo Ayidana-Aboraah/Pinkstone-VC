@@ -7,7 +7,7 @@ win_build:
 	fyne package -os windows -icon icon02.png
 
 test:
-	go test -v
+	go test -v ./Test/...
 
 run:
 	./BronzeHermes.exe

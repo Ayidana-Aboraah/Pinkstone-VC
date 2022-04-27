@@ -2,10 +2,17 @@ package UI
 
 import (
 	"fmt"
+	"testing"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/dialog"
 )
+
+func HandleTestError(err error, t *testing.T) {
+	if err != nil {
+		t.Log(err)
+	}
+}
 
 func HandleError(err error) {
 	if err != nil {

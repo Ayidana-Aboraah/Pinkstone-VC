@@ -12,8 +12,7 @@ import (
 
 var NameKeys map[uint64]string
 
-//0 Items; 1 ReportData; 2 PriceLog
-var Databases [3][]Sale
+var Databases [3][]Sale //0 Items; 1 ReportData; 2 PriceLog
 
 type Sale struct {
 	Year     uint8
@@ -43,10 +42,9 @@ func DataInit() {
 		}
 
 		save, err := fyne.CurrentApp().Storage().Create(file)
-		if err != nil {
-			continue
+		if err == nil {
+			save.Close()
 		}
-		save.Close()
 	}
 }
 

@@ -21,8 +21,7 @@ import (
 
 func main() {
 	a := app.NewWithID("Bronze Hermes")
-	fmt.Println(a.Storage().RootURI())
-
+	fmt.Println(a.Storage().RootURI()) // Remove after debugging
 	go Graph.StartServer()
 
 	Database.DataInit()
@@ -66,8 +65,7 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 
 	title := widget.NewLabelWithStyle("Cart Total: 0.0", fyne.TextAlignCenter, fyne.TextStyle{})
 
-	var interCart []interface{}
-	cartList := binding.BindUntypedList(&interCart)
+	cartList := binding.BindUntypedList(&[]interface{}{})
 
 	shoppingList := widget.NewListWithData(cartList,
 		func() fyne.CanvasObject {
@@ -111,7 +109,8 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 				}, w)
 			}),
 			widget.NewButton("Clear Cart", func() {
-				cartList.Set(Database.ConvertCart(shoppingCart[:0]))
+				cartList.Set([]interface{}{})
+				shoppingCart = shoppingCart[:0]
 				title.SetText(fmt.Sprintf("Cart Total: %1.1f", Database.GetCartTotal(shoppingCart)))
 			}),
 			widget.NewButton("New Item", func() {
@@ -144,19 +143,17 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 	costLabel := widget.NewLabel("Cost")
 	inventoryLabel := widget.NewLabel("Inventory")
 
-	boundData := binding.BindSaleList(&Database.Databases[0])
-
-	//TODO: REMOVE AFTER DEBUGGING
-	fmt.Println(boundData.Get())
+	boundData := binding.BindUntypedList(&[]interface{}{})
+	boundData.Set(Database.ConvertCart(Database.Databases[0]))
 
 	inventoryList := widget.NewListWithData(boundData, func() fyne.CanvasObject {
 		return container.NewBorder(nil, nil, nil, nil, widget.NewLabel("name"))
 	},
-		func(item binding.DataItem, obj fyne.CanvasObject) {
-			val, _ := item.(binding.Sale).Get()
-			obj.(*fyne.Container).Objects[0].(*widget.Label).SetText(Database.NameKeys[val.ID])
-		},
-	)
+		func(item binding.DataItem, obj fyne.CanvasObject) {})
+
+	inventoryList.UpdateItem = func(id widget.ListItemID, obj fyne.CanvasObject) {
+		obj.(*fyne.Container).Objects[0].(*widget.Label).SetText(Database.NameKeys[Database.Databases[0][id].ID])
+	}
 
 	inventoryList.OnSelected = func(id widget.ListItemID) {
 		item := Database.Databases[0][id]
@@ -226,13 +223,11 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 
 					func(found bool) {
 						for i, v := range Database.Databases[0] {
-							if v.ID != newItem.ID {
-								continue
+							if v.ID == newItem.ID {
+								Database.Databases[0][i] = newItem
+								found = true
+								break
 							}
-
-							Database.Databases[0][i] = newItem
-							found = true
-							break
 						}
 
 						if !found {
@@ -240,7 +235,7 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 						}
 					}(false)
 
-					boundData.Set(Database.Databases[0])
+					boundData.Set(Database.ConvertCart(Database.Databases[0]))
 
 					UI.HandleErrorWindow(Database.SaveData(), w)
 

@@ -49,7 +49,7 @@ func StartCamera(Output *canvas.Image, done chan bool) string {
 				}
 
 				release()
-				fmt.Println("Iteration: " + strconv.Itoa(i))
+				fmt.Println("Iteration: " + strconv.Itoa(i)) //Remove after debugging
 			}
 		}
 		return "X"

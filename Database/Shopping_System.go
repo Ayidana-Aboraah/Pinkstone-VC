@@ -55,7 +55,7 @@ func ConvertCart(shoppingCart []Sale) []interface{} {
 	var intercart []interface{}
 
 	for i := range shoppingCart {
-		intercart[i] = shoppingCart[i]
+		intercart = append(intercart, shoppingCart[i])
 	}
 
 	return intercart

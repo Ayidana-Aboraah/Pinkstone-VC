@@ -21,7 +21,6 @@ import (
 
 func main() {
 	a := app.NewWithID("Bronze Hermes")
-	fmt.Println(a.Storage().RootURI())
 
 	go Graph.StartServer()
 
@@ -144,19 +143,17 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 	costLabel := widget.NewLabel("Cost")
 	inventoryLabel := widget.NewLabel("Inventory")
 
-	boundData := binding.BindSaleList(&Database.Databases[0])
-
-	//TODO: REMOVE AFTER DEBUGGING
-	fmt.Println(boundData.Get())
+	data := Database.ConvertCart(Database.Databases[0])
+	boundData := binding.BindUntypedList(&data)
 
 	inventoryList := widget.NewListWithData(boundData, func() fyne.CanvasObject {
 		return container.NewBorder(nil, nil, nil, nil, widget.NewLabel("name"))
 	},
-		func(item binding.DataItem, obj fyne.CanvasObject) {
-			val, _ := item.(binding.Sale).Get()
-			obj.(*fyne.Container).Objects[0].(*widget.Label).SetText(Database.NameKeys[val.ID])
-		},
-	)
+		func(item binding.DataItem, obj fyne.CanvasObject) {})
+
+	inventoryList.UpdateItem = func(idx widget.ListItemID, obj fyne.CanvasObject) {
+		obj.(*fyne.Container).Objects[0].(*widget.Label).SetText(Database.NameKeys[Database.Databases[0][idx].ID])
+	}
 
 	inventoryList.OnSelected = func(id widget.ListItemID) {
 		item := Database.Databases[0][id]
@@ -240,7 +237,7 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 						}
 					}(false)
 
-					boundData.Set(Database.Databases[0])
+					boundData.Set(Database.ConvertCart(Database.Databases[0]))
 
 					UI.HandleErrorWindow(Database.SaveData(), w)
 

@@ -1,7 +1,6 @@
 package Cam
 
 import (
-	"fmt"
 	"image"
 	"strconv"
 
@@ -61,6 +60,6 @@ func ReadImage(img image.Image) *gozxing.Result {
 
 	result, _ := reader.Decode(bmp, nil)
 
-	fmt.Println(result) //Remove after debugging
+	// fmt.Println(result) //Remove after debugging
 	return result
 }

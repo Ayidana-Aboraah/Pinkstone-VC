@@ -20,7 +20,6 @@ func AddToCart(item Sale, ShoppingCart []Sale) []Sale {
 		ShoppingCart[i].Quantity++
 		return ShoppingCart
 	}
-
 	ShoppingCart = append(ShoppingCart, item)
 	return ShoppingCart
 }
@@ -53,11 +52,9 @@ func GetCartTotal(ShoppingCart []Sale) float64 {
 
 func ConvertCart(shoppingCart []Sale) []interface{} {
 	var intercart []interface{}
-
 	for i := range shoppingCart {
 		intercart = append(intercart, shoppingCart[i])
 	}
-
 	return intercart
 }
 

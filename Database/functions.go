@@ -5,47 +5,27 @@ import (
 	"strings"
 )
 
-func AddKey(id int, name string) {
-	newKeys := make(map[uint64]string, len(NameKeys)+1)
-	for idx, name := range NameKeys {
-		newKeys[idx] = name
-	}
-	newKeys[uint64(id)] = name
-	NameKeys = newKeys
-}
-
-func FindItem(ID int) Sale {
-	for _, v := range Databases[0] {
-		if int(v.ID) == ID {
-			return v
-		}
-	}
-	return Sale{}
-}
-
 func GetLine(selection string, dataType int, database []Sale) ([]string, [][]float32) {
-	date := func() []uint8 {
-		if selection == "" {
-			return nil
-		}
+	if selection == "" {
+		return nil, nil
+	}
 
-		raw := strings.Split(selection, "/")
+	raw := strings.Split(selection, "/")
 
-		year, err := strconv.Atoi(raw[0][1:])
-		if err != nil {
-			return nil
-		}
+	year, err := strconv.Atoi(raw[0][1:])
+	if err != nil {
+		return nil, nil
+	}
 
-		month, err := strconv.Atoi(raw[1])
-		if err != nil {
-			return nil
-		}
+	month, err := strconv.Atoi(raw[1])
+	if err != nil {
+		return nil, nil
+	}
 
-		return []uint8{
-			uint8(year),
-			uint8(month),
-		}
-	}()
+	date := []uint8{
+		uint8(year),
+		uint8(month),
+	}
 
 	//Change the error handling for this to show that you can't convert
 	var sales [][]float32
@@ -86,34 +66,32 @@ func GetLine(selection string, dataType int, database []Sale) ([]string, [][]flo
 }
 
 func GetPie(selection string, dataType int) ([]string, []float32) {
-	date := func() []uint8 {
-		if selection == "" {
-			return nil
-		}
+	if selection == "" {
+		return nil, nil
+	}
 
-		raw := strings.Split(selection, "/")
+	raw := strings.Split(selection, "/")
 
-		year, err := strconv.Atoi(raw[0][1:])
-		if err != nil {
-			return nil
-		}
+	year, err := strconv.Atoi(raw[0][1:])
+	if err != nil {
+		return nil, nil
+	}
 
-		month, err := strconv.Atoi(raw[1])
-		if err != nil {
-			return nil
-		}
+	month, err := strconv.Atoi(raw[1])
+	if err != nil {
+		return nil, nil
+	}
 
-		day, err := strconv.Atoi(raw[1])
-		if err != nil {
-			return nil
-		}
+	day, err := strconv.Atoi(raw[1])
+	if err != nil {
+		return nil, nil
+	}
 
-		return []uint8{
-			uint8(year),
-			uint8(month),
-			uint8(day),
-		}
-	}()
+	date := []uint8{
+		uint8(year),
+		uint8(month),
+		uint8(day),
+	}
 
 	var sales []float32
 	var names []string
@@ -145,4 +123,13 @@ func GetPie(selection string, dataType int) ([]string, []float32) {
 	}
 
 	return names, sales
+}
+
+func FindItem(ID int) Sale { // Maybe implement a binary search
+	for _, v := range Databases[0] {
+		if int(v.ID) == ID {
+			return v
+		}
+	}
+	return Sale{}
 }

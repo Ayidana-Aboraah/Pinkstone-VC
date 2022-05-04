@@ -10,18 +10,15 @@ import (
 	"fyne.io/fyne/v2"
 )
 
-var NameKeys map[uint64]string
+var NameKeys = map[uint64]string{}
 
 var Databases [3][]Sale //0 Items; 1 ReportData; 2 PriceLog
 
 type Sale struct {
-	Year     uint8
-	Month    uint8
-	Day      uint8
-	Quantity uint16
-	Price    float32
-	Cost     float32
-	ID       uint64
+	Year, Month, Day uint8
+	Quantity         uint16
+	Price, Cost      float32
+	ID               uint64
 }
 
 func DataInit() {
@@ -89,25 +86,21 @@ func SaveData() error {
 		}
 	}
 
-	err := func() error {
-		names, err := fyne.CurrentApp().Storage().Save("name_keys.json")
+	names, err := fyne.CurrentApp().Storage().Save("name_keys.json")
 
-		if err != nil {
-			return err
-		}
-		defer names.Close()
+	if err != nil {
+		return err
+	}
+	defer names.Close()
 
-		encoder := json.NewEncoder(names)
-		encoder.Encode(NameKeys)
-		return nil
-	}()
-
-	return err
+	encoder := json.NewEncoder(names)
+	encoder.Encode(NameKeys)
+	return nil
 }
 
 func LoadData() error {
-	var file string
 	order := binary.BigEndian
+	var file string
 
 	for idx := range Databases {
 		switch idx {
@@ -124,7 +117,7 @@ func LoadData() error {
 			return err
 		}
 
-		buf, err := ioutil.ReadAll(file)
+		buf, err := io.ReadAll(file)
 		file.Close()
 
 		if err != nil {
@@ -149,50 +142,27 @@ func LoadData() error {
 		Databases[idx] = black
 	}
 
-	err := func() error {
-		names, err := fyne.CurrentApp().Storage().Open("name_keys.json")
-		if err != nil && err != io.EOF {
-			return err
-		}
-		defer names.Close()
+	names, err := fyne.CurrentApp().Storage().Open("name_keys.json")
+	if err != nil && err != io.EOF {
+		return err
+	}
+	defer names.Close()
 
-		encoder := json.NewDecoder(names)
-		err = encoder.Decode(&NameKeys)
-		if err != nil && err != io.EOF {
-			return err
-		}
-		return nil
-	}()
-
-	return err
+	encoder := json.NewDecoder(names)
+	err = encoder.Decode(&NameKeys)
+	if err != nil && err != io.EOF {
+		return err
+	}
+	return nil
 }
 
 func BackUpAllData() error {
-	err := func() error {
-		names, err := fyne.CurrentApp().Storage().Save("BackUp_Keys.red")
-		if err != nil {
-			return err
-		}
-		defer names.Close()
-
-		encoder := json.NewEncoder(names)
-		err = encoder.Encode(NameKeys)
-		if err != nil {
-			return err
-		}
-		return nil
-	}()
-	if err != nil {
-		return err
-	}
-
 	order := binary.BigEndian
 
-	save, err := fyne.CurrentApp().Storage().Save("BackUp.red")
+	save, err := fyne.CurrentApp().Storage().Save("BackUp.red") //BackUp Loading
 	if err != nil {
 		return err
 	}
-
 	defer save.Close()
 
 	bs := make([]byte, ((21 * len(Databases[0])) + (21 * len(Databases[1])) + (21 * len(Databases[2]))))
@@ -215,7 +185,22 @@ func BackUpAllData() error {
 	}
 
 	_, err = save.Write(bs)
-	return err
+	if err != nil {
+		return err
+	}
+
+	names, err := fyne.CurrentApp().Storage().Save("BackUp_Keys.red")
+	if err != nil {
+		return err
+	}
+	defer names.Close()
+
+	encoder := json.NewEncoder(names)
+	err = encoder.Encode(NameKeys)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func LoadBackUp() error {
@@ -256,21 +241,16 @@ func LoadBackUp() error {
 		}
 	}
 
-	err = func() error {
-		names, err := fyne.CurrentApp().Storage().Open("BackUp_Keys.red")
-		if err != nil {
-			return err
-		}
-		defer names.Close()
+	names, err := fyne.CurrentApp().Storage().Open("BackUp_Keys.red")
+	if err != nil {
+		return err
+	}
+	defer names.Close()
 
-		decoder := json.NewDecoder(names)
-		err = decoder.Decode(&NameKeys)
-		if err != nil && err != io.EOF {
-			println("Bang")
-			return err
-		}
-		return nil
-	}()
-
-	return err
+	decoder := json.NewDecoder(names)
+	err = decoder.Decode(&NameKeys)
+	if err != nil && err != io.EOF {
+		return err
+	}
+	return nil
 }

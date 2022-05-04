@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"fyne.io/fyne/v2/canvas"
+	"github.com/makiuchi-d/gozxing"
+	"github.com/makiuchi-d/gozxing/oned"
 	"github.com/pion/mediadevices"
 	_ "github.com/pion/mediadevices/pkg/driver/camera"
 	"github.com/pion/mediadevices/pkg/prop"
@@ -27,6 +29,10 @@ func StartCamera(Output *canvas.Image, done chan bool) string {
 
 	defer vidTrack.Close()
 
+	reader := oned.NewUPCAReader()
+	var bmp *gozxing.BinaryBitmap
+	var result *gozxing.Result
+
 	return func() string {
 		ticker := time.NewTicker(10 * time.Millisecond)
 		defer ticker.Stop()
@@ -44,8 +50,20 @@ func StartCamera(Output *canvas.Image, done chan bool) string {
 				Output.Image = frame
 				Output.Refresh()
 
-				if answer := ReadImage(frame); answer != nil {
-					return answer.String()
+				bmp, _ = gozxing.NewBinaryBitmapFromImage(frame)
+				// bmp, err := gozxing.NewBinaryBitmapFromImage(frame)
+				// if err != nil{
+				// 	fmt.Println(err)
+				// }
+
+				result, _ = reader.Decode(bmp, nil)
+				// result, err = reader.Decode(bmp, nil)
+				// if err != nil{
+				// 	fmt.Println(err)
+				// }
+
+				if result != nil {
+					return result.String()
 				}
 
 				release()

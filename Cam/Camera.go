@@ -2,7 +2,6 @@ package Cam
 
 import (
 	"fmt"
-	"strconv"
 	"time"
 
 	"fyne.io/fyne/v2/canvas"
@@ -19,57 +18,54 @@ func StartCamera(Output *canvas.Image, done chan bool) string {
 			constraint.FrameRate = prop.Float(24)
 		}})
 
-	if stream.GetVideoTracks() == nil || len(stream.GetVideoTracks()) == 0 {
-		return "E"
-	}
-
 	vidTrack := stream.GetVideoTracks()[0]
 	videoTrack := vidTrack.(*mediadevices.VideoTrack)
 	videoReader := videoTrack.NewReader(false)
 
-	defer vidTrack.Close()
+	defer videoTrack.Close()
 
 	reader := oned.NewUPCAReader()
-	var bmp *gozxing.BinaryBitmap
-	var result *gozxing.Result
 
 	return func() string {
-		ticker := time.NewTicker(10 * time.Millisecond)
-		defer ticker.Stop()
+		timer := time.NewTimer(10 * time.Second)
+		defer timer.Stop()
 
 		time.Sleep(50 * time.Millisecond)
 
-		for i := 0; i < 100; i++ {
+		var bmp *gozxing.BinaryBitmap
+		var result *gozxing.Result
+		var err error
+
+		for {
 			select {
-			case <-done:
+			case <-timer.C:
 				return "X"
-			case <-ticker.C:
+			case <-done:
+				return ""
+			default:
 				frame, release, _ := videoReader.Read()
 
 				//Update Camera UI
 				Output.Image = frame
 				Output.Refresh()
 
-				bmp, _ = gozxing.NewBinaryBitmapFromImage(frame)
-				// bmp, err := gozxing.NewBinaryBitmapFromImage(frame)
-				// if err != nil{
-				// 	fmt.Println(err)
-				// }
+				// bmp, _ = gozxing.NewBinaryBitmapFromImage(frame)
+				bmp, err = gozxing.NewBinaryBitmapFromImage(frame)
+				if err != nil {
+					fmt.Println(err)
+				}
 
-				result, _ = reader.Decode(bmp, nil)
-				// result, err = reader.Decode(bmp, nil)
-				// if err != nil{
-				// 	fmt.Println(err)
-				// }
+				result, err = reader.Decode(bmp, nil)
+				if err != nil {
+					fmt.Println(err)
+				}
 
 				if result != nil {
 					return result.String()
 				}
 
 				release()
-				fmt.Println("Iteration: " + strconv.Itoa(i)) //Remove after debugging
 			}
 		}
-		return "X"
 	}()
 }

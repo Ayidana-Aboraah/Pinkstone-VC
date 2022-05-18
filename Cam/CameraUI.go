@@ -34,11 +34,11 @@ func OpenCam(origin *fyne.Window) int {
 
 	text := StartCamera(&CamOutput, done)
 
-	complete = true
-
 	if evacuate {
 		return 0
 	}
+
+	complete = true
 
 	w.Close()
 

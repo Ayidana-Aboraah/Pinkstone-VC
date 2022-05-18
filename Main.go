@@ -21,7 +21,7 @@ import (
 
 func main() {
 	a := app.NewWithID("Bronze Hermes")
-	go Graph.StartServer()
+	// go Graph.StartServer()
 
 	Database.DataInit()
 

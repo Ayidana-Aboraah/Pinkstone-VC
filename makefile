@@ -12,5 +12,5 @@ test:
 run:
 	./BronzeHermes.exe
 
-fun:
+compile:
 	go run Main.go

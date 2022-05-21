@@ -16,10 +16,10 @@ func AddToCart(item Sale, ShoppingCart []Sale) []Sale {
 		if v.ID != item.ID || v.Price != item.Price {
 			continue
 		}
+
 		ShoppingCart[i].Quantity++
 		return ShoppingCart
 	}
-
 	ShoppingCart = append(ShoppingCart, item)
 	return ShoppingCart
 }
@@ -48,6 +48,14 @@ func GetCartTotal(ShoppingCart []Sale) float64 {
 		total += v.Price * float32(v.Quantity)
 	}
 	return float64(total)
+}
+
+func ConvertCart(shoppingCart []Sale) []interface{} {
+	var intercart []interface{}
+	for i := range shoppingCart {
+		intercart = append(intercart, shoppingCart[i])
+	}
+	return intercart
 }
 
 func ConvertString(Price, Cost, Quantity string) (float32, float32, uint16) {

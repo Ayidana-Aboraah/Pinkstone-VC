@@ -59,8 +59,8 @@ func CreateLineGraph(w http.ResponseWriter) {
 	)
 
 	line.SetXAxis([]string{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14",
-	"15", "16", "17", "18", "19", "20", "21", "22", "23", "24",
-	"25", "26", "27", "28", "29", "30", "31"})
+		"15", "16", "17", "18", "19", "20", "21", "22", "23", "24",
+		"25", "26", "27", "28", "29", "30", "31"})
 
 	for i, v := range LineInputs {
 		line.AddSeries(Labels[i], generateLineItems(Labels[i], v)).SetSeriesOptions(
@@ -91,7 +91,7 @@ func CreatePieGraph(w http.ResponseWriter) {
 
 	pie.SetSeriesOptions(charts.WithPieChartOpts(opts.PieChart{Radius: 50}))
 
-	pie.AddSeries("Tree", generatePieItems(Labels, Inputs)).
+	pie.AddSeries("Pie Chart", generatePieItems(Labels, Inputs)).
 		SetSeriesOptions(charts.WithLabelOpts(
 			opts.Label{
 				Show:      true,

@@ -22,10 +22,7 @@ jobs:
       run: go build Main.go
 
     - name: Build
-      run: make win_build
+      run: go build Main.go
 
     - name: Test
       run: make test
-
-    - name: run
-      run: make compile

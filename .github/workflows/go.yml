@@ -19,10 +19,10 @@ jobs:
         go-version: 1.18
 
     - name: Build
-      run: go build main.go
+      run: go build ./main.go
 
     - name: Test
       run: go test -v ./Test/...
 
     - name: run
-      run: go run Main.go
+      run: go run ./Main.go

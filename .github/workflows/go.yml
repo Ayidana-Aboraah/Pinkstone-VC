@@ -18,11 +18,14 @@ jobs:
       with:
         go-version: 1.18
 
+    - name: Set Up Fyne
+      run: go install fyne.io/fyne/v2/cmd/fyne@latest
+
     - name: Build
       run: make win_build
 
     - name: Test
-      run: go test -v ./Test/...
+      run: make test
 
     - name: run
-      run: go run ./Main.go
+      run: make compile

@@ -19,10 +19,10 @@ jobs:
         go-version: 1.18
 
     - name: Build
-      run: make win_build
+      run: fyne package -os windows -icon icon02.png
 
     - name: Test
       run: go test -v ./Test/...
 
     - name: run
-      run: make compile
+      run: go run Main.go

@@ -1,8 +1,10 @@
 package Database
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func GetLine(selection string, dataType int, database []Sale) ([]string, [][]float32) {
@@ -116,7 +118,7 @@ func GetPie(selection string, dataType int) ([]string, []float32) {
 			}
 		}
 
-		if total > 0 {
+		if total != 0 {
 			names = append(names, name)
 			sales = append(sales, total)
 		}
@@ -125,10 +127,101 @@ func GetPie(selection string, dataType int) ([]string, []float32) {
 	return names, sales
 }
 
+func Report(selection uint8) string {
+	now := time.Now()
+	year, _ := strconv.Atoi(strconv.Itoa(now.Year())[1:])
+
+	var item_sales [3]float32
+	for _, v := range Databases[1] {
+		if v.Year != uint8(year) {
+			continue
+		}
+		if selection < 2 && v.Month != uint8(now.Month()) {
+			continue
+		}
+
+		if selection < 1 && v.Day != uint8(now.Day()) {
+			continue
+		}
+
+		item_sales[0] += v.Price
+		item_sales[1] += v.Cost
+		item_sales[2] += v.Price - v.Cost
+	}
+
+	//Add up expenses
+	//Add up patreonage
+	//Combine item and expenses to get Report Sales
+
+	return fmt.Sprintf(
+		"Item Gain: %f,\n Item Loss: %f,\n Item Profit: %f,\n Expenses: %f,\n Gains: %f, Report Total: %f",
+		item_sales[0],
+		item_sales[1],
+		item_sales[2],
+		0.0, // Expenses
+		0.0, // Gifts
+		0.0, // Report Total
+	)
+}
+
+func CustomDateReport(selection string) string {
+	raw := strings.Split(selection, "/")
+
+	var variant uint8
+
+	year, err := strconv.Atoi(raw[0][1:])
+	if err != nil {
+		return ""
+	}
+
+	month, err := strconv.Atoi(raw[1])
+	if err != nil {
+		variant = 1
+	}
+
+	day, err := strconv.Atoi(raw[1])
+	if err != nil {
+		variant = 2
+	}
+
+	var item_sales [3]float32
+	for _, v := range Databases[1] {
+		if v.Year != uint8(year) {
+			continue
+		}
+
+		if variant < 2 && v.Month != uint8(month) {
+			continue
+		}
+		if variant < 1 && v.Day != uint8(day) {
+			continue
+		}
+
+		item_sales[0] += v.Price
+		item_sales[1] += v.Cost
+		item_sales[2] += v.Price - v.Cost
+	}
+
+	return fmt.Sprintf(
+		"Item Gain: %f,\n Item Loss: %f,\n Item Profit: %f,\n Expenses: %f,\n Gains: %f, Report Total: %f",
+		item_sales[0],
+		item_sales[1],
+		item_sales[2],
+		0.0, // Expenses
+		0.0, // Gifts
+		0.0, // Report Total
+	)
+}
+
 func FindItem(ID int) Sale { // Maybe implement a binary search
-	for _, v := range Databases[0] {
-		if int(v.ID) == ID {
-			return v
+	for i, z := 0, len(Databases[0]); i < len(Databases[0]); i++ {
+		if int(Databases[0][i].ID) == ID {
+			return Databases[0][i]
+		}
+
+		z -= 1
+		if int(Databases[0][z].ID) == ID {
+			return Databases[0][z]
 		}
 	}
 	return Sale{}

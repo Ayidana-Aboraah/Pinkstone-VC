@@ -276,8 +276,25 @@ func makeStatsMenu() fyne.CanvasObject {
 		}
 	})
 
+	financeEntry := UI.NewNumEntry("YYYY/MM/DD")
+	reportDisplay := widget.NewLabel("")
+
 	return container.NewVScroll(container.NewMax(container.NewVBox(
-		widget.NewCard("Data Over Time", "", container.NewVBox(
+		widget.NewCard("Financial Reports", "", container.NewVBox(
+			financeEntry,
+			widget.NewSelect([]string{"Day", "Month", "Year", "Date"}, func(time string) {
+				financeEntry.Hidden = true
+				switch time {
+				case "Day":
+				case "Month":
+				case "Year":
+				case "Date":
+					financeEntry.Hidden = false
+				}
+			}),
+			reportDisplay,
+		)),
+		widget.NewCard("Data Graphs", "", container.NewVBox(
 			selectionEntry,
 			widget.NewSelect([]string{"Items Graph", "Price Changes", "Item Popularity", "Item Sales"}, func(graph string) {
 				switch graph {

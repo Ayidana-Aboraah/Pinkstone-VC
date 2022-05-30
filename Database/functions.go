@@ -38,20 +38,20 @@ func GetLine(selection string, dataType int, database []Sale) ([]string, [][]flo
 
 		for i := uint8(1); i < 32; i++ {
 			var total float32
-			for _, v := range database {
 
-				if v.ID != id || v.Day != i || v.Month != date[1] || v.Year != date[0] {
+			for v := len(Databases[1]); i >= 0; i-- {
+				if Databases[1][v].ID != id || Databases[1][v].Day != i || Databases[1][v].Month != date[1] || Databases[1][v].Year != date[0] {
 					continue
 				}
 				switch dataType {
 				case 0:
-					total += v.Price
+					total += Databases[1][v].Price
 				case 1:
-					total += v.Cost
+					total += Databases[1][v].Cost
 				case 2:
-					total += v.Price - v.Cost
+					total += Databases[1][v].Price - Databases[1][v].Cost
 				case 3:
-					total += float32(v.Quantity)
+					total += float32(Databases[1][v].Quantity)
 				}
 			}
 
@@ -101,20 +101,19 @@ func GetPie(selection string, dataType int) ([]string, []float32) {
 	for id, name := range NameKeys {
 		var total float32
 
-		for _, v := range Databases[1] {
-
-			if v.ID != id || v.Day != date[2] || v.Month != date[1] || v.Year != date[0] {
+		for i := len(Databases[1]); i >= 0; i-- {
+			if Databases[1][i].ID != id || Databases[1][i].Day != date[2] || Databases[1][i].Month != date[1] || Databases[1][i].Year != date[0] {
 				continue
 			}
 			switch dataType {
 			case 0:
-				total += v.Price
+				total += Databases[1][i].Price
 			case 1:
-				total += v.Cost
+				total += Databases[1][i].Cost
 			case 2:
-				total += v.Price - v.Cost
+				total += Databases[1][i].Price - Databases[1][i].Cost
 			case 3:
-				total += float32(v.Quantity)
+				total += float32(Databases[1][i].Quantity)
 			}
 		}
 

@@ -12,7 +12,7 @@ import (
 
 var NameKeys = map[uint64]string{}
 
-var Databases [3][]Sale //0 Items; 1 ReportData; 2 PriceLog
+var Databases [3][]Sale
 var Expenses []Expense
 
 type Sale struct {
@@ -27,6 +27,18 @@ type Expense struct { // - for expense, + for gift
 	Amount                      float32
 	Name                        string
 }
+
+const (
+	ITEMS uint8 = iota
+	REPORT
+	LOG
+)
+
+const (
+	ONCE uint8 = iota
+	MONTHLY
+	YEARLY
+)
 
 func ToUint40(b []byte, v uint64) {
 	_ = b[4]

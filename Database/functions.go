@@ -39,7 +39,7 @@ func GetLine(selection string, dataType int, database []Sale) ([]string, [][]flo
 		for i := uint8(1); i < 32; i++ {
 			var total float32
 
-			for v := len(Databases[1]); i >= 0; i-- {
+			for v := len(Databases[REPORT]) - 1; i >= 0; i-- {
 				if Databases[1][v].ID != id || Databases[1][v].Day != i || Databases[1][v].Month != date[1] || Databases[1][v].Year != date[0] {
 					continue
 				}
@@ -101,17 +101,17 @@ func GetPie(selection string, dataType int) ([]string, []float32) {
 	for id, name := range NameKeys {
 		var total float32
 
-		for i := len(Databases[1]); i >= 0; i-- {
+		for i := len(Databases[1]) - 1; i >= 0; i-- {
 			if Databases[1][i].ID != id || Databases[1][i].Day != date[2] || Databases[1][i].Month != date[1] || Databases[1][i].Year != date[0] {
 				continue
 			}
 			switch dataType {
 			case 0:
-				total += Databases[1][i].Price
+				total += Databases[REPORT][i].Price
 			case 1:
-				total += Databases[1][i].Cost
+				total += Databases[REPORT][i].Cost
 			case 2:
-				total += Databases[1][i].Price - Databases[1][i].Cost
+				total += Databases[REPORT][i].Price - Databases[1][i].Cost
 			case 3:
 				total += float32(Databases[1][i].Quantity)
 			}
@@ -131,15 +131,12 @@ func Report(selection uint8) string {
 	year, _ := strconv.Atoi(strconv.Itoa(now.Year())[1:])
 
 	var item_sales [3]float32
-	for _, v := range Databases[1] {
-		if v.Year != uint8(year) {
-			continue
-		}
-		if selection < 2 && v.Month != uint8(now.Month()) {
+	for _, v := range Databases[REPORT] {
+		if v.Year != uint8(year) && v.Month != uint8(now.Month()) {
 			continue
 		}
 
-		if selection < 1 && v.Day != uint8(now.Day()) {
+		if selection == 0 && v.Day != uint8(now.Day()) {
 			continue
 		}
 
@@ -152,14 +149,34 @@ func Report(selection uint8) string {
 	//Add up patreonage
 	//Combine item and expenses to get Report Sales
 
+	var expenses float32
+	var gifts float32
+	for i := len(Expenses) - 1; i >= 0; i-- {
+		if Expenses[i].Year != uint8(year) {
+			continue
+		}
+
+		if selection == Expenses[i].Frequency {
+			if Expenses[i].Frequency == ONCE && Expenses[i].Day != uint8(now.Day()) && Expenses[i].Month != uint8(now.Month()) {
+				continue
+			}
+
+			if Expenses[i].Amount < 0 {
+				expenses += Expenses[i].Amount
+			} else {
+				gifts += Expenses[i].Amount
+			}
+		}
+	}
+
 	return fmt.Sprintf(
 		"Item Gain: %f,\n Item Loss: %f,\n Item Profit: %f,\n Expenses: %f,\n Gains: %f, Report Total: %f",
-		item_sales[0],
-		item_sales[1],
-		item_sales[2],
-		0.0, // Expenses
-		0.0, // Gifts
-		0.0, // Report Total
+		item_sales[0],                // Sold Amount
+		item_sales[1],                // Cost
+		item_sales[2],                // Profit
+		expenses,                     // Expenses
+		gifts,                        // Gifts
+		item_sales[2]+expenses+gifts, // Report Total
 	)
 }
 
@@ -214,13 +231,13 @@ func CustomDateReport(selection string) string {
 
 func FindItem(ID int) Sale { // Maybe implement a binary search
 	for i, z := 0, len(Databases[0]); i < len(Databases[0]); i++ {
-		if int(Databases[0][i].ID) == ID {
-			return Databases[0][i]
+		if int(Databases[ITEMS][i].ID) == ID {
+			return Databases[ITEMS][i]
 		}
 
 		z -= 1
-		if int(Databases[0][z].ID) == ID {
-			return Databases[0][z]
+		if int(Databases[ITEMS][z].ID) == ID {
+			return Databases[ITEMS][z]
 		}
 	}
 	return Sale{}

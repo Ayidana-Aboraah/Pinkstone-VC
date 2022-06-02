@@ -288,16 +288,14 @@ func makeStatsMenu(w fyne.Window) fyne.CanvasObject {
 	items := []*widget.FormItem{
 		widget.NewFormItem("Name ", expense_entry),
 		widget.NewFormItem("Amount ", expense_amount),
-		widget.NewFormItem("Frequency ", widget.NewSelect([]string{"Once", "Weekly", "Monthly", "Yearly"}, func(s string) {
+		widget.NewFormItem("Frequency ", widget.NewSelect([]string{"Once", "Monthly", "Yearly"}, func(s string) {
 			switch s {
 			case "Once":
-				expense_frequency = 0
-			case "Weekly":
-				expense_frequency = 1
+				expense_frequency = Database.ONCE
 			case "Monthly":
-				expense_frequency = 2
+				expense_frequency = Database.MONTHLY
 			case "Yearly":
-				expense_frequency = 3
+				expense_frequency = Database.YEARLY
 			}
 		})),
 	}

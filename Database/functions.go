@@ -128,6 +128,7 @@ func GetPie(selection string, dataType int) ([]string, []float32) {
 func FindItem(ID int) Sale { // Maybe implement a binary search
 	for _, v := range Databases[0] {
 		if int(v.ID) == ID {
+			v.Quantity = 1 // If changing to for loop, make a direct copy when submitting
 			return v
 		}
 	}

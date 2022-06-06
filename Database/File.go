@@ -12,13 +12,45 @@ import (
 
 var NameKeys = map[uint64]string{}
 
-var Databases [3][]Sale //0 Items; 1 ReportData; 2 PriceLog
+var Databases [3][]Sale
+var Expenses []Expense
 
 type Sale struct {
 	Year, Month, Day uint8
 	Quantity         uint16
 	Price, Cost      float32
 	ID               uint64
+}
+
+type Expense struct { // - for expense, + for gift
+	Year, Month, Day, Frequency uint8
+	Amount                      float32
+	Name                        string
+}
+
+const (
+	ITEMS uint8 = iota
+	REPORT
+	LOG
+)
+
+const (
+	ONCE uint8 = iota
+	MONTHLY
+	YEARLY
+)
+
+func ToUint40(b []byte, v uint64) {
+	_ = b[4]
+	b[0] = byte(v >> 32)
+	b[1] = byte(v >> 24)
+	b[2] = byte(v >> 16)
+	b[3] = byte(v >> 8)
+	b[4] = byte(v)
+}
+
+func FromUint40(b []byte) uint64 {
+	return uint64(b[4]) | uint64(b[3])<<8 | uint64(b[2])<<16 | uint64(b[1])<<24 | uint64(b[0])<<32
 }
 
 func DataInit() {

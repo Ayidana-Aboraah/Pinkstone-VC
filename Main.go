@@ -6,8 +6,10 @@ import (
 	"BronzeHermes/Graph"
 	"BronzeHermes/UI"
 	"fmt"
+	"log"
 	"net/url"
 	"strconv"
+	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -41,7 +43,7 @@ func CreateWindow(a fyne.App) {
 		container.NewTabItem("Main", makeMainMenu(a, w)),
 		container.NewTabItem("Shop", makeShoppingMenu(w)),
 		container.NewTabItem("Inventory", makeInfoMenu(w)),
-		container.NewTabItem("Statistics", makeStatsMenu()),
+		container.NewTabItem("Statistics", makeStatsMenu(w)),
 	)))
 
 	w.ShowAndRun()
@@ -202,51 +204,51 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 				costEntry := UI.NewNumEntry("How much you bought it for")
 				inventoryEntry := UI.NewNumEntry("Current Inventory")
 
-				items := []*widget.FormItem{
-					widget.NewFormItem("ID", idLabel),
-					widget.NewFormItem("Name", nameEntry),
-					widget.NewFormItem("Price", priceEntry),
-					widget.NewFormItem("Cost", costEntry),
-					widget.NewFormItem("Inventory", inventoryEntry),
-				}
+				dialog.ShowForm("Item", "Save", "Cancel",
+					[]*widget.FormItem{
+						widget.NewFormItem("ID", idLabel),
+						widget.NewFormItem("Name", nameEntry),
+						widget.NewFormItem("Price", priceEntry),
+						widget.NewFormItem("Cost", costEntry),
+						widget.NewFormItem("Inventory", inventoryEntry),
+					},
+					func(b bool) {
+						if !b {
+							return
+						}
 
-				dialog.ShowForm("Item", "Save", "Cancel", items, func(b bool) {
-					if !b {
-						return
-					}
+						price, cost, inventory := Database.ConvertString(priceEntry.Text, costEntry.Text, inventoryEntry.Text)
+						newItem := Database.Sale{ID: uint64(conID), Price: price, Cost: cost, Quantity: inventory}
 
-					price, cost, inventory := Database.ConvertString(priceEntry.Text, costEntry.Text, inventoryEntry.Text)
-					newItem := Database.Sale{ID: uint64(conID), Price: price, Cost: cost, Quantity: inventory}
+						Database.Databases[2] = append(Database.Databases[2], newItem)
+						Database.NameKeys[uint64(conID)] = nameEntry.Text
 
-					Database.Databases[2] = append(Database.Databases[2], newItem)
-					Database.NameKeys[uint64(conID)] = nameEntry.Text
-
-					func(found bool) {
-						for i, v := range Database.Databases[0] {
-							if v.ID == newItem.ID {
-								Database.Databases[0][i] = newItem
-								found = true
-								break
+						func(found bool) {
+							for i, v := range Database.Databases[0] {
+								if v.ID == newItem.ID {
+									Database.Databases[0][i] = newItem
+									found = true
+									break
+								}
 							}
-						}
 
-						if !found {
-							Database.Databases[0] = append(Database.Databases[0], newItem)
-						}
-					}(false)
+							if !found {
+								Database.Databases[0] = append(Database.Databases[0], newItem)
+							}
+						}(false)
 
-					boundData.Set(Database.ConvertCart(Database.Databases[0]))
+						boundData.Set(Database.ConvertCart(Database.Databases[0]))
 
-					UI.HandleErrorWindow(Database.SaveData(), w)
+						UI.HandleErrorWindow(Database.SaveData(), w)
 
-					//Updating Entries
-					nameLabel.Text = nameEntry.Text
-					priceLabel.Text = priceEntry.Text
-					costLabel.Text = costEntry.Text
-					inventoryLabel.Text = inventoryEntry.Text
+						//Updating Entries
+						nameLabel.Text = nameEntry.Text
+						priceLabel.Text = priceEntry.Text
+						costLabel.Text = costEntry.Text
+						inventoryLabel.Text = inventoryEntry.Text
 
-					dialog.NewInformation("Success!", "Your data has been saved successfully!", w)
-				}, w)
+						dialog.NewInformation("Success!", "Your data has been saved successfully!", w)
+					}, w)
 			}),
 		),
 		container.NewMax(
@@ -254,7 +256,7 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 		))
 }
 
-func makeStatsMenu() fyne.CanvasObject {
+func makeStatsMenu(w fyne.Window) fyne.CanvasObject {
 	u, _ := url.Parse("http://localhost:8081/line")
 	r, _ := url.Parse("http://localhost:8081/pie")
 
@@ -276,8 +278,64 @@ func makeStatsMenu() fyne.CanvasObject {
 		}
 	})
 
+	financeEntry := UI.NewNumEntry("YYYY/MM/DD")
+	reportDisplay := widget.NewLabel("")
+
+	var expense_frequency uint8
+	expense_entry := widget.NewEntry()
+	expense_amount := UI.NewNumEntry("The amount gained or lost.")
+
+	items := []*widget.FormItem{
+		widget.NewFormItem("Name ", expense_entry),
+		widget.NewFormItem("Amount ", expense_amount),
+		widget.NewFormItem("Frequency ", widget.NewSelect([]string{"Once", "Monthly", "Yearly"}, func(s string) {
+			switch s {
+			case "Once":
+				expense_frequency = Database.ONCE
+			case "Monthly":
+				expense_frequency = Database.MONTHLY
+			case "Yearly":
+				expense_frequency = Database.YEARLY
+			}
+		})),
+	}
+
 	return container.NewVScroll(container.NewMax(container.NewVBox(
-		widget.NewCard("Data Over Time", "", container.NewVBox(
+		widget.NewButton("Expense/Gift", func() {
+			dialog.ShowForm("Expense", "Create", "Cancel", items, func(b bool) {
+				if !b {
+					return
+				}
+				amount, err := strconv.ParseFloat(expense_amount.Text, 32)
+				if err != nil {
+					log.Println(err)
+				}
+
+				Database.Expenses = append(Database.Expenses, Database.Expense{
+					Name:      expense_entry.Text,
+					Amount:    float32(amount),
+					Day:       uint8(time.Now().Day()),
+					Month:     uint8(time.Now().Month()),
+					Year:      uint8(time.Now().Year()),
+					Frequency: expense_frequency,
+				})
+			}, w)
+		}),
+		widget.NewCard("Financial Reports", "", container.NewVBox(
+			financeEntry,
+			widget.NewSelect([]string{"Day", "Month", "Year", "Date"}, func(time string) { // TODO: Finish the times
+				financeEntry.Hidden = true
+				switch time {
+				case "Day":
+				case "Month":
+				case "Year":
+				case "Date":
+					financeEntry.Hidden = false
+				}
+			}),
+			reportDisplay,
+		)),
+		widget.NewCard("Data Graphs", "", container.NewVBox(
 			selectionEntry,
 			widget.NewSelect([]string{"Items Graph", "Price Changes", "Item Popularity", "Item Sales"}, func(graph string) {
 				switch graph {

@@ -5,6 +5,20 @@ import (
 	"testing"
 )
 
+func TestToUint40(t *testing.T) {
+	value := 674398202423
+	buf := make([]byte, 5)
+	Database.ToUint40(buf, uint64(value))
+
+	newVal := Database.FromUint40(buf)
+
+	if value != int(newVal) {
+		t.Errorf("Values Don't match | Value: %v, New Value: %v", value, newVal)
+	}
+	t.Log(value)
+	t.Log(newVal)
+}
+
 var testItems = []Database.Sale{
 	{ID: 1011324, Price: 234.23, Cost: 1324, Quantity: 1},
 	{ID: 1011324, Price: 100.50, Cost: 1324, Quantity: 1},

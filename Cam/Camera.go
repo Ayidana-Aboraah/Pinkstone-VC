@@ -1,7 +1,6 @@
 package Cam
 
 import (
-	"fmt"
 	"time"
 
 	"fyne.io/fyne/v2/canvas"
@@ -24,17 +23,17 @@ func StartCamera(Output *canvas.Image, done chan bool) string {
 
 	defer videoTrack.Close()
 
-	reader := oned.NewUPCAReader()
-
 	return func() string {
 		timer := time.NewTimer(10 * time.Second)
 		defer timer.Stop()
 
 		time.Sleep(50 * time.Millisecond)
 
+		reader := oned.NewUPCAReader()
 		var bmp *gozxing.BinaryBitmap
 		var result *gozxing.Result
-		var err error
+
+		// var err error
 
 		for {
 			select {
@@ -45,26 +44,18 @@ func StartCamera(Output *canvas.Image, done chan bool) string {
 			default:
 				frame, release, _ := videoReader.Read()
 
-				//Update Camera UI
-				Output.Image = frame
+				Output.Image = frame //Update Camera UI
 				Output.Refresh()
 
-				// bmp, _ = gozxing.NewBinaryBitmapFromImage(frame)
-				bmp, err = gozxing.NewBinaryBitmapFromImage(frame)
-				if err != nil {
-					fmt.Println(err)
-				}
+				bmp, _ = gozxing.NewBinaryBitmapFromImage(frame)
 
-				result, err = reader.Decode(bmp, nil)
-				if err != nil {
-					fmt.Println(err)
-				}
+				release()
+
+				result, _ = reader.Decode(bmp, map[gozxing.DecodeHintType]interface{}{gozxing.DecodeHintType_TRY_HARDER: true})
 
 				if result != nil {
 					return result.String()
 				}
-
-				release()
 			}
 		}
 	}()

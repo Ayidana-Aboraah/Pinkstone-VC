@@ -5,28 +5,32 @@ import (
 	"testing"
 )
 
+var testItems = []Database.Sale{
+	{ID: 674398202423, Price: 234.23, Cost: 1324, Quantity: 1},
+	{ID: 674398202423, Price: 100.50, Cost: 1324, Quantity: 1},
+	{ID: 389432143927, Price: 3974.89, Cost: 8934.24, Quantity: 5},
+	{ID: 674398202423, Price: 90109.22, Cost: 48.24, Quantity: 87},
+	{ID: 402933466372, Price: 1324.89, Cost: 21432.24, Quantity: 4124},
+	{ID: 198998421024, Price: 1094.89, Cost: 9021038.24, Quantity: 5},
+	{ID: 412341251434, Price: 3974.89, Cost: 8934.24, Quantity: 41},
+}
+
 func TestToUint40(t *testing.T) {
-	value := 674398202423
+	value := testItems[0].ID
 	buf := make([]byte, 5)
 	Database.ToUint40(buf, uint64(value))
 
 	newVal := Database.FromUint40(buf)
 
-	if value != int(newVal) {
+	if value != newVal {
 		t.Errorf("Values Don't match | Value: %v, New Value: %v", value, newVal)
 	}
 	t.Log(value)
 	t.Log(newVal)
 }
 
-var testItems = []Database.Sale{
-	{ID: 1011324, Price: 234.23, Cost: 1324, Quantity: 1},
-	{ID: 1011324, Price: 100.50, Cost: 1324, Quantity: 1},
-	{ID: 3894321, Price: 3974.89, Cost: 8934.24, Quantity: 5},
-	{ID: 7084009, Price: 90109.22, Cost: 48.24, Quantity: 87},
-	{ID: 4029334, Price: 1324.89, Cost: 21432.24, Quantity: 4124},
-	{ID: 1989024, Price: 1094.89, Cost: 9021038.24, Quantity: 5},
-	{ID: 41234144, Price: 3974.89, Cost: 8934.24, Quantity: 41},
+func TestLoadBackUp(t *testing.T){
+	
 }
 
 func TestCart(t *testing.T) {

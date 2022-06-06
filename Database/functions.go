@@ -126,17 +126,21 @@ func GetPie(selection string, dataType int) ([]string, []float32) {
 	return names, sales
 }
 
-func Report(selection uint8) string {
+func Report(selection uint8, input string) string {
 	now := time.Now()
 	year, _ := strconv.Atoi(strconv.Itoa(now.Year())[1:])
 
 	var item_sales [3]float32
 	for _, v := range Databases[REPORT] {
-		if v.Year != uint8(year) && v.Month != uint8(now.Month()) {
+		if v.Year != uint8(year){
 			continue
 		}
 
-		if selection == 0 && v.Day != uint8(now.Day()) {
+		if selection < 2 && v.Month != uint8(now.Month()){
+			continue
+		}
+		
+		if selection < 1 && v.Day != uint8(now.Day()) {
 			continue
 		}
 
@@ -218,14 +222,34 @@ func CustomDateReport(selection string) string {
 		item_sales[2] += v.Price - v.Cost
 	}
 
+	var expenses float32
+	var gifts float32
+	for i := len(Expenses) - 1; i >= 0; i-- {
+		if Expenses[i].Year != uint8(year) {
+			continue
+		}
+
+		if variant == Expenses[i].Frequency {
+			if Expenses[i].Frequency == ONCE && Expenses[i].Day != uint8(day) && Expenses[i].Month != uint8(month) {
+				continue
+			}
+
+			if Expenses[i].Amount < 0 {
+				expenses += Expenses[i].Amount
+			} else {
+				gifts += Expenses[i].Amount
+			}
+		}
+	}
+
 	return fmt.Sprintf(
 		"Item Gain: %f,\n Item Loss: %f,\n Item Profit: %f,\n Expenses: %f,\n Gains: %f, Report Total: %f",
 		item_sales[0],
 		item_sales[1],
 		item_sales[2],
-		0.0, // Expenses
-		0.0, // Gifts
-		0.0, // Report Total
+		expenses,                     // Expenses
+		gifts,                        // Gifts
+		item_sales[2]+expenses+gifts, // Report Total
 	)
 }
 

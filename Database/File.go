@@ -39,6 +39,7 @@ const (
 	MONTHLY
 	YEARLY
 )
+const DATA_SIZE = 19
 
 func ToUint40(b []byte, v uint64) {
 	_ = b[4]
@@ -96,9 +97,9 @@ func SaveData() error {
 			return err
 		}
 
-		bs := make([]byte, 21*len(database))
+		bs := make([]byte, DATA_SIZE*len(database))
 		for i, x := range database {
-			c := (21 * i)
+			c := (DATA_SIZE * i)
 
 			bs[c] = x.Year
 			bs[c+1] = x.Month
@@ -107,7 +108,7 @@ func SaveData() error {
 			order.PutUint16(bs[c+3:c+5], x.Quantity)
 			order.PutUint32(bs[c+5:c+9], math.Float32bits(x.Price))
 			order.PutUint32(bs[c+9:c+13], math.Float32bits(x.Cost))
-			order.PutUint64(bs[c+13:c+21], x.ID)
+			ToUint40(bs[c+13:c+19], x.ID)
 		}
 
 		_, err = save.Write(bs)
@@ -156,10 +157,10 @@ func LoadData() error {
 			return err
 		}
 
-		black := make([]Sale, len(buf)/21)
+		black := make([]Sale, len(buf)/DATA_SIZE)
 
 		for i := range black {
-			c := 21 * i
+			c := DATA_SIZE * i
 
 			black[i].Year = uint8(buf[c])
 			black[i].Month = uint8(buf[c+1])
@@ -168,7 +169,7 @@ func LoadData() error {
 			black[i].Quantity = order.Uint16(buf[c+3 : c+5])
 			black[i].Price = math.Float32frombits(order.Uint32(buf[c+5 : c+9]))
 			black[i].Cost = math.Float32frombits(order.Uint32(buf[c+9 : c+13]))
-			black[i].ID = order.Uint64(buf[c+13 : c+21])
+			black[i].ID = FromUint40(buf[c+13 : c+19])
 		}
 
 		Databases[idx] = black
@@ -197,12 +198,12 @@ func BackUpAllData() error {
 	}
 	defer save.Close()
 
-	bs := make([]byte, ((21 * len(Databases[0])) + (21 * len(Databases[1])) + (21 * len(Databases[2]))))
+	bs := make([]byte, ((DATA_SIZE * len(Databases[0])) + (DATA_SIZE * len(Databases[1])) + (DATA_SIZE * len(Databases[2]))))
 
 	previousLength := 0
 	for _, database := range Databases {
 		for i, x := range database {
-			initial := (previousLength * 21) + (21 * i)
+			initial := (previousLength * DATA_SIZE) + (DATA_SIZE * i)
 
 			bs[initial] = x.Year
 			bs[initial+1] = x.Month
@@ -211,7 +212,7 @@ func BackUpAllData() error {
 			order.PutUint16(bs[initial+3:initial+5], x.Quantity)
 			order.PutUint32(bs[initial+5:initial+9], math.Float32bits(x.Price))
 			order.PutUint32(bs[initial+9:initial+13], math.Float32bits(x.Cost))
-			order.PutUint64(bs[initial+13:initial+21], x.ID)
+			ToUint40(bs[initial+13:initial+19], x.ID)
 		}
 		previousLength += len(database)
 	}
@@ -250,10 +251,10 @@ func LoadBackUp() error {
 		return err
 	}
 
-	black := make([]Sale, len(buf)/21)
+	black := make([]Sale, len(buf)/DATA_SIZE)
 
 	for i, v := range black {
-		c := 21 * i
+		c := DATA_SIZE * i
 
 		black[i].Year = uint8(buf[c])
 		black[i].Month = uint8(buf[c+1])
@@ -262,7 +263,7 @@ func LoadBackUp() error {
 		black[i].Quantity = order.Uint16(buf[c+3 : c+5])
 		black[i].Price = math.Float32frombits(order.Uint32(buf[c+5 : c+9]))
 		black[i].Cost = math.Float32frombits(order.Uint32(buf[c+9 : c+13]))
-		black[i].ID = order.Uint64(buf[c+13 : c+21])
+		black[i].ID = FromUint40(buf[c+13 : c+19])
 
 		if v.Year == 0 {
 			Databases[0] = append(Databases[0], v)

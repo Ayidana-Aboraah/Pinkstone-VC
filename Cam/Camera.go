@@ -51,7 +51,7 @@ func StartCamera(Output *canvas.Image, done chan bool) string {
 
 				release()
 
-				result, _ = reader.Decode(bmp, nil)
+				result, _ = reader.Decode(bmp, map[gozxing.DecodeHintType]interface{}{gozxing.DecodeHintType_TRY_HARDER: true})
 
 				if result != nil {
 					return result.String()

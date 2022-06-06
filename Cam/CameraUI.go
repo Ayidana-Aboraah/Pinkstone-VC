@@ -1,15 +1,11 @@
 package Cam
 
 import (
-	"image"
 	"strconv"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/dialog"
-
-	"github.com/makiuchi-d/gozxing"
-	"github.com/makiuchi-d/gozxing/oned"
 )
 
 func OpenCam(origin *fyne.Window) int {
@@ -52,14 +48,4 @@ func OpenCam(origin *fyne.Window) int {
 
 	conID, _ := strconv.Atoi(text)
 	return conID
-}
-
-func ReadImage(img image.Image) *gozxing.Result {
-	bmp, _ := gozxing.NewBinaryBitmapFromImage(img)
-	reader := oned.NewUPCAReader()
-
-	result, _ := reader.Decode(bmp, nil)
-
-	// fmt.Println(result) //Remove after debugging
-	return result
 }

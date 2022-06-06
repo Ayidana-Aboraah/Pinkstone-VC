@@ -18,7 +18,8 @@ func TestToUint40(t *testing.T) {
 	t.Log(value)
 	t.Log(newVal)
 }
-	var testItems = []Database.Sale{
+
+var testItems = []Database.Sale{
 	{ID: 1011324, Price: 234.23, Cost: 1324, Quantity: 1},
 	{ID: 1011324, Price: 100.50, Cost: 1324, Quantity: 1},
 	{ID: 3894321, Price: 3974.89, Cost: 8934.24, Quantity: 5},

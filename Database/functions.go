@@ -229,7 +229,7 @@ func CustomDateReport(selection string) string {
 	)
 }
 
-func FindItem(ID int) Sale { // Maybe implement a binary search
+func FindItem(ID int) Sale {
 	for i, z := 0, len(Databases[0]); i < len(Databases[0]); i++ {
 		if int(Databases[ITEMS][i].ID) == ID {
 			return Databases[ITEMS][i]

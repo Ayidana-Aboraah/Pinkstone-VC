@@ -26,7 +26,7 @@ func AddToCart(item Sale, ShoppingCart []Sale) []Sale {
 
 func DecreaseFromCart(item Sale, ShoppingCart []Sale) []Sale {
 	for i, v := range ShoppingCart {
-		if v.ID != item.ID || v.Price != item.Price {
+		if v.ID != item.ID || v.Price != item.Price{
 			continue
 		}
 
@@ -34,20 +34,20 @@ func DecreaseFromCart(item Sale, ShoppingCart []Sale) []Sale {
 			ShoppingCart[i].Quantity -= 1
 		} else {
 			ShoppingCart[i] = ShoppingCart[len(ShoppingCart)-1] // Copy last element to index i.
-			ShoppingCart[len(ShoppingCart)-1] = Sale{}          // Erase last element (write zero value).
-			ShoppingCart = ShoppingCart[:len(ShoppingCart)-1]   // Truncate slice.
+			// ShoppingCart[len(ShoppingCart)-1] = Sale{}          // Erase last element (write zero value).
+			ShoppingCart = ShoppingCart[:len(ShoppingCart)-1] // Truncate slice.
 		}
 	}
 
 	return ShoppingCart
 }
 
-func GetCartTotal(ShoppingCart []Sale) float64 {
+func GetCartTotal(ShoppingCart []Sale) float32 {
 	var total float32
 	for _, v := range ShoppingCart {
 		total += v.Price * float32(v.Quantity)
 	}
-	return float64(total)
+	return total
 }
 
 func ConvertCart(shoppingCart []Sale) []interface{} {

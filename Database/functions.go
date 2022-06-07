@@ -129,7 +129,7 @@ func GetPie(selection string, dataType int) ([]string, []float32) {
 func Report(selection uint8, date []uint8) string {
 	// For Date: 0 = day, 1 = month, 2 = year, 3 = now
 
-	if len(date) == 4 {
+	if len(date) == 0 {
 		day, month, y := time.Now().Date()
 		year, _ := strconv.Atoi(strconv.Itoa(y)[1:])
 		date = []uint8{uint8(day), uint8(month), uint8(year)}

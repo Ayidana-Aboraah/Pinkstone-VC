@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"fyne.io/fyne/v2"
@@ -278,8 +279,8 @@ func makeStatsMenu(w fyne.Window) fyne.CanvasObject {
 		}
 	})
 
-	financeEntry := UI.NewNumEntry("YYYY/MM/DD")
 	reportDisplay := widget.NewLabel("")
+	financeEntry := UI.NewNumEntry("YYYY/MM/DD [Select Custom again to select the date]")
 
 	var expense_frequency uint8
 	expense_entry := widget.NewEntry()
@@ -306,6 +307,10 @@ func makeStatsMenu(w fyne.Window) fyne.CanvasObject {
 				if !b {
 					return
 				}
+
+				day, month, y := time.Now().Date()
+				year, _ := strconv.Atoi(strconv.Itoa(y)[1:])
+
 				amount, err := strconv.ParseFloat(expense_amount.Text, 32)
 				if err != nil {
 					log.Println(err)
@@ -314,24 +319,58 @@ func makeStatsMenu(w fyne.Window) fyne.CanvasObject {
 				Database.Expenses = append(Database.Expenses, Database.Expense{
 					Name:      expense_entry.Text,
 					Amount:    float32(amount),
-					Day:       uint8(time.Now().Day()),
-					Month:     uint8(time.Now().Month()),
-					Year:      uint8(time.Now().Year()),
+					Day:       uint8(day),
+					Month:     uint8(month),
+					Year:      uint8(year),
 					Frequency: expense_frequency,
 				})
 			}, w)
 		}),
 		widget.NewCard("Financial Reports", "", container.NewVBox(
 			financeEntry,
-			widget.NewSelect([]string{"Day", "Month", "Year", "Date"}, func(time string) { // TODO: Finish the times
+			widget.NewSelect([]string{"Day", "Month", "Year", "Date"}, func(time string) {
+				var variant uint8
+
 				financeEntry.Hidden = true
+
+				date := []uint8{}
+
 				switch time {
 				case "Day":
+					variant = Database.ONCE
 				case "Month":
+					variant = Database.MONTHLY
 				case "Year":
-				case "Date":
+					variant = Database.YEARLY
+				case "Date": //The user will have to double tap when using Dates
+					if financeEntry.Text == "" {
+						return
+					}
+
+					raw := strings.Split(financeEntry.Text, "/")
+
+					year, err := strconv.Atoi(raw[0][1:])
+					if err != nil {
+						fmt.Println("Something Seems up!") //DEBUG: REMOVE AFTER TESTING
+						return
+					}
+
+					month, err := strconv.Atoi(raw[1])
+					if err != nil {
+						variant = 1
+					}
+
+					day, err := strconv.Atoi(raw[1])
+					if err != nil {
+						variant = 2
+					}
 					financeEntry.Hidden = false
+
+					date = []uint8{uint8(day), uint8(month), uint8(year)}
 				}
+
+				reportDisplay.Text = Database.Report(variant, date)
+
 			}),
 			reportDisplay,
 		)),

@@ -23,9 +23,10 @@ type Sale struct {
 }
 
 type Expense struct { // - for expense, + for gift
-	Year, Month, Day, Frequency uint8
-	Amount                      float32
-	Name                        string
+	Frequency uint8
+	Date      [3]uint8 //Year, Month, Day,
+	Amount    float32
+	Name      string
 }
 
 const (
@@ -41,7 +42,7 @@ const (
 )
 const DATA_SIZE = 19
 
-func ToUint40(b []byte, v uint64) {
+func PutUint40(b []byte, v uint64) {
 	_ = b[4]
 	b[0] = byte(v >> 32)
 	b[1] = byte(v >> 24)
@@ -108,7 +109,7 @@ func SaveData() error {
 			order.PutUint16(bs[c+3:c+5], x.Quantity)
 			order.PutUint32(bs[c+5:c+9], math.Float32bits(x.Price))
 			order.PutUint32(bs[c+9:c+13], math.Float32bits(x.Cost))
-			ToUint40(bs[c+13:c+19], x.ID)
+			PutUint40(bs[c+13:c+19], x.ID)
 		}
 
 		_, err = save.Write(bs)
@@ -212,7 +213,7 @@ func BackUpAllData() error {
 			order.PutUint16(bs[initial+3:initial+5], x.Quantity)
 			order.PutUint32(bs[initial+5:initial+9], math.Float32bits(x.Price))
 			order.PutUint32(bs[initial+9:initial+13], math.Float32bits(x.Cost))
-			ToUint40(bs[initial+13:initial+19], x.ID)
+			PutUint40(bs[initial+13:initial+19], x.ID)
 		}
 		previousLength += len(database)
 	}

@@ -2,12 +2,14 @@ package test
 
 import (
 	"BronzeHermes/Database"
+	"fmt"
+	"strings"
 	"testing"
 )
 
 var TestDB = [3][]Database.Sale{
 	{
-		{ID: 674398202423, Price: 234.23, Cost: 1324, Quantity: 1},
+		{ID: 999999999999, Price: 234.23, Cost: 1324, Quantity: 1},
 		{ID: 674398202423, Price: 100.50, Cost: 1324, Quantity: 1},
 		{ID: 389432143927, Price: 3974.89, Cost: 8934.24, Quantity: 5},
 		{ID: 674398202423, Price: 90109.22, Cost: 48.24, Quantity: 87},
@@ -16,13 +18,13 @@ var TestDB = [3][]Database.Sale{
 		{ID: 412341251434, Price: 3974.89, Cost: 8934.24, Quantity: 41},
 	},
 	{
-		{Year: 22, Month: 10, Day: 1, ID: 674398202423, Price: 234.23, Cost: 1324, Quantity: 1},
-		{Year: 22, Month: 9, Day: 4, ID: 674398202423, Price: 100.50, Cost: 1324, Quantity: 1},
-		{Year: 22, Month: 8, Day: 5, ID: 389432143927, Price: 3974.89, Cost: 8934.24, Quantity: 5},
-		{Year: 22, Month: 7, Day: 6, ID: 674398202423, Price: 90109.22, Cost: 48.24, Quantity: 87},
-		{Year: 22, Month: 6, Day: 4, ID: 402933466372, Price: 1324.89, Cost: 21432.24, Quantity: 4124},
-		{Year: 22, Month: 6, Day: 4, ID: 198998421024, Price: 1094.89, Cost: 9021038.24, Quantity: 5},
-		{Year: 22, Month: 6, Day: 7, ID: 412341251434, Price: 3974.89, Cost: 8934.24, Quantity: 41},
+		{Year: 22, Month: 10, Day: 1, ID: 674398202423, Price: 111.23, Cost: 1324, Quantity: 1},
+		{Year: 22, Month: 9, Day: 4, ID: 674398202423, Price: 100.50, Cost: 555, Quantity: 1},
+		{Year: 22, Month: 8, Day: 5, ID: 389432143927, Price: 222.89, Cost: 332.24, Quantity: 5},
+		{Year: 22, Month: 7, Day: 6, ID: 674398202423, Price: 444.22, Cost: 222.24, Quantity: 7},
+		{Year: 22, Month: 6, Day: 4, ID: 402933466372, Price: 333.21, Cost: 232.24, Quantity: 4},
+		{Year: 22, Month: 6, Day: 4, ID: 198998421024, Price: 555.22, Cost: 938.24, Quantity: 5},
+		{Year: 22, Month: 6, Day: 7, ID: 412341251434, Price: 666.22, Cost: 834.24, Quantity: 1},
 	},
 	{},
 }
@@ -30,7 +32,7 @@ var TestDB = [3][]Database.Sale{
 func TestToUint40(t *testing.T) {
 	value := TestDB[0][0].ID
 	buf := make([]byte, 5)
-	Database.ToUint40(buf, uint64(value))
+	Database.PutUint40(buf, uint64(value))
 
 	newVal := Database.FromUint40(buf)
 
@@ -43,36 +45,6 @@ func TestToUint40(t *testing.T) {
 
 func TestLoadBackUp(t *testing.T) {
 
-}
-
-func TestReport(t *testing.T) {
-	Database.Databases[1] = TestDB[1]
-	Database.Expenses = []Database.Expense{
-		{Year: 22, Month: 6, Day: 7, Frequency: 1, Amount: 1},
-		{Year: 22, Month: 6, Day: 7, Frequency: 1, Amount: -43},
-	}
-
-	DayReport := Database.Report(0, []uint8{7, 6, 22})
-	MonthReport := Database.Report(1, []uint8{7, 6, 22})
-	YearReport := Database.Report(2, []uint8{7, 6, 22})
-
-	// if DayReport != "Item Gain: 3974.889893,\n Item Loss: 8934.240234,\n Item Profit: -4959.350586,\n Expenses: 0.000000,\n	Gains: 0.000000,\n Report Total: -4959.350586" {
-	// 	t.Error("Day's Report does not match up!")
-	// }
-
-	// if MonthReport != "Item Gain: 6394.669922,\n Item Loss: 9051404.000000,\n Item Profit: -9045009.000000,\n Expenses: 0.000000,\n Gains: 1.000000,\n Report Total: -9045008.000000" {
-	// 	t.Error("Month's report does not match up!")
-	// }
-
-	// if YearReport != "Item Gain: 100813.507812,\n Item Loss: 9063035.000000,\n Item Profit: -8962221.000000,\n Expenses: 0.000000,\n Gains: 1.000000,\n Report Total: -8962220.000000" {
-	// 	t.Error("Year's report does not match up!")
-	// }
-
-	//Find a way to actually compare the string result
-
-	t.Log(DayReport)
-	t.Log(MonthReport)
-	t.Log(YearReport)
 }
 
 func TestCart(t *testing.T) {
@@ -128,4 +100,50 @@ func TestCart(t *testing.T) {
 		t.Error("Cart Quantitiy does not match up!")
 		t.Log(red[0].Quantity)
 	}
+}
+
+func TestReport(t *testing.T) {
+	testExpenses := []Database.Expense{
+		{Date: [3]uint8{7, 6, 22}, Frequency: 1, Amount: 1},
+		{Date: [3]uint8{7, 6, 22}, Frequency: 1, Amount: -43},
+
+		{Date: [3]uint8{8, 6, 22}, Frequency: 0, Amount: -43},
+		{Date: [3]uint8{7, 7, 22}, Frequency: 1, Amount: 3},
+		{Date: [3]uint8{7, 6, 23}, Frequency: 1, Amount: -13},
+	}
+	Database.Databases[1] = TestDB[1]
+	Database.Expenses = testExpenses
+
+	test_report_outputs := func() []string {
+		base := "Item Gain: %.2f,\n Item Loss: %.2f,\n Item Profit: %.2f,\n Expenses: %.2f,\n Gains: %.2f,\n Report Total: %.2f"
+		return []string{
+			fmt.Sprintf(base, 666.22, 834.24, -168.02, -43.0, 1.0, -210.02),    //Day Report
+			fmt.Sprintf(base, 4775.16, 6454.4, -1679.24, -86.0, 1.0, -1764.24), //Month Report
+			fmt.Sprintf(base, 9210.88, 11550.28, -2339.4, -86.0, 4.0, -2421.4), //Year Report
+		}
+	}()
+
+	DayReport := Database.Report(0, []uint8{7, 6, 22})
+	MonthReport := Database.Report(1, []uint8{7, 6, 22})
+	YearReport := Database.Report(2, []uint8{7, 6, 22})
+
+	if strings.Compare(DayReport, test_report_outputs[0]) != 0 {
+		t.Error("Day's Report does not match up!")
+		t.Log(test_report_outputs[0])
+		t.Log(DayReport)
+	}
+	strings.Compare(DayReport, test_report_outputs[0])
+
+	if strings.Compare(MonthReport, test_report_outputs[1]) != 0 {
+		t.Error("Month's report does not match up!")
+		t.Log(test_report_outputs[1])
+		t.Log(MonthReport)
+	}
+
+	if strings.Compare(YearReport, test_report_outputs[2]) != 0 {
+		t.Error("Year's report does not match up!")
+		t.Log(test_report_outputs[2])
+		t.Log(YearReport)
+	}
+
 }

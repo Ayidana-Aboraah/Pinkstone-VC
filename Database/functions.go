@@ -142,42 +142,44 @@ func Report(selection uint8, date []uint8) string {
 			continue
 		}
 
-		if selection < 2 && v.Month != date[1] {
+		if selection != 2 && v.Month != date[1] {
 			continue
 		}
 
-		if selection < 1 && v.Day != date[0] {
+		if selection == ONCE && v.Day != date[ONCE] {
 			continue
 		}
 
-		item_sales[0] += v.Price
-		item_sales[1] += v.Cost
-		item_sales[2] += v.Price - v.Cost
+		item_sales[0] += v.Price * float32(v.Quantity)
+		item_sales[1] += v.Cost * float32(v.Quantity)
+		item_sales[2] += (v.Price - v.Cost) * float32(v.Quantity)
 	}
 
 	var expenses float32
 	var gifts float32
 
 	for i := len(Expenses) - 1; i >= 0; i-- {
-		if Expenses[i].Year != date[2] {
+		if Expenses[i].Date[YEARLY] != date[YEARLY] {
 			continue
 		}
 
-		if selection >= Expenses[i].Frequency {
-			if Expenses[i].Frequency == ONCE && Expenses[i].Day != date[0] && Expenses[i].Month != date[1] {
-				continue
-			}
+		if selection != 2 && Expenses[i].Date[MONTHLY] != date[MONTHLY]{
+			continue
+		}
 
-			if Expenses[i].Amount < 0 {
-				expenses += Expenses[i].Amount
-			} else {
-				gifts += Expenses[i].Amount
-			}
+		if selection == ONCE && Expenses[i].Date[ONCE] != date[ONCE]{
+			continue
+		}
+
+		if Expenses[i].Amount < 0 {
+			expenses += Expenses[i].Amount
+		} else {
+			gifts += Expenses[i].Amount
 		}
 	}
 
 	return fmt.Sprintf(
-		"Item Gain: %f,\n Item Loss: %f,\n Item Profit: %f,\n Expenses: %f,\n Gains: %f,\n Report Total: %f",
+		"Item Gain: %.2f,\n Item Loss: %.2f,\n Item Profit: %.2f,\n Expenses: %.2f,\n Gains: %.2f,\n Report Total: %.2f",
 		item_sales[0],                // Sold Amount
 		item_sales[1],                // Cost
 		item_sales[2],                // Profit
@@ -185,29 +187,6 @@ func Report(selection uint8, date []uint8) string {
 		gifts,                        // Gifts
 		item_sales[2]+expenses+gifts, // Report Total
 	)
-}
-
-func CustomDateReport(selection string) string { // Just perform this operation in the function at run time
-	raw := strings.Split(selection, "/")
-
-	var variant uint8
-
-	year, err := strconv.Atoi(raw[0][1:])
-	if err != nil {
-		return ""
-	}
-
-	month, err := strconv.Atoi(raw[1])
-	if err != nil {
-		variant = 1
-	}
-
-	day, err := strconv.Atoi(raw[1])
-	if err != nil {
-		variant = 2
-	}
-
-	return Report(variant, []uint8{uint8(day), uint8(month), uint8(year)})
 }
 
 func FindItem(ID int) Sale {

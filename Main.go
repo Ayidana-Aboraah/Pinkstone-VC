@@ -80,7 +80,7 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 	shoppingList.OnSelected = func(id widget.ListItemID) {
 		shoppingCart[id].Quantity++
 		cartList.Reload()
-		title.SetText(fmt.Sprintf("Cart Total: %f", Database.GetCartTotal(shoppingCart)))
+		title.SetText(fmt.Sprintf("Cart Total: %.2f", Database.GetCartTotal(shoppingCart)))
 		shoppingList.Unselect(id)
 	}
 
@@ -319,10 +319,8 @@ func makeStatsMenu(w fyne.Window) fyne.CanvasObject {
 				Database.Expenses = append(Database.Expenses, Database.Expense{
 					Name:      expense_entry.Text,
 					Amount:    float32(amount),
-					Day:       uint8(day),
-					Month:     uint8(month),
-					Year:      uint8(year),
 					Frequency: expense_frequency,
+					Date:      	[3]uint8{uint8(day), uint8(month), uint8(year)},
 				})
 			}, w)
 		}),
@@ -347,6 +345,7 @@ func makeStatsMenu(w fyne.Window) fyne.CanvasObject {
 						return
 					}
 
+					//String to Date conversion
 					raw := strings.Split(financeEntry.Text, "/")
 
 					year, err := strconv.Atoi(raw[0][1:])

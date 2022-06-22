@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"math"
+	"strings"
 
 	"fyne.io/fyne/v2"
 )
@@ -67,8 +68,10 @@ func DataInit() {
 		case 3:
 			file = "name_keys.json"
 		case 4:
-			file = "BackUp.red"
+			file = "Expense.red"
 		case 5:
+			file = "BackUp.red"
+		case 6:
 			file = "BackUp_Keys.red"
 		}
 
@@ -120,16 +123,48 @@ func SaveData() error {
 		}
 	}
 
-	names, err := fyne.CurrentApp().Storage().Save("name_keys.json")
+	// TODO: Write test for expense Loading
+	expenses, err := fyne.CurrentApp().Storage().Save("Expenses.red")
+	if err != nil && err != io.EOF {
+		return err
+	}
+	defer expenses.Close()
 
+	var res []byte
+	for _, v := range Expenses {
+		buff := make([]byte, 8)
+		buff[0] = v.Frequency
+		buff[1] = v.Date[0]
+		buff[2] = v.Date[1]
+		buff[3] = v.Date[2]
+		order.PutUint32(buff[4:], math.Float32bits(v.Amount))
+		res = append(buff, []byte(v.Name+"\n")...)
+	}
+
+	_, err = expenses.Write(res)
+	if err != nil {
+		return err
+	}
+
+	// TODO: Write Test for Saving and Loading the new name_keys
+	// New Key saving
+	names, err := fyne.CurrentApp().Storage().Save("name_keys.json")
 	if err != nil {
 		return err
 	}
 	defer names.Close()
+	var result []byte
+	for k, v := range NameKeys {
+		mine := make([]byte, 6)
+		PutUint40(mine, k)
+		result = append(mine, []byte(" "+v+"\n")...)
+	}
+	_, err = names.Write(result)
 
-	encoder := json.NewEncoder(names)
-	encoder.Encode(NameKeys)
-	return nil
+	// Old Key Saving
+	// encoder := json.NewEncoder(names)
+	// encoder.Encode(NameKeys)
+	return err
 }
 
 func LoadData() error {
@@ -176,17 +211,55 @@ func LoadData() error {
 		Databases[idx] = black
 	}
 
+	// TODO: Write test for expense Loading
+	expenses, err := fyne.CurrentApp().Storage().Open("Expenses.red")
+	if err != nil && err != io.EOF {
+		return err
+	}
+	defer expenses.Close()
+
+	exp_bytes, err := io.ReadAll(expenses)
+	if err != nil && err != io.EOF {
+		return err
+	}
+
+	raw := strings.Split(string(exp_bytes), "\n")
+	for _, v := range raw[:len(raw)-1] {
+		var expense Expense
+		process := []byte(v)
+		expense.Frequency = process[0]
+		expense.Date[0] = process[1]
+		expense.Date[1] = process[2]
+		expense.Date[2] = process[3]
+		expense.Amount = math.Float32frombits(order.Uint32(process[4:9]))
+		expense.Name = v[9:]
+	}
+
 	names, err := fyne.CurrentApp().Storage().Open("name_keys.json")
 	if err != nil && err != io.EOF {
 		return err
 	}
 	defer names.Close()
 
-	encoder := json.NewDecoder(names)
-	err = encoder.Decode(&NameKeys)
+	// New Key Loading
+	arr, err := io.ReadAll(names)
 	if err != nil && err != io.EOF {
 		return err
 	}
+
+	entries := strings.Split(string(arr), "\n")
+
+	for _, v := range entries[:len(entries)-1] {
+		NameKeys[FromUint40([]byte(v[:5]))] = v[5:]
+	}
+
+	// Old Key Loading
+	// encoder := json.NewDecoder(names)
+	// err = encoder.Decode(&NameKeys)
+	// if err != nil && err != io.EOF {
+	// 	return err
+	// }
+
 	return nil
 }
 
@@ -223,6 +296,8 @@ func BackUpAllData() error {
 		return err
 	}
 
+	// TODO: Change to the current system of saving keys
+	// TODO: Add expenses to this save
 	names, err := fyne.CurrentApp().Storage().Save("BackUp_Keys.red")
 	if err != nil {
 		return err
@@ -275,6 +350,8 @@ func LoadBackUp() error {
 		}
 	}
 
+	// TODO: Change to the current system of Loading keys
+	// TODO: Add expenses to this load
 	names, err := fyne.CurrentApp().Storage().Open("BackUp_Keys.red")
 	if err != nil {
 		return err

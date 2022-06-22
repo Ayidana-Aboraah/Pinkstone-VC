@@ -24,7 +24,7 @@ import (
 
 func main() {
 	a := app.NewWithID("Bronze Hermes")
-	// go Graph.StartServer()
+	go Graph.StartServer()
 
 	Database.DataInit()
 
@@ -147,10 +147,32 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 	costLabel := widget.NewLabel("Cost")
 	inventoryLabel := widget.NewLabel("Inventory")
 
-	boundData := binding.BindUntypedList(&[]interface{}{})
-	boundData.Set(Database.ConvertCart(Database.Databases[0]))
+	var expense_frequency uint8
+	expense_entry := widget.NewEntry()
+	expense_amount := UI.NewNumEntry("The amount gained or lost.")
 
-	inventoryList := widget.NewListWithData(boundData, func() fyne.CanvasObject {
+	inventoryData := binding.BindUntypedList(&[]interface{}{})
+	inventoryData.Set(Database.ConvertCart(Database.Databases[0]))
+
+	expenseData := binding.BindUntypedList(&[]interface{}{})
+	expenseData.Set(Database.ConvertExpenses())
+
+	items := []*widget.FormItem{
+		widget.NewFormItem("Name ", expense_entry),
+		widget.NewFormItem("Amount ", expense_amount),
+		widget.NewFormItem("Frequency ", widget.NewSelect([]string{"Once", "Monthly", "Yearly"}, func(s string) {
+			switch s {
+			case "Once":
+				expense_frequency = Database.ONCE
+			case "Monthly":
+				expense_frequency = Database.MONTHLY
+			case "Yearly":
+				expense_frequency = Database.YEARLY
+			}
+		})),
+	}
+
+	inventoryList := widget.NewListWithData(inventoryData, func() fyne.CanvasObject {
 		return container.NewBorder(nil, nil, nil, nil, widget.NewLabel("name"))
 	}, func(item binding.DataItem, obj fyne.CanvasObject) {})
 
@@ -167,6 +189,33 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 		priceLabel.SetText(values[0])
 		costLabel.SetText(values[1])
 		inventoryLabel.SetText(values[2])
+	}
+
+	expenseList := widget.NewListWithData(expenseData, func() fyne.CanvasObject {
+		return container.NewBorder(nil, nil, nil, widget.NewLabel("name"), widget.NewButton("X", func() {}))
+	}, func(item binding.DataItem, obj fyne.CanvasObject) {})
+
+	expenseList.UpdateItem = func(idx widget.ListItemID, obj fyne.CanvasObject) {
+		obj.(*fyne.Container).Objects[0].(*widget.Label).SetText(Database.NameKeys[Database.Databases[0][idx].ID])
+		obj.(*fyne.Container).Objects[1].(*widget.Button).OnTapped = func() {
+			dialog.ShowConfirm("Think about this.", "Are you sure you want to delete this expense?", func(b bool) {
+				if !b {
+					return
+				}
+				Database.RemoveExpense(idx)
+				expenseData.Set(Database.ConvertExpenses())
+			}, w)
+		}
+	}
+
+	expenseList.OnSelected = func(id widget.ListItemID) {
+		dialog.ShowForm("Modify", "Done", "Cancel", items, func(b bool) {
+
+		}, w)
+		// Create a form that shows the information on the currently selected list item
+		// Modify attributes in the form
+		// Convert the modified attributes into an expense
+		// Fill the data into that index of the old expense
 	}
 
 	return container.New(layout.NewGridLayout(2),
@@ -238,7 +287,7 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 							}
 						}(false)
 
-						boundData.Set(Database.ConvertCart(Database.Databases[0]))
+						inventoryData.Set(Database.ConvertCart(Database.Databases[0]))
 
 						UI.HandleErrorWindow(Database.SaveData(), w)
 
@@ -251,9 +300,32 @@ func makeInfoMenu(w fyne.Window) fyne.CanvasObject {
 						dialog.NewInformation("Success!", "Your data has been saved successfully!", w)
 					}, w)
 			}),
+			widget.NewButton("Expense/Gift", func() {
+				dialog.ShowForm("Expense", "Create", "Cancel", items, func(b bool) {
+					if !b {
+						return
+					}
+
+					day, month, y := time.Now().Date()
+					year, _ := strconv.Atoi(strconv.Itoa(y)[1:])
+
+					amount, err := strconv.ParseFloat(expense_amount.Text, 32)
+					if err != nil {
+						log.Println(err)
+					}
+
+					Database.Expenses = append(Database.Expenses, Database.Expense{
+						Name:      expense_entry.Text,
+						Amount:    float32(amount),
+						Frequency: expense_frequency,
+						Date:      [3]uint8{uint8(day), uint8(month), uint8(year)},
+					})
+				}, w)
+			}),
 		),
 		container.NewMax(
 			inventoryList,
+			expenseList,
 		))
 }
 
@@ -282,48 +354,7 @@ func makeStatsMenu(w fyne.Window) fyne.CanvasObject {
 	reportDisplay := widget.NewLabel("")
 	financeEntry := UI.NewNumEntry("YYYY/MM/DD [Select Custom again to select the date]")
 
-	var expense_frequency uint8
-	expense_entry := widget.NewEntry()
-	expense_amount := UI.NewNumEntry("The amount gained or lost.")
-
-	items := []*widget.FormItem{
-		widget.NewFormItem("Name ", expense_entry),
-		widget.NewFormItem("Amount ", expense_amount),
-		widget.NewFormItem("Frequency ", widget.NewSelect([]string{"Once", "Monthly", "Yearly"}, func(s string) {
-			switch s {
-			case "Once":
-				expense_frequency = Database.ONCE
-			case "Monthly":
-				expense_frequency = Database.MONTHLY
-			case "Yearly":
-				expense_frequency = Database.YEARLY
-			}
-		})),
-	}
-
 	return container.NewVScroll(container.NewMax(container.NewVBox(
-		widget.NewButton("Expense/Gift", func() {
-			dialog.ShowForm("Expense", "Create", "Cancel", items, func(b bool) {
-				if !b {
-					return
-				}
-
-				day, month, y := time.Now().Date()
-				year, _ := strconv.Atoi(strconv.Itoa(y)[1:])
-
-				amount, err := strconv.ParseFloat(expense_amount.Text, 32)
-				if err != nil {
-					log.Println(err)
-				}
-
-				Database.Expenses = append(Database.Expenses, Database.Expense{
-					Name:      expense_entry.Text,
-					Amount:    float32(amount),
-					Frequency: expense_frequency,
-					Date:      	[3]uint8{uint8(day), uint8(month), uint8(year)},
-				})
-			}, w)
-		}),
 		widget.NewCard("Financial Reports", "", container.NewVBox(
 			financeEntry,
 			widget.NewSelect([]string{"Day", "Month", "Year", "Date"}, func(time string) {

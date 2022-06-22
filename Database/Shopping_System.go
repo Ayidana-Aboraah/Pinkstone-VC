@@ -26,7 +26,7 @@ func AddToCart(item Sale, ShoppingCart []Sale) []Sale {
 
 func DecreaseFromCart(item Sale, ShoppingCart []Sale) []Sale {
 	for i, v := range ShoppingCart {
-		if v.ID != item.ID || v.Price != item.Price{
+		if v.ID != item.ID || v.Price != item.Price {
 			continue
 		}
 
@@ -56,6 +56,19 @@ func ConvertCart(shoppingCart []Sale) []interface{} {
 		intercart = append(intercart, shoppingCart[i])
 	}
 	return intercart
+}
+
+func RemoveExpense(index int) {
+	Expenses[index] = Expenses[len(Expenses)-1]
+	Expenses = Expenses[:len(Expenses)-1]
+}
+
+func ConvertExpenses() []interface{} {
+	var inter []interface{}
+	for i := range Expenses {
+		inter = append(inter, Expenses[i])
+	}
+	return inter
 }
 
 func ConvertString(Price, Cost, Quantity string) (float32, float32, uint16) {

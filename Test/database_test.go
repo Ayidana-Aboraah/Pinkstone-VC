@@ -7,6 +7,15 @@ import (
 	"testing"
 )
 
+var TestNames = map[uint64]string{
+	999999999999: "sammy",
+	674398202423: "Cark",
+	389432143927: "Banker",
+	402933466372: "Blackeg",
+	198998421024: "Boomb",
+	412341251434: "Sus",
+}
+
 var TestDB = [3][]Database.Sale{
 	{
 		{ID: 999999999999, Price: 234.23, Cost: 1324, Quantity: 1},
@@ -29,6 +38,15 @@ var TestDB = [3][]Database.Sale{
 	{},
 }
 
+var testExpenses = []Database.Expense{
+	{Date: [3]uint8{7, 6, 22}, Frequency: 1, Amount: 1, Name: "red"},
+	{Date: [3]uint8{7, 6, 22}, Frequency: 1, Amount: -43},
+
+	{Date: [3]uint8{8, 6, 22}, Frequency: 0, Amount: -43},
+	{Date: [3]uint8{7, 7, 22}, Frequency: 1, Amount: 3},
+	{Date: [3]uint8{7, 6, 23}, Frequency: 1, Amount: -13},
+}
+
 func TestToUint40(t *testing.T) {
 	value := TestDB[0][0].ID
 	buf := make([]byte, 5)
@@ -41,10 +59,6 @@ func TestToUint40(t *testing.T) {
 	}
 	t.Log(value)
 	t.Log(newVal)
-}
-
-func TestLoadBackUp(t *testing.T) {
-
 }
 
 func TestCart(t *testing.T) {
@@ -103,14 +117,6 @@ func TestCart(t *testing.T) {
 }
 
 func TestReport(t *testing.T) {
-	testExpenses := []Database.Expense{
-		{Date: [3]uint8{7, 6, 22}, Frequency: 1, Amount: 1},
-		{Date: [3]uint8{7, 6, 22}, Frequency: 1, Amount: -43},
-
-		{Date: [3]uint8{8, 6, 22}, Frequency: 0, Amount: -43},
-		{Date: [3]uint8{7, 7, 22}, Frequency: 1, Amount: 3},
-		{Date: [3]uint8{7, 6, 23}, Frequency: 1, Amount: -13},
-	}
 	Database.Databases[1] = TestDB[1]
 	Database.Expenses = testExpenses
 

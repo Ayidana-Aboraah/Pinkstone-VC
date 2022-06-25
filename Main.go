@@ -26,7 +26,7 @@ func main() {
 	a := app.NewWithID("Bronze Hermes")
 	go Graph.StartServer()
 
-	Database.DataInit()
+	Database.DataInit(false)
 
 	CreateWindow(a)
 }

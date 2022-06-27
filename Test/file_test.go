@@ -12,7 +12,7 @@ func TestFileSave(t *testing.T) {
 
 	Database.NameKeys = TestNames
 	Database.Databases = TestDB
-	Database.Expenses = testExpenses
+	Database.Expenses = TestExpenses
 
 	Database.DataInit(false)
 	err := Database.SaveData()
@@ -44,15 +44,15 @@ func TestFileSave(t *testing.T) {
 		}
 	}
 
-	for i := range testExpenses {
-		if testExpenses[i] != Database.Expenses[i] {
+	for i := range TestExpenses {
+		if TestExpenses[i] != Database.Expenses[i] {
 			t.Errorf("Expenses do not match at %v", i)
 		}
 	}
 
 	t.Logf("Now just for vals:\n Expenses: %v \n Name Keys: %v\n Databaseses: %v", Database.Expenses, Database.NameKeys, Database.Databases)
 
-	// Database.DataInit(true)
+	Database.DataInit(true)
 	a.Quit()
 }
 
@@ -61,7 +61,7 @@ func TestSaveBackUp(t *testing.T) {
 
 	Database.Databases = TestDB
 	Database.NameKeys = TestNames
-	Database.Expenses = testExpenses
+	Database.Expenses = TestExpenses
 
 	Database.DataInit(false)
 	err := Database.BackUpAllData()
@@ -95,14 +95,14 @@ func TestSaveBackUp(t *testing.T) {
 		}
 	}
 
-	if len(testExpenses) != len(Database.Expenses) {
+	if len(TestExpenses) != len(Database.Expenses) {
 		t.Errorf("The lengths of the expenses do not match up\n")
-		t.Logf("Test: %v, Expenses: %v", len(testExpenses), len(Database.Expenses))
+		t.Logf("Test: %v, Expenses: %v", len(TestExpenses), len(Database.Expenses))
 	}
 
-	for i := range testExpenses {
+	for i := range TestExpenses {
 		// t.Logf("Idx: %v\n Te s: %v\n Exp: %v\n", i, testExpenses[i], Database.Expenses[i])
-		if testExpenses[i] != Database.Expenses[i] {
+		if TestExpenses[i] != Database.Expenses[i] {
 			t.Errorf("Expenses do not match at %v", i)
 		}
 	}

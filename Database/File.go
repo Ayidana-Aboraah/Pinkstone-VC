@@ -266,7 +266,7 @@ func LoadData() error {
 	return nil
 }
 
-func BackUpAllData() error {
+func BackUpAllData() error { // TODO: Fix this function
 	order := binary.BigEndian
 
 	save, err := fyne.CurrentApp().Storage().Save("BackUp.red") //BackUp Loading
@@ -335,7 +335,7 @@ func BackUpAllData() error {
 	return err
 }
 
-func LoadBackUp() error {
+func LoadBackUp() error { //TODO: Fix this function
 	order := binary.BigEndian
 
 	file, err := fyne.CurrentApp().Storage().Open("BackUp.red")

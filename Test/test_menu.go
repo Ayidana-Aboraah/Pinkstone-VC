@@ -6,16 +6,44 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
 )
 
-func TestMenu(a fyne.App, w fyne.Window) fyne.CanvasObject {
+func TestMenu(shoppingCart *[]Database.Sale, a fyne.App, w fyne.Window) fyne.CanvasObject {
+	items := widget.NewListWithData(
+		binding.BindUntypedList(&[]interface{}{Database.ConvertCart(Database.Databases[0])}),
+		func() fyne.CanvasObject {
+			return container.NewBorder(nil, nil, nil, nil, widget.NewLabel("N"))
+		},
+		func(item binding.DataItem, obj fyne.CanvasObject) {},
+	)
+
+	items.UpdateItem = func(idx widget.ListItemID, obj fyne.CanvasObject) {
+		// Change this to TestDB if needed
+		obj.(*fyne.Container).Objects[0].(*widget.Label).SetText(Database.NameKeys[Database.Databases[0][idx].ID])
+	}
+
+	items.OnSelected = func(id widget.ListItemID) {
+		*shoppingCart = append(*shoppingCart, Database.Databases[0][id])
+		items.Unselect(id)
+	}
+
 	return container.NewVBox(
 		widget.NewButton("Display Database", func() {
 			dialog.ShowInformation("Databases", fmt.Sprint(Database.Databases), w)
 			dialog.ShowInformation("Name Keys", fmt.Sprint(Database.NameKeys), w)
-		}))
+		}),
+		widget.NewButton("Load Test DB", func() {
+			Database.NameKeys = TestNames
+			Database.Databases = TestDB
+		}),
+		widget.NewButton("Load Test Expenses", func() { Database.Expenses = TestExpenses }),
+		widget.NewButton("Add Item to Shopping Cart", func() {
+			dialog.ShowCustom("Test Items", "Done", items, w)
+		}),
+	)
 }
 
 var TestNames = map[uint64]string{

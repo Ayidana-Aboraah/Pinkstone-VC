@@ -4,6 +4,7 @@ import (
 	"BronzeHermes/Cam"
 	"BronzeHermes/Database"
 	"BronzeHermes/Graph"
+	test "BronzeHermes/Test"
 	"BronzeHermes/UI"
 	"fmt"
 	"net/url"
@@ -44,6 +45,7 @@ func CreateWindow(a fyne.App) {
 		container.NewTabItem("Shop", makeShoppingMenu(w)),
 		container.NewTabItem("Inventory", Database.MakeInfoMenu(w)),
 		container.NewTabItem("Statistics", makeStatsMenu(w)),
+		container.NewTabItem("Debug", test.TestMenu(&shoppingCart, a, w)),
 	)))
 
 	w.ShowAndRun()
@@ -66,8 +68,9 @@ func makeMainMenu(a fyne.App, w fyne.Window) fyne.CanvasObject {
 	)
 }
 
+var shoppingCart []Database.Sale
+
 func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
-	var shoppingCart []Database.Sale
 
 	title := widget.NewLabelWithStyle("Cart Total: 0.0", fyne.TextAlignCenter, fyne.TextStyle{})
 
@@ -135,6 +138,11 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 						title.SetText(fmt.Sprintf("Cart Total: %1.1f", Database.GetCartTotal(shoppingCart)))
 						shoppingList.Refresh()
 					}, w)
+			}),
+			widget.NewButton("Reload", func() { // DEBUG
+				cartList.Set(Database.ConvertCart(shoppingCart))
+				title.SetText(fmt.Sprintf("Cart Total: %1.1f", Database.GetCartTotal(shoppingCart)))
+				shoppingList.Refresh()
 			}),
 		),
 	)

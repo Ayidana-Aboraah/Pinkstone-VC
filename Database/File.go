@@ -25,7 +25,7 @@ type Sale struct {
 
 type Expense struct { // - for expense, + for gift
 	Frequency uint8
-	Date      [3]uint8 //Year, Month, Day,
+	Date      [3]uint8 // Day, Month Year
 	Amount    float32
 	Name      string
 }

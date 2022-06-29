@@ -24,9 +24,11 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 	costLabel := widget.NewLabel("Cost")
 	inventoryLabel := widget.NewLabel("Inventory")
 
-	inventoryData := binding.BindUntypedList(&[]interface{}{ConvertCart(Databases[0])})
+	inventoryData := binding.BindUntypedList(&[]interface{}{})
+	inventoryData.Set(ConvertCart(Databases[0]))
 
-	expenseData := binding.BindUntypedList(&[]interface{}{ConvertExpenses()})
+	expenseData := binding.BindUntypedList(&[]interface{}{})
+	expenseData.Set(ConvertExpenses())
 
 	inventoryList := widget.NewListWithData(inventoryData, func() fyne.CanvasObject {
 		return container.NewBorder(nil, nil, nil, nil, widget.NewLabel("N"))
@@ -35,6 +37,17 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 	inventoryList.UpdateItem = func(idx widget.ListItemID, obj fyne.CanvasObject) {
 		obj.(*fyne.Container).Objects[0].(*widget.Label).SetText(NameKeys[Databases[0][idx].ID])
 	}
+
+	expenseList := widget.NewListWithData(expenseData, func() fyne.CanvasObject {
+		return container.NewBorder(nil, nil, nil, nil, widget.NewLabel("N"))
+	}, func(item binding.DataItem, obj fyne.CanvasObject) {})
+
+	expenseList.UpdateItem = func(idx widget.ListItemID, obj fyne.CanvasObject) {
+		obj.(*fyne.Container).Objects[0].(*widget.Label).SetText(Expenses[idx].Name)
+	}
+
+	var target int
+	var arr uint8
 
 	inventoryList.OnSelected = func(id widget.ListItemID) {
 		item := Databases[0][id]
@@ -46,14 +59,9 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 		costLabel.SetText(values[1])
 		inventoryLabel.SetText(values[2])
 		inventoryList.Unselect(id)
-	}
 
-	expenseList := widget.NewListWithData(expenseData, func() fyne.CanvasObject {
-		return container.NewBorder(nil, nil, nil, nil, widget.NewLabel("N"))
-	}, func(item binding.DataItem, obj fyne.CanvasObject) {})
-
-	expenseList.UpdateItem = func(idx widget.ListItemID, obj fyne.CanvasObject) {
-		obj.(*fyne.Container).Objects[0].(*widget.Label).SetText(Expenses[idx].Name)
+		arr = 0
+		target = id
 	}
 
 	expenseList.OnSelected = func(id widget.ListItemID) {
@@ -75,6 +83,9 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 		costLabel.SetText("")
 		inventoryLabel.SetText("")
 		expenseList.Unselect(id)
+
+		arr = 1
+		target = id
 	}
 
 	return container.New(layout.NewGridLayout(2),
@@ -85,7 +96,7 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 			priceLabel,
 			costLabel,
 			inventoryLabel,
-			widget.NewButton("New", func() {
+			widget.NewButton("New Item", func() {
 				id := Cam.OpenCam(&w)
 				if id == 0 {
 					return
@@ -101,6 +112,68 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 				inventoryLabel.SetText(labels[2])
 
 			}),
+			widget.NewButton("New Expense/Gift", func() {
+				var expense_frequency uint8
+
+				items := []*widget.FormItem{
+					widget.NewFormItem("Name ", widget.NewEntry()),
+					widget.NewFormItem("Amount ", UI.NewNumEntry("The amount lost or gained")),
+					widget.NewFormItem("Frequency ", widget.NewSelect([]string{"Once", "Monthly", "Yearly"}, func(s string) {
+						switch s {
+						case "Once":
+							expense_frequency = ONCE
+						case "Monthly":
+							expense_frequency = MONTHLY
+						case "Yearly":
+							expense_frequency = YEARLY
+						}
+					})),
+				}
+
+				dialog.ShowForm("Expense", "Create", "Cancel", items, func(b bool) {
+					if !b {
+						return
+					}
+
+					y, month, day := time.Now().Date()
+					year, _ := strconv.Atoi(strconv.Itoa(y)[1:])
+
+					amount, err := strconv.ParseFloat(items[1].Widget.(*UI.NumEntry).Text, 32)
+					if err != nil {
+						log.Println(err)
+					}
+
+					Expenses = append(Expenses, Expense{
+						Name:      items[0].Widget.(*widget.Entry).Text,
+						Amount:    float32(amount),
+						Frequency: expense_frequency,
+						Date:      [3]uint8{uint8(day), uint8(month), uint8(year)},
+					})
+					expenseData.Set(ConvertExpenses())
+					fmt.Println(Expenses) // DEBUG
+					UI.HandleErrorWindow(SaveData(), w)
+				}, w)
+			}),
+			widget.NewButton("Remove", func() {
+				if arr == 0 { // Inventory
+					if len(Databases[ITEMS])-1 == 0 {
+						dialog.ShowInformation("Nope", "You cannot remove all your items like this, try adding a new item, and removing the last old one.", w)
+						return
+					}
+					Databases[ITEMS][target] = Databases[ITEMS][len(Databases[ITEMS])-1]
+					Databases[ITEMS] = Databases[ITEMS][:len(Databases[ITEMS])-1]
+					inventoryList.Refresh()
+				} else { // Expenses
+					if len(Expenses)-1 == 0 {
+						dialog.ShowInformation("Nope", "You cannot remove all your items like this, try adding a new item, and removing the last old one.", w)
+						return
+					}
+					RemoveExpense(target)
+					expenseList.Refresh()
+				}
+				UI.HandleErrorWindow(SaveData(), w)
+			}),
+
 			widget.NewButton("Modify", func() {
 				conID, _ := strconv.Atoi(idLabel.Text)
 
@@ -153,47 +226,6 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 
 						dialog.NewInformation("Success!", "Your data has been saved successfully!", w)
 					}, w)
-			}),
-			widget.NewButton("Expense/Gift", func() {
-				var expense_frequency uint8
-
-				items := []*widget.FormItem{
-					widget.NewFormItem("Name ", widget.NewEntry()),
-					widget.NewFormItem("Amount ", UI.NewNumEntry("The amount lost or gained")),
-					widget.NewFormItem("Frequency ", widget.NewSelect([]string{"Once", "Monthly", "Yearly"}, func(s string) {
-						switch s {
-						case "Once":
-							expense_frequency = ONCE
-						case "Monthly":
-							expense_frequency = MONTHLY
-						case "Yearly":
-							expense_frequency = YEARLY
-						}
-					})),
-				}
-
-				dialog.ShowForm("Expense", "Create", "Cancel", items, func(b bool) {
-					if !b {
-						return
-					}
-
-					y, month, day := time.Now().Date()
-					year, _ := strconv.Atoi(strconv.Itoa(y)[1:])
-
-					amount, err := strconv.ParseFloat(items[1].Widget.(*UI.NumEntry).Text, 32)
-					if err != nil {
-						log.Println(err)
-					}
-
-					Expenses = append(Expenses, Expense{
-						Name:      items[0].Widget.(*widget.Entry).Text,
-						Amount:    float32(amount),
-						Frequency: expense_frequency,
-						Date:      [3]uint8{uint8(day), uint8(month), uint8(year)},
-					})
-					expenseData.Set(ConvertExpenses())
-					fmt.Println(Expenses)
-				}, w)
 			}),
 		),
 		container.NewVSplit(

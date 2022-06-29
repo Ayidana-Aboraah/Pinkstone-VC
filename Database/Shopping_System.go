@@ -34,8 +34,7 @@ func DecreaseFromCart(item Sale, ShoppingCart []Sale) []Sale {
 			ShoppingCart[i].Quantity -= 1
 		} else {
 			ShoppingCart[i] = ShoppingCart[len(ShoppingCart)-1] // Copy last element to index i.
-			// ShoppingCart[len(ShoppingCart)-1] = Sale{}          // Erase last element (write zero value).
-			ShoppingCart = ShoppingCart[:len(ShoppingCart)-1] // Truncate slice.
+			ShoppingCart = ShoppingCart[:len(ShoppingCart)-1]   // Truncate slice.
 		}
 	}
 

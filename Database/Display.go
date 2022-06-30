@@ -150,28 +150,33 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 						Date:      [3]uint8{uint8(day), uint8(month), uint8(year)},
 					})
 					expenseData.Set(ConvertExpenses())
-					fmt.Println(Expenses) // DEBUG
 					UI.HandleErrorWindow(SaveData(), w)
 				}, w)
 			}),
 			widget.NewButton("Remove", func() {
-				if arr == 0 { // Inventory
-					if len(Databases[ITEMS])-1 == 0 {
-						dialog.ShowInformation("Nope", "You cannot remove all your items like this, try adding a new item, and removing the last old one.", w)
+				dialog.ShowConfirm("Are you sure?", "Are you sure you want to delete this?", func(b bool) {
+					if !b {
 						return
 					}
-					Databases[ITEMS][target] = Databases[ITEMS][len(Databases[ITEMS])-1]
-					Databases[ITEMS] = Databases[ITEMS][:len(Databases[ITEMS])-1]
-					inventoryList.Refresh()
-				} else { // Expenses
-					if len(Expenses)-1 == 0 {
-						dialog.ShowInformation("Nope", "You cannot remove all your items like this, try adding a new item, and removing the last old one.", w)
-						return
+
+					if arr == 0 { // Inventory
+						if len(Databases[ITEMS])-1 == 0 {
+							dialog.ShowInformation("Nope", "You cannot remove all your items like this, try adding a new item, and removing the last old one.", w)
+							return
+						}
+						Databases[ITEMS][target] = Databases[ITEMS][len(Databases[ITEMS])-1]
+						Databases[ITEMS] = Databases[ITEMS][:len(Databases[ITEMS])-1]
+						inventoryList.Refresh()
+					} else { // Expenses
+						if len(Expenses)-1 == 0 {
+							dialog.ShowInformation("Nope", "You cannot remove all your items like this, try adding a new item, and removing the last old one.", w)
+							return
+						}
+						RemoveExpense(target)
+						expenseList.Refresh()
 					}
-					RemoveExpense(target)
-					expenseList.Refresh()
-				}
-				UI.HandleErrorWindow(SaveData(), w)
+					UI.HandleErrorWindow(SaveData(), w)
+				}, w)
 			}),
 
 			widget.NewButton("Modify", func() {

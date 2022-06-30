@@ -12,6 +12,17 @@ import (
 )
 
 var NameKeys = map[uint64]string{}
+var ItemKeys = map[uint64]struct {
+	Price float32
+	idxes []uint16
+	Name  string
+}{}
+
+var Items []struct {
+	Quantity uint16
+	Cost     float32
+	ID       uint64
+}
 
 var Databases [3][]Sale
 var Expenses []Expense
@@ -41,7 +52,7 @@ const (
 	MONTHLY
 	YEARLY
 )
-const DATA_SIZE = 19
+const DATA_SIZE = 18
 
 func PutUint40(b []byte, v uint64) {
 	_ = b[4]
@@ -119,7 +130,7 @@ func SaveData() error {
 			order.PutUint16(bs[c+3:c+5], x.Quantity)
 			order.PutUint32(bs[c+5:c+9], math.Float32bits(x.Price))
 			order.PutUint32(bs[c+9:c+13], math.Float32bits(x.Cost))
-			PutUint40(bs[c+13:c+19], x.ID)
+			PutUint40(bs[c+13:c+DATA_SIZE], x.ID)
 		}
 
 		_, err = save.Write(bs)
@@ -164,7 +175,7 @@ func SaveData() error {
 	defer names.Close()
 	var result []byte
 	for k, v := range NameKeys {
-		mine := make([]byte, 6)
+		mine := make([]byte, 5)
 		PutUint40(mine, k)
 		mine = append(mine, []byte(v+"\n")...)
 		result = append(result, mine...)
@@ -212,7 +223,7 @@ func LoadData() error {
 			black[i].Quantity = order.Uint16(buf[c+3 : c+5])
 			black[i].Price = math.Float32frombits(order.Uint32(buf[c+5 : c+9]))
 			black[i].Cost = math.Float32frombits(order.Uint32(buf[c+9 : c+13]))
-			black[i].ID = FromUint40(buf[c+13 : c+19])
+			black[i].ID = FromUint40(buf[c+13 : c+DATA_SIZE])
 		}
 
 		Databases[idx] = black
@@ -289,7 +300,7 @@ func BackUpAllData() error { // TODO: Fix this function
 			order.PutUint16(bs[initial+3:initial+5], x.Quantity)
 			order.PutUint32(bs[initial+5:initial+9], math.Float32bits(x.Price)) //TODO: Look into using a float16 to save space
 			order.PutUint32(bs[initial+9:initial+13], math.Float32bits(x.Cost)) //TODO: Look into using a float16 to save space
-			PutUint40(bs[initial+13:initial+19], x.ID)
+			PutUint40(bs[initial+13:initial+DATA_SIZE], x.ID)
 		}
 		previousLength += len(database)
 	}
@@ -362,7 +373,7 @@ func LoadBackUp() error { //TODO: Fix this function
 		black[i].Quantity = order.Uint16(buf[c+3 : c+5])
 		black[i].Price = math.Float32frombits(order.Uint32(buf[c+5 : c+9]))
 		black[i].Cost = math.Float32frombits(order.Uint32(buf[c+9 : c+13]))
-		black[i].ID = FromUint40(buf[c+13 : c+19])
+		black[i].ID = FromUint40(buf[c+13 : c+DATA_SIZE])
 
 		if black[i].Year == 0 {
 			Databases[0] = append(Databases[0], black[i])

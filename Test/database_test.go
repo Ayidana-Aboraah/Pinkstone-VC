@@ -2,31 +2,23 @@ package test
 
 import (
 	"BronzeHermes/Database"
+	"fmt"
+	"strings"
 	"testing"
 )
 
 func TestToUint40(t *testing.T) {
-	value := 674398202423
+	value := TestDB[0][0].ID
 	buf := make([]byte, 5)
-	Database.ToUint40(buf, uint64(value))
+	Database.PutUint40(buf, uint64(value))
 
 	newVal := Database.FromUint40(buf)
 
-	if value != int(newVal) {
+	if value != newVal {
 		t.Errorf("Values Don't match | Value: %v, New Value: %v", value, newVal)
 	}
 	t.Log(value)
 	t.Log(newVal)
-}
-
-var testItems = []Database.Sale{
-	{ID: 1011324, Price: 234.23, Cost: 1324, Quantity: 1},
-	{ID: 1011324, Price: 100.50, Cost: 1324, Quantity: 1},
-	{ID: 3894321, Price: 3974.89, Cost: 8934.24, Quantity: 5},
-	{ID: 7084009, Price: 90109.22, Cost: 48.24, Quantity: 87},
-	{ID: 4029334, Price: 1324.89, Cost: 21432.24, Quantity: 4124},
-	{ID: 1989024, Price: 1094.89, Cost: 9021038.24, Quantity: 5},
-	{ID: 41234144, Price: 3974.89, Cost: 8934.24, Quantity: 41},
 }
 
 func TestCart(t *testing.T) {
@@ -35,44 +27,44 @@ func TestCart(t *testing.T) {
 	t.Log(len(red))
 
 	// Run functions on the cart
-	red = Database.AddToCart(testItems[0], red)
+	red = Database.AddToCart(TestDB[0][0], red)
 
 	if len(red) != 1 {
 		t.Errorf("Cart not correct size, adding to cart is bugged | cartSize: %v", len(red))
 	}
 
-	if red[0] != testItems[0] {
+	if red[0] != TestDB[0][0] {
 		t.Error("Item 0 in shopping cart does not match up with test item 0")
 	}
 
-	red = Database.AddToCart(testItems[1], red)
+	red = Database.AddToCart(TestDB[0][1], red)
 	if len(red) != 2 {
 		t.Errorf("Cart not correct size (addition) | cartSize: %v", len(red))
 	}
 
-	if red[1] != testItems[1] {
+	if red[1] != TestDB[0][1] {
 		t.Error("Item 1 in shopping cart does not match up with test item 1")
 	}
 
 	t.Log(len(red))
 
-	red = Database.DecreaseFromCart(testItems[0], red)
+	red = Database.DecreaseFromCart(TestDB[0][0], red)
 
 	if len(red) != 1 {
 		t.Errorf("Cart not correct size (subtraction) | cartSize: %v", len(red))
 	}
 
-	if red[0] != testItems[1] {
+	if red[0] != TestDB[0][1] {
 		t.Error("Item 0 in shopping cart does not match up with test item 1, after shifting 1 to 0")
-		t.Logf("Cart 0: %v, Test Items 1: %v", red[0], testItems[1])
+		t.Logf("Cart 0: %v, Test Items 1: %v", red[0], TestDB[1])
 	}
 
-	if result := Database.GetCartTotal(red); result != testItems[1].Price {
+	if result := Database.GetCartTotal(red); result != TestDB[0][1].Price {
 		t.Errorf("Total does not match up.")
-		t.Logf("Got: %v, Expected: %v", result, testItems[1].Price)
+		t.Logf("Got: %v, Expected: %v", result, TestDB[0][1].Price)
 	}
 
-	red = Database.AddToCart(testItems[1], red)
+	red = Database.AddToCart(TestDB[0][1], red)
 
 	if len(red) != 1 {
 		t.Errorf("Cart not correct size (addition) | cartSize: %v", len(red))
@@ -82,4 +74,42 @@ func TestCart(t *testing.T) {
 		t.Error("Cart Quantitiy does not match up!")
 		t.Log(red[0].Quantity)
 	}
+}
+
+func TestReport(t *testing.T) {
+	Database.Databases[1] = TestDB[1]
+	Database.Expenses = TestExpenses
+
+	test_report_outputs := func() []string {
+		base := "Item Gain: %.2f,\n Item Loss: %.2f,\n Item Profit: %.2f,\n Expenses: %.2f,\n Gains: %.2f,\n Report Total: %.2f"
+		return []string{
+			fmt.Sprintf(base, 666.22, 834.24, -168.02, -43.0, 1.0, -210.02),    //Day Report
+			fmt.Sprintf(base, 4775.16, 6454.4, -1679.24, -86.0, 1.0, -1764.24), //Month Report
+			fmt.Sprintf(base, 9210.88, 11550.28, -2339.4, -86.0, 4.0, -2421.4), //Year Report
+		}
+	}()
+
+	DayReport := Database.Report(0, []uint8{7, 6, 22})
+	MonthReport := Database.Report(1, []uint8{7, 6, 22})
+	YearReport := Database.Report(2, []uint8{7, 6, 22})
+
+	if strings.Compare(DayReport, test_report_outputs[0]) != 0 {
+		t.Error("Day's Report does not match up!")
+		t.Log(test_report_outputs[0])
+		t.Log(DayReport)
+	}
+	strings.Compare(DayReport, test_report_outputs[0])
+
+	if strings.Compare(MonthReport, test_report_outputs[1]) != 0 {
+		t.Error("Month's report does not match up!")
+		t.Log(test_report_outputs[1])
+		t.Log(MonthReport)
+	}
+
+	if strings.Compare(YearReport, test_report_outputs[2]) != 0 {
+		t.Error("Year's report does not match up!")
+		t.Log(test_report_outputs[2])
+		t.Log(YearReport)
+	}
+
 }

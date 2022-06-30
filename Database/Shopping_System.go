@@ -26,7 +26,7 @@ func AddToCart(item Sale, ShoppingCart []Sale) []Sale {
 
 func DecreaseFromCart(item Sale, ShoppingCart []Sale) []Sale {
 	for i, v := range ShoppingCart {
-		if v.ID != item.ID || v.Price != item.Price{
+		if v.ID != item.ID || v.Price != item.Price {
 			continue
 		}
 
@@ -34,28 +34,37 @@ func DecreaseFromCart(item Sale, ShoppingCart []Sale) []Sale {
 			ShoppingCart[i].Quantity -= 1
 		} else {
 			ShoppingCart[i] = ShoppingCart[len(ShoppingCart)-1] // Copy last element to index i.
-			// ShoppingCart[len(ShoppingCart)-1] = Sale{}          // Erase last element (write zero value).
-			ShoppingCart = ShoppingCart[:len(ShoppingCart)-1] // Truncate slice.
+			ShoppingCart = ShoppingCart[:len(ShoppingCart)-1]   // Truncate slice.
 		}
 	}
 
 	return ShoppingCart
 }
 
-func GetCartTotal(ShoppingCart []Sale) float32 {
-	var total float32
+func GetCartTotal(ShoppingCart []Sale) (total float32) {
 	for _, v := range ShoppingCart {
 		total += v.Price * float32(v.Quantity)
 	}
-	return total
+	return
 }
 
-func ConvertCart(shoppingCart []Sale) []interface{} {
-	var intercart []interface{}
+func ConvertCart(shoppingCart []Sale) (intercart []interface{}) {
 	for i := range shoppingCart {
 		intercart = append(intercart, shoppingCart[i])
 	}
-	return intercart
+	return
+}
+
+func ConvertExpenses() (inter []interface{}) {
+	for i := range Expenses {
+		inter = append(inter, Expenses[i])
+	}
+	return
+}
+
+func RemoveExpense(index int) {
+	Expenses[index] = Expenses[len(Expenses)-1]
+	Expenses = Expenses[:len(Expenses)-1]
 }
 
 func ConvertString(Price, Cost, Quantity string) (float32, float32, uint16) {

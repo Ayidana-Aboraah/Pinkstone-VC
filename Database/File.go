@@ -12,6 +12,17 @@ import (
 )
 
 var NameKeys = map[uint64]string{}
+var ItemKeys = map[uint64]*struct {
+	Price float32
+	idxes []uint16
+	Name  string
+}{}
+
+var Items []struct {
+	Quantity uint16
+	Cost     float32
+	ID       uint64
+}
 
 var Databases [3][]Sale
 var Expenses []Expense
@@ -30,11 +41,7 @@ type Expense struct { // - for expense, + for gift
 	Name      string
 }
 
-const (
-	ITEMS uint8 = iota
-	REPORT
-	LOG
-)
+const ITEMS uint8 = 0 // TEMP
 
 const (
 	ONCE uint8 = iota

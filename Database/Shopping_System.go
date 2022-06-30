@@ -55,6 +55,13 @@ func ConvertCart(shoppingCart []Sale) (intercart []interface{}) {
 	return
 }
 
+func ConvertItems() (inter []interface{}) {
+	for i := range Items {
+		inter = append(inter, Items[i])
+	}
+	return
+}
+
 func ConvertExpenses() (inter []interface{}) {
 	for i := range Expenses {
 		inter = append(inter, Expenses[i])

@@ -12,17 +12,6 @@ import (
 )
 
 var NameKeys = map[uint64]string{}
-var ItemKeys = map[uint64]struct {
-	Price float32
-	idxes []uint16
-	Name  string
-}{}
-
-var Items []struct {
-	Quantity uint16
-	Cost     float32
-	ID       uint64
-}
 
 var Databases [3][]Sale
 var Expenses []Expense

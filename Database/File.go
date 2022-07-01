@@ -14,18 +14,17 @@ import (
 var NameKeys = map[uint64]string{}
 var ItemKeys = map[uint64]*struct {
 	Price float32
-	idxes []uint16
 	Name  string
+	Idxes []int
 }{}
 
+var Reports [2][]Sale
+var Expenses []Expense
 var Items []struct {
 	Quantity uint16
 	Cost     float32
 	ID       uint64
 }
-
-var Databases [3][]Sale
-var Expenses []Expense
 
 type Sale struct {
 	Year, Month, Day uint8
@@ -41,14 +40,13 @@ type Expense struct { // - for expense, + for gift
 	Name      string
 }
 
-const ITEMS uint8 = 0 // TEMP
-
 const (
 	ONCE uint8 = iota
 	MONTHLY
 	YEARLY
 )
 const DATA_SIZE = 18
+const ITEM_DS = 14
 
 func PutUint40(b []byte, v uint64) {
 	_ = b[4]
@@ -98,15 +96,31 @@ func DataInit(remove bool) {
 
 func SaveData() error {
 	order := binary.BigEndian
-	var file string
+	file := "Item_Reference.red"
 
-	for idx, database := range Databases {
+	save, err := fyne.CurrentApp().Storage().Save(file)
+	if err != nil {
+		return err
+	}
+
+	bs := make([]byte, ITEM_DS*len(Items))
+
+	for i := range Items {
+		c := i * ITEM_DS
+		order.PutUint16(bs[c:c+2], Items[i].Quantity)
+		order.PutUint32(bs[c+2:c+6], math.Float32bits(Items[i].Cost))
+		order.PutUint64(bs[c+6:c+ITEM_DS], Items[i].ID)
+	}
+	_, err = save.Write(bs)
+	if err != nil {
+		return err
+	}
+
+	for idx, database := range Reports {
 		switch idx {
 		case 0:
-			file = "Item_Reference.red"
-		case 1:
 			file = "Report_Data.red"
-		case 2:
+		case 1:
 			file = "Price_Log.red"
 		}
 
@@ -169,11 +183,19 @@ func SaveData() error {
 		return err
 	}
 	defer names.Close()
+
 	var result []byte
-	for k, v := range NameKeys {
-		mine := make([]byte, 5)
-		PutUint40(mine, k)
-		mine = append(mine, []byte(v+"\n")...)
+	for k, v := range ItemKeys {
+		mine := make([]byte, 9+len(v.Idxes))
+		PutUint40(mine[:5], k)
+		order.PutUint32(mine[5:9], math.Float32bits(v.Price))
+
+		for i := range v.Idxes {
+			c := 9 + (i * 2)
+			order.PutUint16(mine[c:c+2], uint16(v.Idxes[i]))
+		}
+		mine = append(mine, 255)
+		mine = append(mine, []byte(v.Name+"\n")...)
 		result = append(result, mine...)
 	}
 	_, err = names.Write(result)
@@ -183,15 +205,37 @@ func SaveData() error {
 
 func LoadData() error {
 	order := binary.BigEndian
-	var file string
+	file := "Item_Reference.red"
 
-	for idx := range Databases {
+	f, err := fyne.CurrentApp().Storage().Open(file)
+	if err != nil {
+		return err
+	}
+
+	buf, err := io.ReadAll(f)
+	if err != nil {
+		return err
+	}
+	f.Close()
+
+	Items = make([]struct {
+		Quantity uint16
+		Cost     float32
+		ID       uint64
+	}, len(buf)/ITEM_DS)
+
+	for i := range Items {
+		c := ITEM_DS * i
+		Items[i].Quantity = order.Uint16(buf[c : c+2])
+		Items[i].Cost = math.Float32frombits(order.Uint32(buf[c+2 : c+6]))
+		Items[i].ID = order.Uint64(buf[c+6 : c+ITEM_DS])
+	}
+
+	for idx := range Reports {
 		switch idx {
 		case 0:
-			file = "Item_Reference.red"
-		case 1:
 			file = "Report_Data.red"
-		case 2:
+		case 1:
 			file = "Price_Log.red"
 		}
 
@@ -201,11 +245,10 @@ func LoadData() error {
 		}
 
 		buf, err := io.ReadAll(file)
-		file.Close()
-
 		if err != nil {
 			return err
 		}
+		file.Close()
 
 		black := make([]Sale, len(buf)/DATA_SIZE)
 
@@ -222,7 +265,7 @@ func LoadData() error {
 			black[i].ID = FromUint40(buf[c+13 : c+DATA_SIZE])
 		}
 
-		Databases[idx] = black
+		Reports[idx] = black
 	}
 
 	expenses, err := fyne.CurrentApp().Storage().Open("Expenses.red")
@@ -267,7 +310,20 @@ func LoadData() error {
 	entries := strings.Split(string(arr), "\n")
 
 	for _, v := range entries[:len(entries)-1] {
-		NameKeys[FromUint40([]byte(v[:5]))] = v[5:]
+		pp := strings.Split(v, string(255))
+		ItemKeys[FromUint40([]byte(pp[0]))] = &struct {
+			Price float32
+			Name  string
+			Idxes []int
+		}{
+			Price: math.Float32frombits(order.Uint32([]byte(pp[0])[0:4])),
+			Name:  pp[1],
+		}
+
+		for i := 0; i < len([]byte(pp[0])[4:])/2; i++ {
+			c := 4 + (i * 2)
+			ItemKeys[FromUint40([]byte(pp[0]))].Idxes = append(ItemKeys[FromUint40([]byte(pp[0]))].Idxes, int(order.Uint16([]byte(pp[0])[c:c+2])))
+		}
 	}
 
 	return nil
@@ -282,10 +338,10 @@ func BackUpAllData() error { // TODO: Fix this function
 	}
 	defer save.Close()
 
-	bs := make([]byte, ((DATA_SIZE * len(Databases[0])) + (DATA_SIZE * len(Databases[1])) + (DATA_SIZE * len(Databases[2]))))
+	bs := make([]byte, (ITEM_DS*len(Items) + (DATA_SIZE * len(Reports[0])) + (DATA_SIZE * len(Reports[1]))))
 
 	previousLength := 0
-	for _, database := range Databases {
+	for _, database := range Reports {
 		for i, x := range database {
 			initial := (previousLength * DATA_SIZE) + (DATA_SIZE * i)
 
@@ -372,11 +428,11 @@ func LoadBackUp() error { //TODO: Fix this function
 		black[i].ID = FromUint40(buf[c+13 : c+DATA_SIZE])
 
 		if black[i].Year == 0 {
-			Databases[0] = append(Databases[0], black[i])
+			// Items = append(Items, black[i]) // NOTE: CHANGE this to ItemDB
 		} else if black[i].Quantity == 0 {
-			Databases[2] = append(Databases[2], black[i])
+			Reports[1] = append(Reports[1], black[i])
 		} else {
-			Databases[1] = append(Databases[1], black[i])
+			Reports[0] = append(Reports[0], black[i])
 		}
 	}
 

@@ -11,7 +11,7 @@ func TestFileSave(t *testing.T) {
 	a := app.NewWithID("Testing")
 
 	Database.NameKeys = TestNames
-	Database.Databases = TestDB
+	Database.Reports = TestDB
 	Database.Expenses = TestExpenses
 
 	Database.DataInit(false)
@@ -28,11 +28,11 @@ func TestFileSave(t *testing.T) {
 	}
 
 	for i := range TestDB {
-		if len(TestDB[i]) != len(Database.Databases[i]) {
+		if len(TestDB[i]) != len(Database.Reports[i]) {
 			t.Logf("Test DB and Datbase %v aren't the same", i)
 		}
 		for x := range TestDB[i] {
-			if Database.Databases[i][x] != TestDB[i][x] {
+			if Database.Reports[i][x] != TestDB[i][x] {
 				t.Errorf("Database %v, entry %v don't match up", i, x)
 			}
 		}
@@ -50,7 +50,7 @@ func TestFileSave(t *testing.T) {
 		}
 	}
 
-	t.Logf("Now just for vals:\n Expenses: %v \n Name Keys: %v\n Databaseses: %v", Database.Expenses, Database.NameKeys, Database.Databases)
+	t.Logf("Now just for vals:\n Expenses: %v \n Name Keys: %v\n Databaseses: %v", Database.Expenses, Database.NameKeys, Database.Reports)
 
 	Database.DataInit(true)
 	a.Quit()
@@ -59,7 +59,7 @@ func TestFileSave(t *testing.T) {
 func TestSaveBackUp(t *testing.T) {
 	a := app.NewWithID("Testing")
 
-	Database.Databases = TestDB
+	Database.Reports = TestDB
 	Database.NameKeys = TestNames
 	Database.Expenses = TestExpenses
 

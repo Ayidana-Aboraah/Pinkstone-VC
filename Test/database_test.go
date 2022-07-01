@@ -77,7 +77,7 @@ func TestCart(t *testing.T) {
 }
 
 func TestReport(t *testing.T) {
-	Database.Databases[1] = TestDB[1]
+	Database.Reports[0] = TestDB[0]
 	Database.Expenses = TestExpenses
 
 	test_report_outputs := func() []string {

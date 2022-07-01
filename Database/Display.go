@@ -25,7 +25,7 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 	inventoryLabel := widget.NewLabel("Inventory")
 
 	inventoryData := binding.BindUntypedList(&[]interface{}{})
-	inventoryData.Set(ConvertCart(Databases[0]))
+	inventoryData.Set(ConvertCart(Reports[0])) // NOTE: CHANGE this to ItemDB
 
 	expenseData := binding.BindUntypedList(&[]interface{}{})
 	expenseData.Set(ConvertExpenses())
@@ -35,7 +35,7 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 	}, func(item binding.DataItem, obj fyne.CanvasObject) {})
 
 	inventoryList.UpdateItem = func(idx widget.ListItemID, obj fyne.CanvasObject) {
-		obj.(*fyne.Container).Objects[0].(*widget.Label).SetText(NameKeys[Databases[0][idx].ID])
+		obj.(*fyne.Container).Objects[0].(*widget.Label).SetText(NameKeys[Reports[0][idx].ID]) // NOTE: CHANGE this to ItemDB
 	}
 
 	expenseList := widget.NewListWithData(expenseData, func() fyne.CanvasObject {
@@ -50,7 +50,7 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 	var arr uint8
 
 	inventoryList.OnSelected = func(id widget.ListItemID) {
-		item := Databases[0][id]
+		item := Reports[0][id] // NOTE: CHANGE this to ItemDB
 		values := ConvertSale(item)
 
 		idLabel.SetText(strconv.Itoa(int(item.ID)))
@@ -160,12 +160,12 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 					}
 
 					if arr == 0 { // Inventory
-						if len(Databases[ITEMS])-1 == 0 {
+						if len(Items)-1 == 0 {
 							dialog.ShowInformation("Nope", "You cannot remove all your items like this, try adding a new item, and removing the last old one.", w)
 							return
 						}
-						Databases[ITEMS][target] = Databases[ITEMS][len(Databases[ITEMS])-1]
-						Databases[ITEMS] = Databases[ITEMS][:len(Databases[ITEMS])-1]
+						Items[target] = Items[len(Items)-1]
+						Items = Items[:len(Items)-1]
 						inventoryList.Refresh()
 					} else { // Expenses
 						if len(Expenses)-1 == 0 {
@@ -179,7 +179,7 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 				}, w)
 			}),
 
-			widget.NewButton("Modify", func() {
+			widget.NewButton("Modify", func() { // NOTE: Deal with this transition
 				conID, _ := strconv.Atoi(idLabel.Text)
 
 				nameEntry := widget.NewEntry()
@@ -208,24 +208,24 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 						price, cost, inventory := ConvertString(priceText, costText, inventoryText)
 						newItem := Sale{ID: uint64(conID), Price: price, Cost: cost, Quantity: inventory}
 
-						Databases[2] = append(Databases[2], newItem)
+						Reports[1] = append(Reports[1], newItem)
 						NameKeys[uint64(conID)] = nameEntry.Text
 
 						func(found bool) {
-							for i, v := range Databases[0] {
+							for i, v := range Reports[0] { // NOTE: CHANGE this to ItemDB
 								if v.ID == newItem.ID {
-									Databases[0][i] = newItem
+									Reports[0][i] = newItem // NOTE: CHANGE this to ItemDB
 									found = true
 									break
 								}
 							}
 
 							if !found {
-								Databases[0] = append(Databases[0], newItem)
+								Reports[0] = append(Reports[0], newItem) // NOTE: CHANGE this to ItemDB
 							}
 						}(false)
 
-						inventoryData.Set(ConvertCart(Databases[0]))
+						inventoryData.Set(ConvertCart(Reports[0])) // NOTE: CHANGE this to ItemDB
 
 						UI.HandleErrorWindow(SaveData(), w)
 

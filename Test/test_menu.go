@@ -13,7 +13,7 @@ import (
 
 func TestMenu(shoppingCart *[]Database.Sale, a fyne.App, w fyne.Window) fyne.CanvasObject {
 	items := widget.NewListWithData(
-		binding.BindUntypedList(&[]interface{}{Database.ConvertCart(Database.Databases[0])}),
+		binding.BindUntypedList(&[]interface{}{Database.ConvertCart(Database.Reports[0])}),
 		func() fyne.CanvasObject {
 			return container.NewBorder(nil, nil, nil, nil, widget.NewLabel("N"))
 		},
@@ -22,22 +22,22 @@ func TestMenu(shoppingCart *[]Database.Sale, a fyne.App, w fyne.Window) fyne.Can
 
 	items.UpdateItem = func(idx widget.ListItemID, obj fyne.CanvasObject) {
 		// Change this to TestDB if needed
-		obj.(*fyne.Container).Objects[0].(*widget.Label).SetText(Database.NameKeys[Database.Databases[0][idx].ID])
+		obj.(*fyne.Container).Objects[0].(*widget.Label).SetText(Database.NameKeys[Database.Reports[0][idx].ID])
 	}
 
 	items.OnSelected = func(id widget.ListItemID) {
-		*shoppingCart = append(*shoppingCart, Database.Databases[0][id])
+		*shoppingCart = append(*shoppingCart, Database.Reports[0][id])
 		items.Unselect(id)
 	}
 
 	return container.NewVBox(
 		widget.NewButton("Display Database", func() {
-			dialog.ShowInformation("Databases", fmt.Sprint(Database.Databases), w)
+			dialog.ShowInformation("Databases", fmt.Sprint(Database.Reports), w)
 			dialog.ShowInformation("Name Keys", fmt.Sprint(Database.NameKeys), w)
 		}),
 		widget.NewButton("Load Test DB", func() {
 			Database.NameKeys = TestNames
-			Database.Databases = TestDB
+			Database.Reports = TestDB
 		}),
 		widget.NewButton("Load Test Expenses", func() { Database.Expenses = TestExpenses }),
 		widget.NewButton("Add Item to Shopping Cart", func() {
@@ -55,16 +55,7 @@ var TestNames = map[uint64]string{
 	412341251434: "Sus",
 }
 
-var TestDB = [3][]Database.Sale{
-	{
-		{ID: 999999999999, Price: 234.23, Cost: 1324, Quantity: 1},
-		{ID: 674398202423, Price: 100.50, Cost: 1324, Quantity: 1},
-		{ID: 389432143927, Price: 3974.89, Cost: 8934.24, Quantity: 5},
-		{ID: 674398202423, Price: 90109.22, Cost: 48.24, Quantity: 87},
-		{ID: 402933466372, Price: 1324.89, Cost: 21432.24, Quantity: 4124},
-		{ID: 198998421024, Price: 1094.89, Cost: 9021038.24, Quantity: 5},
-		{ID: 412341251434, Price: 3974.89, Cost: 8934.24, Quantity: 41},
-	},
+var TestDB = [2][]Database.Sale{
 	{
 		{Year: 22, Month: 10, Day: 1, ID: 674398202423, Price: 111.23, Cost: 1324, Quantity: 1},
 		{Year: 22, Month: 9, Day: 4, ID: 674398202423, Price: 100.50, Cost: 555, Quantity: 1},

@@ -6,7 +6,7 @@ import (
 )
 
 func BuyCart(ShoppingCart []Sale) []Sale {
-	Databases[1] = append(Databases[1], ShoppingCart...)
+	Reports[0] = append(Reports[0], ShoppingCart...)
 	SaveData()
 	return ShoppingCart[:0]
 }

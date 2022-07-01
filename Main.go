@@ -93,7 +93,8 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 		btn := obj.(*fyne.Container).Objects[1].(*widget.Button)
 		val := shoppingCart[id]
 
-		text.SetText(Database.NameKeys[val.ID] + " x" + strconv.Itoa(int(val.Quantity)))
+		text.SetText(Database.NameKeys[val.ID] + " x" + strconv.Itoa(int(val.Quantity))) // NOTE: SWTICH -> ITEM DB
+
 		btn.OnTapped = func() {
 			cartList.Set(Database.ConvertCart(Database.DecreaseFromCart(val, shoppingCart)))
 			title.SetText(fmt.Sprintf("Cart Total: %1.1f", Database.GetCartTotal(shoppingCart)))
@@ -127,7 +128,8 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 					return
 				}
 
-				item := Database.FindItem(id)
+				item := Database.FindItem(id) // NOTE: Switch to Item DB
+				// Database.Items[Database.ItemKeys[uint64(id)].Idxes[0]].
 
 				dialog.ShowCustomConfirm("Just Checking...", "Yes", "No", container.NewVBox(widget.NewLabel("Is this the right item: "+Database.NameKeys[item.ID])),
 					func(b bool) {
@@ -254,11 +256,11 @@ func makeStatsMenu(w fyne.Window) fyne.CanvasObject {
 			widget.NewButton("Graph", func() {
 				switch buttonType {
 				case 0:
-					Graph.Labels, Graph.LineInputs = Database.GetLine(selectionEntry.Text, profitDataSelect, Database.Databases[1])
+					Graph.Labels, Graph.LineInputs = Database.GetLine(selectionEntry.Text, profitDataSelect, Database.Reports[0])
 				case 1:
-					Graph.Labels, Graph.LineInputs = Database.GetLine(selectionEntry.Text, profitDataSelect, Database.Databases[2])
+					Graph.Labels, Graph.LineInputs = Database.GetLine(selectionEntry.Text, profitDataSelect, Database.Reports[1])
 				case 4:
-					Graph.Labels, Graph.LineInputs = Database.GetLine(selectionEntry.Text, 3, Database.Databases[1])
+					Graph.Labels, Graph.LineInputs = Database.GetLine(selectionEntry.Text, 3, Database.Reports[0])
 				case 2:
 					Graph.Labels, Graph.Inputs = Database.GetPie(selectionEntry.Text, profitDataSelect)
 				case 3:

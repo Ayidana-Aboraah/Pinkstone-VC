@@ -3,6 +3,7 @@ package Database
 import (
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"math"
@@ -11,19 +12,16 @@ import (
 	"fyne.io/fyne/v2"
 )
 
-var NameKeys = map[uint64]string{}
-var ItemKeys = map[uint64]*struct {
-	Price float32
-	Name  string
-	Idxes []int
-}{}
-
-var Reports [2][]Sale
-var Expenses []Expense
 var Items []struct {
 	Quantity uint16
 	Cost     float32
 	ID       uint64
+}
+
+type ItemEV struct { //EV = Entry Value
+	Price float32
+	Name  string
+	Idxes []int
 }
 
 type Sale struct {
@@ -39,6 +37,11 @@ type Expense struct { // - for expense, + for gift
 	Amount    float32
 	Name      string
 }
+
+var NameKeys = map[uint64]string{}
+var ItemKeys = map[uint64]*ItemEV{}
+var Reports [2][]Sale
+var Expenses []Expense
 
 const (
 	ONCE uint8 = iota
@@ -186,7 +189,7 @@ func SaveData() error {
 
 	var result []byte
 	for k, v := range ItemKeys {
-		mine := make([]byte, 9+len(v.Idxes))
+		mine := make([]byte, 9+(len(v.Idxes)*2))
 		PutUint40(mine[:5], k)
 		order.PutUint32(mine[5:9], math.Float32bits(v.Price))
 
@@ -194,8 +197,8 @@ func SaveData() error {
 			c := 9 + (i * 2)
 			order.PutUint16(mine[c:c+2], uint16(v.Idxes[i]))
 		}
-		mine = append(mine, 255)
-		mine = append(mine, []byte(v.Name+"\n")...)
+		mine = append(mine, []byte{255, 255}...)
+		mine = append(mine, []byte(v.Name+"\n\n")...)
 		result = append(result, mine...)
 	}
 	_, err = names.Write(result)
@@ -307,22 +310,21 @@ func LoadData() error {
 		return err
 	}
 
-	entries := strings.Split(string(arr), "\n")
+	entries := strings.Split(string(arr), "\n\n")
 
 	for _, v := range entries[:len(entries)-1] {
-		pp := strings.Split(v, string(255))
-		ItemKeys[FromUint40([]byte(pp[0]))] = &struct {
-			Price float32
-			Name  string
-			Idxes []int
-		}{
-			Price: math.Float32frombits(order.Uint32([]byte(pp[0])[0:4])),
-			Name:  pp[1],
+		data, name, found := strings.Cut(v, string([]byte{255, 255}))
+		if !found {
+			fmt.Println("Seems as if the character does not exist")
+		}
+		ItemKeys[FromUint40([]byte(data))] = &ItemEV{
+			Price: math.Float32frombits(order.Uint32([]byte(data)[5:9])),
+			Name:  name,
 		}
 
-		for i := 0; i < len([]byte(pp[0])[4:])/2; i++ {
-			c := 4 + (i * 2)
-			ItemKeys[FromUint40([]byte(pp[0]))].Idxes = append(ItemKeys[FromUint40([]byte(pp[0]))].Idxes, int(order.Uint16([]byte(pp[0])[c:c+2])))
+		for i := 0; i < len([]byte(data)[9:])/2; i++ {
+			c := 9 + (i * 2)
+			ItemKeys[FromUint40([]byte(data))].Idxes = append(ItemKeys[FromUint40([]byte(data))].Idxes, int(order.Uint16([]byte(data)[c:c+2])))
 		}
 	}
 

@@ -3,10 +3,8 @@ package Database
 import (
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"io"
 	"io/ioutil"
-	"math"
 	"strings"
 
 	"fyne.io/fyne/v2"
@@ -38,18 +36,18 @@ type Expense struct { // - for expense, + for gift
 	Name      string
 }
 
-var NameKeys = map[uint64]string{}
+var NameKeys = map[uint64]string{} // REMOVE
 var ItemKeys = map[uint64]*ItemEV{}
 var Reports [2][]Sale
 var Expenses []Expense
 
+const DATA_SIZE = 18
+const ITEM_DS = 14
 const (
 	ONCE uint8 = iota
 	MONTHLY
 	YEARLY
 )
-const DATA_SIZE = 18
-const ITEM_DS = 14
 
 func PutUint40(b []byte, v uint64) {
 	_ = b[4]
@@ -64,7 +62,7 @@ func FromUint40(b []byte) uint64 {
 	return uint64(b[4]) | uint64(b[3])<<8 | uint64(b[2])<<16 | uint64(b[1])<<24 | uint64(b[0])<<32
 }
 
-func DataInit(remove bool) {
+func DataInit(remove bool) error {
 	for i, file := 0, ""; i < 7; i++ {
 		switch i {
 		case 0:
@@ -91,10 +89,11 @@ func DataInit(remove bool) {
 		} else {
 			err := fyne.CurrentApp().Storage().Remove(file)
 			if err != nil {
-				panic(err) //IDK what else to do
+				return err
 			}
 		}
 	}
+	return nil
 }
 
 func SaveData() error {
@@ -106,15 +105,7 @@ func SaveData() error {
 		return err
 	}
 
-	bs := make([]byte, ITEM_DS*len(Items))
-
-	for i := range Items {
-		c := i * ITEM_DS
-		order.PutUint16(bs[c:c+2], Items[i].Quantity)
-		order.PutUint32(bs[c+2:c+6], math.Float32bits(Items[i].Cost))
-		order.PutUint64(bs[c+6:c+ITEM_DS], Items[i].ID)
-	}
-	_, err = save.Write(bs)
+	_, err = save.Write(save_itemDB(order))
 	if err != nil {
 		return err
 	}
@@ -132,21 +123,7 @@ func SaveData() error {
 			return err
 		}
 
-		bs := make([]byte, DATA_SIZE*len(database))
-		for i, x := range database {
-			c := (DATA_SIZE * i)
-
-			bs[c] = x.Year
-			bs[c+1] = x.Month
-			bs[c+2] = x.Day
-
-			order.PutUint16(bs[c+3:c+5], x.Quantity)
-			order.PutUint32(bs[c+5:c+9], math.Float32bits(x.Price))
-			order.PutUint32(bs[c+9:c+13], math.Float32bits(x.Cost))
-			PutUint40(bs[c+13:c+DATA_SIZE], x.ID)
-		}
-
-		_, err = save.Write(bs)
+		_, err = save.Write(save_report(database, order))
 		save.Close()
 
 		if err != nil {
@@ -158,27 +135,12 @@ func SaveData() error {
 	if err != nil && err != io.EOF {
 		return err
 	}
-	defer expenses.Close()
 
-	var res []byte
-	for _, v := range Expenses {
-		buff := make([]byte, 8)
-		buff[0] = v.Frequency
-		buff[1] = v.Date[0]
-		buff[2] = v.Date[1]
-		buff[3] = v.Date[2]
-		order.PutUint32(buff[4:], math.Float32bits(v.Amount))
-		if v.Name == "" {
-			v.Name = "_"
-		}
-		buff = append(buff, []byte(v.Name+"\n")...)
-		res = append(res, buff...)
-	}
-
-	_, err = expenses.Write(res)
+	_, err = expenses.Write(save_expense(order))
 	if err != nil {
 		return err
 	}
+	expenses.Close()
 
 	// New Key saving
 	names, err := fyne.CurrentApp().Storage().Save("Name_Map.red")
@@ -187,21 +149,7 @@ func SaveData() error {
 	}
 	defer names.Close()
 
-	var result []byte
-	for k, v := range ItemKeys {
-		mine := make([]byte, 9+(len(v.Idxes)*2))
-		PutUint40(mine[:5], k)
-		order.PutUint32(mine[5:9], math.Float32bits(v.Price))
-
-		for i := range v.Idxes {
-			c := 9 + (i * 2)
-			order.PutUint16(mine[c:c+2], uint16(v.Idxes[i]))
-		}
-		mine = append(mine, []byte{255, 255}...)
-		mine = append(mine, []byte(v.Name+"\n\n")...)
-		result = append(result, mine...)
-	}
-	_, err = names.Write(result)
+	_, err = names.Write(save_kv(order))
 
 	return err
 }
@@ -221,18 +169,7 @@ func LoadData() error {
 	}
 	f.Close()
 
-	Items = make([]struct {
-		Quantity uint16
-		Cost     float32
-		ID       uint64
-	}, len(buf)/ITEM_DS)
-
-	for i := range Items {
-		c := ITEM_DS * i
-		Items[i].Quantity = order.Uint16(buf[c : c+2])
-		Items[i].Cost = math.Float32frombits(order.Uint32(buf[c+2 : c+6]))
-		Items[i].ID = order.Uint64(buf[c+6 : c+ITEM_DS])
-	}
+	load_itemDB(buf, order)
 
 	for idx := range Reports {
 		switch idx {
@@ -253,22 +190,7 @@ func LoadData() error {
 		}
 		file.Close()
 
-		black := make([]Sale, len(buf)/DATA_SIZE)
-
-		for i := range black {
-			c := DATA_SIZE * i
-
-			black[i].Year = uint8(buf[c])
-			black[i].Month = uint8(buf[c+1])
-			black[i].Day = uint8(buf[c+2])
-
-			black[i].Quantity = order.Uint16(buf[c+3 : c+5])
-			black[i].Price = math.Float32frombits(order.Uint32(buf[c+5 : c+9]))
-			black[i].Cost = math.Float32frombits(order.Uint32(buf[c+9 : c+13]))
-			black[i].ID = FromUint40(buf[c+13 : c+DATA_SIZE])
-		}
-
-		Reports[idx] = black
+		Reports[idx] = load_report(buf, order)
 	}
 
 	expenses, err := fyne.CurrentApp().Storage().Open("Expenses.red")
@@ -282,21 +204,7 @@ func LoadData() error {
 		return err
 	}
 
-	raw := strings.Split(string(exp_bytes), "\n")
-	for _, v := range raw[:len(raw)-1] {
-		var expense Expense
-		process := []byte(v)
-		expense.Frequency = process[0]
-		expense.Date[0] = process[1]
-		expense.Date[1] = process[2]
-		expense.Date[2] = process[3]
-		expense.Amount = math.Float32frombits(order.Uint32(process[4:8])) //TODO: Look into using a float16 to save space
-		expense.Name = v[8:]
-		if expense.Name == "_" {
-			expense.Name = ""
-		}
-		Expenses = append(Expenses, expense)
-	}
+	load_expense(exp_bytes, order)
 
 	names, err := fyne.CurrentApp().Storage().Open("Name_Map.red")
 	if err != nil && err != io.EOF {
@@ -310,59 +218,31 @@ func LoadData() error {
 		return err
 	}
 
-	entries := strings.Split(string(arr), "\n\n")
-
-	for _, v := range entries[:len(entries)-1] {
-		data, name, found := strings.Cut(v, string([]byte{255, 255}))
-		if !found {
-			fmt.Println("Seems as if the character does not exist")
-		}
-		ItemKeys[FromUint40([]byte(data))] = &ItemEV{
-			Price: math.Float32frombits(order.Uint32([]byte(data)[5:9])),
-			Name:  name,
-		}
-
-		for i := 0; i < len([]byte(data)[9:])/2; i++ {
-			c := 9 + (i * 2)
-			ItemKeys[FromUint40([]byte(data))].Idxes = append(ItemKeys[FromUint40([]byte(data))].Idxes, int(order.Uint16([]byte(data)[c:c+2])))
-		}
-	}
+	load_kv(arr, order)
 
 	return nil
 }
 
-func BackUpAllData() error { // TODO: Fix this function
+func SaveBackUp() error {
 	order := binary.BigEndian
 
-	save, err := fyne.CurrentApp().Storage().Save("BackUp.red") //BackUp Loading
+	save, err := fyne.CurrentApp().Storage().Save("BackUp.red")
 	if err != nil {
 		return err
 	}
-	defer save.Close()
 
-	bs := make([]byte, (ITEM_DS*len(Items) + (DATA_SIZE * len(Reports[0])) + (DATA_SIZE * len(Reports[1]))))
+	var BackUp_Buff []byte
 
-	previousLength := 0
-	for _, database := range Reports {
-		for i, x := range database {
-			initial := (previousLength * DATA_SIZE) + (DATA_SIZE * i)
+	BackUp_Buff = append(BackUp_Buff, save_itemDB(order)...)
+	BackUp_Buff = append(BackUp_Buff, []byte{10, 10}...)
 
-			bs[initial] = x.Year
-			bs[initial+1] = x.Month
-			bs[initial+2] = x.Day
+	BackUp_Buff = append(BackUp_Buff, save_report(Reports[0], order)...)
+	BackUp_Buff = append(BackUp_Buff, []byte{10, 10}...)
 
-			order.PutUint16(bs[initial+3:initial+5], x.Quantity)
-			order.PutUint32(bs[initial+5:initial+9], math.Float32bits(x.Price)) //TODO: Look into using a float16 to save space
-			order.PutUint32(bs[initial+9:initial+13], math.Float32bits(x.Cost)) //TODO: Look into using a float16 to save space
-			PutUint40(bs[initial+13:initial+DATA_SIZE], x.ID)
-		}
-		previousLength += len(database)
-	}
+	BackUp_Buff = append(BackUp_Buff, save_report(Reports[1], order)...)
 
-	_, err = save.Write(bs)
-	if err != nil {
-		return err
-	}
+	_, err = save.Write(BackUp_Buff)
+	save.Close()
 
 	names, err := fyne.CurrentApp().Storage().Save("BackUp_Map.red")
 	if err != nil {
@@ -370,37 +250,17 @@ func BackUpAllData() error { // TODO: Fix this function
 	}
 	defer names.Close()
 
-	// TODO: Add expenses to this save
-	var res []byte
-	for _, v := range Expenses {
-		buff := make([]byte, 8)
-		buff[0] = v.Frequency
-		buff[1] = v.Date[0]
-		buff[2] = v.Date[1]
-		buff[3] = v.Date[2]
-		order.PutUint32(buff[4:], math.Float32bits(v.Amount))
-		if v.Name == "" {
-			v.Name = "_"
-		}
-		buff = append(buff, []byte(v.Name+"\n")...)
-		res = append(res, buff...)
-	}
-
-	res = append(res, []byte("\n\n")...) // Just append a break character
-
 	var result []byte
-	for k, v := range NameKeys {
-		mine := make([]byte, 6)
-		PutUint40(mine, k)
-		mine = append(mine, []byte(v+"\n")...)
-		result = append(result, mine...)
-	}
-	result = append(res, result...)
+
+	result = append(result, save_expense(order)...)
+	result = append(result, []byte("X\n\n")...) // Just append a break character
+
+	result = append(result, save_kv(order)...)
 	_, err = names.Write(result)
 	return err
 }
 
-func LoadBackUp() error { //TODO: Fix this function
+func LoadBackUp() error {
 	order := binary.BigEndian
 
 	file, err := fyne.CurrentApp().Storage().Open("BackUp.red")
@@ -415,28 +275,11 @@ func LoadBackUp() error { //TODO: Fix this function
 		return err
 	}
 
-	black := make([]Sale, len(buf)/DATA_SIZE)
+	black := strings.Split(string(buf), "\n\n")
 
-	for i := range black {
-		c := DATA_SIZE * i
-
-		black[i].Year = uint8(buf[c])
-		black[i].Month = uint8(buf[c+1])
-		black[i].Day = uint8(buf[c+2])
-
-		black[i].Quantity = order.Uint16(buf[c+3 : c+5])
-		black[i].Price = math.Float32frombits(order.Uint32(buf[c+5 : c+9]))
-		black[i].Cost = math.Float32frombits(order.Uint32(buf[c+9 : c+13]))
-		black[i].ID = FromUint40(buf[c+13 : c+DATA_SIZE])
-
-		if black[i].Year == 0 {
-			// Items = append(Items, black[i]) // NOTE: CHANGE this to ItemDB
-		} else if black[i].Quantity == 0 {
-			Reports[1] = append(Reports[1], black[i])
-		} else {
-			Reports[0] = append(Reports[0], black[i])
-		}
-	}
+	load_itemDB([]byte(black[0]), order)
+	Reports[0] = load_report([]byte(black[1]), order)
+	Reports[1] = load_report([]byte(black[2]), order)
 
 	names, err := fyne.CurrentApp().Storage().Open("BackUp_Map.red")
 	if err != nil {
@@ -444,38 +287,18 @@ func LoadBackUp() error { //TODO: Fix this function
 	}
 	defer names.Close()
 
-	// New Key Loading
 	raw, err := io.ReadAll(names)
 	if err != nil && err != io.EOF {
 		return err
 	}
 
-	exp, NameKV, found := strings.Cut(string(raw), "\n\n")
+	exp, NameKV, found := strings.Cut(string(raw), "X\n\n")
 	if !found {
 		return errors.New("Data not found in BackUp_Map.red")
 	}
 
-	exp_data := strings.Split(exp, "\n")
-	for _, v := range exp_data {
-		var expense Expense
-		process := []byte(v)
-		expense.Frequency = process[0]
-		expense.Date[0] = process[1]
-		expense.Date[1] = process[2]
-		expense.Date[2] = process[3]
-		expense.Amount = math.Float32frombits(order.Uint32(process[4:8])) //TODO: Look into using a float16 to save space
-		expense.Name = v[8:]
-		if expense.Name == "_" {
-			expense.Name = ""
-		}
-		Expenses = append(Expenses, expense)
-	}
-
-	entries := strings.Split(NameKV[2:], "\n")
-
-	for _, v := range entries[:len(entries)-1] {
-		NameKeys[FromUint40([]byte(v[:5]))] = v[5:]
-	}
+	load_expense([]byte(exp), order)
+	load_kv([]byte(NameKV), order) // NOTE: Watch for odd activity
 
 	return nil
 }

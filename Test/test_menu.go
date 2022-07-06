@@ -12,8 +12,11 @@ import (
 )
 
 func TestMenu(shoppingCart *[]Database.Sale, a fyne.App, w fyne.Window) fyne.CanvasObject {
+	idData := binding.BindIntList(&[]int{})
+	idData.Set(Database.ConvertItemKeys())
+
 	items := widget.NewListWithData(
-		binding.BindUntypedList(&[]interface{}{Database.ConvertItems()}),
+		idData,
 		func() fyne.CanvasObject {
 			return container.NewBorder(nil, nil, nil, nil, widget.NewLabel("N"))
 		},
@@ -34,6 +37,7 @@ func TestMenu(shoppingCart *[]Database.Sale, a fyne.App, w fyne.Window) fyne.Can
 		}),
 		widget.NewButton("Load Test DB", func() {
 			Database.ItemKeys = TestItemKeys
+			Database.Items = TestItems
 			Database.Reports = TestDB
 		}),
 		widget.NewButton("Load Test Expenses", func() { Database.Expenses = TestExpenses }),
@@ -52,19 +56,15 @@ var TestItemKeys = map[uint64]*Database.ItemEV{
 	412341251434: {Price: 3974.89, Name: "Sus", Idxes: []int{6, 7}},
 }
 
-var TestItems = []struct {
-	Quantity uint16
-	Cost     float32
-	ID       uint64
-}{
-	{ID: 999999999999, Cost: 1324, Quantity: 1},
-	{ID: 674398202423, Cost: 1324, Quantity: 1},
-	{ID: 389432143927, Cost: 8934.24, Quantity: 5},
-	{ID: 674398202423, Cost: 48.24, Quantity: 87},
-	{ID: 402933466372, Cost: 21432.24, Quantity: 4124},
-	{ID: 198998421024, Cost: 9021038.24, Quantity: 5},
-	{ID: 412341251434, Cost: 8934.24, Quantity: 41},
-	{ID: 412341251434, Cost: 10.0, Quantity: 10},
+var TestItems = []Database.Item{
+	{Cost: 1324, Quantity: 1},
+	{Cost: 1324, Quantity: 1},
+	{Cost: 8934.24, Quantity: 5},
+	{Cost: 48.24, Quantity: 87},
+	{Cost: 21432.24, Quantity: 4124},
+	{Cost: 9021038.24, Quantity: 5},
+	{Cost: 8934.24, Quantity: 41},
+	{Cost: 10.0, Quantity: 10},
 }
 
 var TestDB = [2][]Database.Sale{

@@ -7,29 +7,26 @@ import (
 	"strings"
 )
 
+const DATA_SIZE = 18
+const ITEM_DS = 6
+
 func save_itemDB(order binary.ByteOrder) (result []byte) {
 	result = make([]byte, len(Items)*ITEM_DS)
 	for i := range Items {
 		c := i * ITEM_DS
 		order.PutUint16(result[c:c+2], Items[i].Quantity)
-		order.PutUint32(result[c+2:c+6], math.Float32bits(Items[i].Cost))
-		order.PutUint64(result[c+6:c+ITEM_DS], Items[i].ID)
+		order.PutUint32(result[c+2:c+ITEM_DS], math.Float32bits(Items[i].Cost))
 	}
 	return
 }
 
 func load_itemDB(buf []byte, order binary.ByteOrder) {
-	Items = make([]struct {
-		Quantity uint16
-		Cost     float32
-		ID       uint64
-	}, len(buf)/ITEM_DS)
+	Items = make([]Item, len(buf)/ITEM_DS)
 
 	for i := range Items {
 		c := ITEM_DS * i
 		Items[i].Quantity = order.Uint16(buf[c : c+2])
-		Items[i].Cost = math.Float32frombits(order.Uint32(buf[c+2 : c+6]))
-		Items[i].ID = order.Uint64(buf[c+6 : c+ITEM_DS])
+		Items[i].Cost = math.Float32frombits(order.Uint32(buf[c+2 : c+ITEM_DS]))
 	}
 }
 

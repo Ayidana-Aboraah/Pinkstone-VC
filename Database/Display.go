@@ -24,7 +24,7 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 	costLabel := widget.NewLabel("Cost")
 
 	inventoryData := binding.BindIntList(&[]int{})
-	inventoryData.Set(ConvertItems())
+	inventoryData.Set(ConvertItemKeys())
 
 	expenseData := binding.BindUntypedList(&[]interface{}{})
 	expenseData.Set(ConvertExpenses())
@@ -32,7 +32,8 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 	inventoryList := widget.NewListWithData(inventoryData, func() fyne.CanvasObject {
 		return container.NewBorder(nil, nil, nil, nil, widget.NewLabel("N"))
 	}, func(item binding.DataItem, obj fyne.CanvasObject) {
-		val, _ := item.(binding.Int).Get() // NOTE: Err handling
+		val, err := item.(binding.Int).Get() // NOTE: Err handling
+		UI.HandleError(err)
 		obj.(*fyne.Container).Objects[0].(*widget.Label).SetText(ItemKeys[uint64(val)].Name)
 	})
 
@@ -50,23 +51,23 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 	inventoryList.OnSelected = func(idx widget.ListItemID) {
 		id, _ := inventoryData.GetValue(idx) // NOTE: Handle Err
 
-		pi := ""
+		ctq := "Cost : Quantity\n"
 		for _, v := range ItemKeys[uint64(id)].Idxes {
-			pi += fmt.Sprintf("%f : %d\n", Items[v].Cost, Items[v].Quantity)
+			ctq += fmt.Sprintf("%f : %d\n", Items[v].Cost, Items[v].Quantity)
 		}
 
 		idLabel.SetText(strconv.Itoa(id))
 		nameLabel.SetText(ItemKeys[uint64(idx)].Name)
 		priceLabel.SetText(fmt.Sprint(ItemKeys[uint64(idx)].Price))
-		costLabel.SetText(pi)
-		inventoryList.Unselect(id)
+		costLabel.SetText(ctq)
+		inventoryList.Unselect(idx)
 
 		arr = 0
 		target = id
 	}
 
 	expenseList.OnSelected = func(id widget.ListItemID) {
-		idLabel.SetText("" + Expenses[id].Name)
+		idLabel.SetText("ID: " + Expenses[id].Name)
 		nameLabel.SetText(fmt.Sprintf("Amount: %v", Expenses[id].Amount))
 
 		freq_text := "Frequency: "
@@ -77,7 +78,7 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 		case MONTHLY:
 			freq_text += "Monthly"
 		case ONCE:
-			freq_text += fmt.Sprintf("20%v/%v/%v", Expenses[id].Date[2], Expenses[id].Date[1], Expenses[id].Date[0])
+			freq_text += fmt.Sprintf("Year/Month/Day: 20%v/%v/%v", Expenses[id].Date[2], Expenses[id].Date[1], Expenses[id].Date[0])
 		}
 
 		priceLabel.SetText(freq_text)
@@ -95,23 +96,28 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 			nameLabel,
 			priceLabel,
 			costLabel,
-			widget.NewButton("New Item", func() {
+			widget.NewButton("New Item", func() { // REVIEW: Change name
 				id := Cam.OpenCam(&w)
 				if id == 0 {
 					return
 				}
 
-				val := ItemKeys[uint64(id)] // NOTE: if !found {Open up modify menu or something of the sort}
+				val, found := ItemKeys[uint64(id)] // NOTE: if !found {Open up modify menu or something of the sort}
+				if !found {
+					val = &ItemEV{Idxes: []int{len(Items)}}
+					ItemKeys[uint64(id)] = val
+					Items = append(Items, Item{})
+				}
 
-				pi := ""
+				ctq := "Cost : Quantity\n"
 				for _, v := range ItemKeys[uint64(id)].Idxes {
-					pi += fmt.Sprintf("%f : %d\n", Items[v].Cost, Items[v].Quantity)
+					ctq += fmt.Sprintf("%2f : %d\n", Items[v].Cost, Items[v].Quantity)
 				}
 
 				idLabel.SetText(strconv.Itoa(id))
 				nameLabel.SetText(val.Name)
 				priceLabel.SetText(fmt.Sprint(val.Price))
-				costLabel.SetText(pi)
+				costLabel.SetText(ctq)
 			}),
 			widget.NewButton("New Expense/Gift", func() {
 				var expense_frequency uint8
@@ -161,13 +167,24 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 					}
 
 					if arr == 0 { // Inventory
-						// NOTE: implement new system
-						// if len(Items)-1 == 0 {
-						// 	dialog.ShowInformation("Nope", "You cannot remove all your items like this, try adding a new item, and removing the last old one.", w)
-						// 	return
-						// }
-						// Items[target] = Items[len(Items)-1]
-						// Items = Items[:len(Items)-1]
+						itemData := binding.NewIntList()
+						itemData.Set(ConvertItemIdxes(uint64(target)))
+
+						itemList := widget.NewListWithData(itemData,
+							func() fyne.CanvasObject { return container.NewBorder(nil, nil, nil, nil, widget.NewLabel("N")) },
+							func(item binding.DataItem, obj fyne.CanvasObject) {
+								val, err := item.(binding.Int).Get()
+								UI.HandleError(err)
+								obj.(*fyne.Container).Objects[0].(*widget.Label).SetText(fmt.Sprintf("%f : %d", Items[val].Cost, Items[val].Quantity))
+							})
+
+						itemList.OnSelected = func(id widget.ListItemID) {
+							RemoveItem(id, uint64(target))
+						}
+
+						title := widget.NewLabelWithStyle(ItemKeys[uint64(target)].Name+"Price : Cost\n", fyne.TextAlignCenter, fyne.TextStyle{})
+
+						dialog.ShowCustom("Which one?", "Done", container.NewVBox(title, itemList), w)
 						inventoryList.Refresh()
 					} else { // Expenses
 						if len(Expenses)-1 == 0 {
@@ -209,7 +226,7 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 						newItem := Sale{ID: uint64(target), Price: price, Cost: cost, Quantity: inventory}
 
 						Reports[1] = append(Reports[1], newItem)
-						ItemKeys[uint64(target)] = &ItemEV{Name: nameEntry.Text, Price: price}
+						ItemKeys[uint64(target)] = &ItemEV{Name: nameEntry.Text, Price: price, Idxes: ItemKeys[uint64(target)].Idxes}
 
 						func(found bool) {
 							for i, v := range Reports[0] { // NOTE: CHANGE this to ItemDB
@@ -225,7 +242,7 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 							}
 						}(false)
 
-						inventoryData.Set(ConvertItems()) // NOTE: CHANGE this to ItemDB
+						inventoryData.Set(ConvertItemKeys()) // NOTE: CHANGE this to ItemDB
 
 						UI.HandleErrorWindow(SaveData(), w)
 
@@ -237,4 +254,8 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 			container.NewMax(inventoryList),
 			container.NewMax(expenseList),
 		))
+}
+
+func whichOne(target uint64, w fyne.Window) {
+
 }

@@ -129,15 +129,18 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 					return
 				}
 
-				item := Database.FindItem(id) // NOTE: Switch to Item DB
-				// Database.Items[Database.ItemKeys[uint64(id)].Idxes[0]].
+				val, found := Database.ItemKeys[uint64(id)]
+				if !found {
+					dialog.ShowInformation("Oops", "Item not recorded in database", w)
+					return
+				}
 
-				dialog.ShowCustomConfirm("Just Checking...", "Yes", "No", container.NewVBox(widget.NewLabel("Is this the right item: "+Database.ItemKeys[item.ID].Name)),
+				dialog.ShowCustomConfirm("Just Checking...", "Yes", "No", container.NewVBox(widget.NewLabel("Is this the right item: "+val.Name)),
 					func(b bool) {
 						if !b {
 							return
 						}
-						cartList.Set(Database.ConvertCart(Database.AddToCart(item, shoppingCart)))
+						cartList.Set(Database.ConvertCart(Database.AddToCart(Database.ConvertItem(uint64(id)), shoppingCart)))
 						title.SetText(fmt.Sprintf("Cart Total: %1.1f", Database.GetCartTotal(shoppingCart)))
 						shoppingList.Refresh()
 					}, w)

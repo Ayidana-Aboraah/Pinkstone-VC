@@ -10,16 +10,9 @@ import (
 	"fyne.io/fyne/v2"
 )
 
-var Items []struct {
-	Quantity uint16
-	Cost     float32
-	ID       uint64
-}
-
 type Item struct {
 	Quantity uint16
 	Cost     float32
-	ID       uint64
 }
 
 type ItemEV struct { //EV = Entry Value
@@ -42,12 +35,12 @@ type Expense struct { // - for expense, + for gift
 	Name      string
 }
 
+var Items []Item
 var ItemKeys = map[uint64]*ItemEV{}
 var Reports [2][]Sale
 var Expenses []Expense
+var Free_Spaces []int
 
-const DATA_SIZE = 18
-const ITEM_DS = 14
 const (
 	ONCE uint8 = iota
 	MONTHLY

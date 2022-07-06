@@ -38,7 +38,7 @@ func CreateWindow(a fyne.App) {
 		UI.HandleErrorWindow(Database.LoadBackUp(), w)
 	}
 
-	fmt.Println(Database.Expenses)
+	fmt.Println(Database.Expenses) // DEBUG
 
 	w.SetContent(container.NewVBox(container.NewAppTabs(
 		container.NewTabItem("Main", makeMainMenu(a, w)),
@@ -48,21 +48,22 @@ func CreateWindow(a fyne.App) {
 		container.NewTabItem("Debug", test.TestMenu(&shoppingCart, a, w)),
 	)))
 
+	w.SetOnClosed(func() { Database.SaveBackUp() })
+
 	w.ShowAndRun()
 }
 
 func makeMainMenu(a fyne.App, w fyne.Window) fyne.CanvasObject {
 	return container.NewVBox(
 		widget.NewLabelWithStyle("Welcome", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
-		// NOTE: Not functional
-		// widget.NewButton("Save Backup Data", func() {
-		// 	go UI.HandleErrorWindow(Database.BackUpAllData(), w)
-		// }),
-		// widget.NewButton("Save Backup Data", func() {
-		// 	dialog.ShowInformation("Loading Back up Data", "Wait until back up is done loading...", w)
-		// 	go UI.HandleErrorWindow(Database.LoadBackUp(), w)
-		// 	dialog.ShowInformation("Loaded", "Back Up Loaded", w)
-		// }),
+		widget.NewButton("Save Backup Data", func() {
+			go UI.HandleErrorWindow(Database.SaveBackUp(), w)
+		}),
+		widget.NewButton("Save Backup Data", func() {
+			dialog.ShowInformation("Loading Back up Data", "Wait until back up is done loading...", w)
+			go UI.HandleErrorWindow(Database.LoadBackUp(), w)
+			dialog.ShowInformation("Loaded", "Back Up Loaded", w)
+		}),
 
 		//Add inventory features here
 	)
@@ -93,12 +94,12 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 		btn := obj.(*fyne.Container).Objects[1].(*widget.Button)
 		val := shoppingCart[id]
 
-		text.SetText(Database.NameKeys[val.ID] + " x" + strconv.Itoa(int(val.Quantity))) // NOTE: SWTICH -> ITEM DB
+		text.SetText(Database.ItemKeys[val.ID].Name + " x" + strconv.Itoa(int(val.Quantity))) // NOTE: SWTICH -> ITEM DB
 
 		btn.OnTapped = func() {
 			cartList.Set(Database.ConvertCart(Database.DecreaseFromCart(val, shoppingCart)))
 			title.SetText(fmt.Sprintf("Cart Total: %1.1f", Database.GetCartTotal(shoppingCart)))
-			text.SetText(Database.NameKeys[val.ID] + " x" + strconv.Itoa(int(val.Quantity)))
+			text.SetText(Database.ItemKeys[val.ID].Name + " x" + strconv.Itoa(int(val.Quantity)))
 			shoppingList.Refresh()
 		}
 	}
@@ -131,7 +132,7 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 				item := Database.FindItem(id) // NOTE: Switch to Item DB
 				// Database.Items[Database.ItemKeys[uint64(id)].Idxes[0]].
 
-				dialog.ShowCustomConfirm("Just Checking...", "Yes", "No", container.NewVBox(widget.NewLabel("Is this the right item: "+Database.NameKeys[item.ID])),
+				dialog.ShowCustomConfirm("Just Checking...", "Yes", "No", container.NewVBox(widget.NewLabel("Is this the right item: "+Database.ItemKeys[item.ID].Name)),
 					func(b bool) {
 						if !b {
 							return

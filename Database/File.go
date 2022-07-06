@@ -16,6 +16,12 @@ var Items []struct {
 	ID       uint64
 }
 
+type Item struct {
+	Quantity uint16
+	Cost     float32
+	ID       uint64
+}
+
 type ItemEV struct { //EV = Entry Value
 	Price float32
 	Name  string
@@ -36,7 +42,6 @@ type Expense struct { // - for expense, + for gift
 	Name      string
 }
 
-var NameKeys = map[uint64]string{} // REMOVE
 var ItemKeys = map[uint64]*ItemEV{}
 var Reports [2][]Sale
 var Expenses []Expense

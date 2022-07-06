@@ -13,17 +13,15 @@ import (
 
 func TestMenu(shoppingCart *[]Database.Sale, a fyne.App, w fyne.Window) fyne.CanvasObject {
 	items := widget.NewListWithData(
-		binding.BindUntypedList(&[]interface{}{Database.ConvertCart(Database.Reports[0])}),
+		binding.BindUntypedList(&[]interface{}{Database.ConvertItems()}),
 		func() fyne.CanvasObject {
 			return container.NewBorder(nil, nil, nil, nil, widget.NewLabel("N"))
 		},
-		func(item binding.DataItem, obj fyne.CanvasObject) {},
+		func(item binding.DataItem, obj fyne.CanvasObject) {
+			val, _ := item.(binding.Int).Get() // NOTE: Err handling
+			obj.(*fyne.Container).Objects[0].(*widget.Label).SetText(Database.ItemKeys[uint64(val)].Name)
+		},
 	)
-
-	items.UpdateItem = func(idx widget.ListItemID, obj fyne.CanvasObject) {
-		// Change this to TestDB if needed
-		obj.(*fyne.Container).Objects[0].(*widget.Label).SetText(Database.NameKeys[Database.Reports[0][idx].ID])
-	}
 
 	items.OnSelected = func(id widget.ListItemID) {
 		*shoppingCart = append(*shoppingCart, Database.Reports[0][id])
@@ -33,10 +31,8 @@ func TestMenu(shoppingCart *[]Database.Sale, a fyne.App, w fyne.Window) fyne.Can
 	return container.NewVBox(
 		widget.NewButton("Display Database", func() {
 			dialog.ShowInformation("Databases", fmt.Sprint(Database.Reports), w)
-			dialog.ShowInformation("Name Keys", fmt.Sprint(Database.NameKeys), w)
 		}),
 		widget.NewButton("Load Test DB", func() {
-			// Database.NameKeys = TestNames
 			Database.ItemKeys = TestItemKeys
 			Database.Reports = TestDB
 		}),

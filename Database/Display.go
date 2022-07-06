@@ -22,21 +22,19 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 	nameLabel := widget.NewLabel("Name")
 	priceLabel := widget.NewLabel("Price")
 	costLabel := widget.NewLabel("Cost")
-	inventoryLabel := widget.NewLabel("Inventory")
 
-	inventoryData := binding.BindUntypedList(&[]interface{}{})
-	inventoryData.Set(ConvertCart(Reports[0])) // NOTE: CHANGE this to ItemDB
+	inventoryData := binding.BindIntList(&[]int{})
+	inventoryData.Set(ConvertItems())
 
 	expenseData := binding.BindUntypedList(&[]interface{}{})
 	expenseData.Set(ConvertExpenses())
 
 	inventoryList := widget.NewListWithData(inventoryData, func() fyne.CanvasObject {
 		return container.NewBorder(nil, nil, nil, nil, widget.NewLabel("N"))
-	}, func(item binding.DataItem, obj fyne.CanvasObject) {})
-
-	inventoryList.UpdateItem = func(idx widget.ListItemID, obj fyne.CanvasObject) {
-		obj.(*fyne.Container).Objects[0].(*widget.Label).SetText(NameKeys[Reports[0][idx].ID]) // NOTE: CHANGE this to ItemDB
-	}
+	}, func(item binding.DataItem, obj fyne.CanvasObject) {
+		val, _ := item.(binding.Int).Get() // NOTE: Err handling
+		obj.(*fyne.Container).Objects[0].(*widget.Label).SetText(ItemKeys[uint64(val)].Name)
+	})
 
 	expenseList := widget.NewListWithData(expenseData, func() fyne.CanvasObject {
 		return container.NewBorder(nil, nil, nil, nil, widget.NewLabel("N"))
@@ -49,15 +47,18 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 	var target int
 	var arr uint8
 
-	inventoryList.OnSelected = func(id widget.ListItemID) {
-		item := Reports[0][id] // NOTE: CHANGE this to ItemDB
-		values := ConvertSale(item)
+	inventoryList.OnSelected = func(idx widget.ListItemID) {
+		id, _ := inventoryData.GetValue(idx) // NOTE: Handle Err
 
-		idLabel.SetText(strconv.Itoa(int(item.ID)))
-		nameLabel.SetText(NameKeys[item.ID])
-		priceLabel.SetText(values[0])
-		costLabel.SetText(values[1])
-		inventoryLabel.SetText(values[2])
+		pi := ""
+		for _, v := range ItemKeys[uint64(id)].Idxes {
+			pi += fmt.Sprintf("%f : %d\n", Items[v].Cost, Items[v].Quantity)
+		}
+
+		idLabel.SetText(strconv.Itoa(id))
+		nameLabel.SetText(ItemKeys[uint64(idx)].Name)
+		priceLabel.SetText(fmt.Sprint(ItemKeys[uint64(idx)].Price))
+		costLabel.SetText(pi)
 		inventoryList.Unselect(id)
 
 		arr = 0
@@ -81,7 +82,6 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 
 		priceLabel.SetText(freq_text)
 		costLabel.SetText("")
-		inventoryLabel.SetText("")
 		expenseList.Unselect(id)
 
 		arr = 1
@@ -95,22 +95,23 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 			nameLabel,
 			priceLabel,
 			costLabel,
-			inventoryLabel,
 			widget.NewButton("New Item", func() {
 				id := Cam.OpenCam(&w)
 				if id == 0 {
 					return
 				}
 
-				result := FindItem(id)
-				labels := ConvertSale(result)
+				val := ItemKeys[uint64(id)] // NOTE: if !found {Open up modify menu or something of the sort}
+
+				pi := ""
+				for _, v := range ItemKeys[uint64(id)].Idxes {
+					pi += fmt.Sprintf("%f : %d\n", Items[v].Cost, Items[v].Quantity)
+				}
 
 				idLabel.SetText(strconv.Itoa(id))
-				nameLabel.SetText(NameKeys[result.ID])
-				priceLabel.SetText(labels[0])
-				costLabel.SetText(labels[1])
-				inventoryLabel.SetText(labels[2])
-
+				nameLabel.SetText(val.Name)
+				priceLabel.SetText(fmt.Sprint(val.Price))
+				costLabel.SetText(pi)
 			}),
 			widget.NewButton("New Expense/Gift", func() {
 				var expense_frequency uint8
@@ -160,12 +161,13 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 					}
 
 					if arr == 0 { // Inventory
-						if len(Items)-1 == 0 {
-							dialog.ShowInformation("Nope", "You cannot remove all your items like this, try adding a new item, and removing the last old one.", w)
-							return
-						}
-						Items[target] = Items[len(Items)-1]
-						Items = Items[:len(Items)-1]
+						// NOTE: implement new system
+						// if len(Items)-1 == 0 {
+						// 	dialog.ShowInformation("Nope", "You cannot remove all your items like this, try adding a new item, and removing the last old one.", w)
+						// 	return
+						// }
+						// Items[target] = Items[len(Items)-1]
+						// Items = Items[:len(Items)-1]
 						inventoryList.Refresh()
 					} else { // Expenses
 						if len(Expenses)-1 == 0 {
@@ -180,8 +182,6 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 			}),
 
 			widget.NewButton("Modify", func() { // NOTE: Deal with this transition
-				conID, _ := strconv.Atoi(idLabel.Text)
-
 				nameEntry := widget.NewEntry()
 				nameEntry.SetPlaceHolder("Product Name with _ for spaces.")
 				nameEntry.Validator = validation.NewRegexp(`^[A-Za-z0-9_-]+$`, "username can only contain letters, numbers, '_', and '-'")
@@ -206,10 +206,10 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 						inventoryText := items[4].Widget.(*UI.NumEntry).Text
 
 						price, cost, inventory := ConvertString(priceText, costText, inventoryText)
-						newItem := Sale{ID: uint64(conID), Price: price, Cost: cost, Quantity: inventory}
+						newItem := Sale{ID: uint64(target), Price: price, Cost: cost, Quantity: inventory}
 
 						Reports[1] = append(Reports[1], newItem)
-						NameKeys[uint64(conID)] = nameEntry.Text
+						ItemKeys[uint64(target)] = &ItemEV{Name: nameEntry.Text, Price: price}
 
 						func(found bool) {
 							for i, v := range Reports[0] { // NOTE: CHANGE this to ItemDB
@@ -225,7 +225,7 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 							}
 						}(false)
 
-						inventoryData.Set(ConvertCart(Reports[0])) // NOTE: CHANGE this to ItemDB
+						inventoryData.Set(ConvertItems()) // NOTE: CHANGE this to ItemDB
 
 						UI.HandleErrorWindow(SaveData(), w)
 

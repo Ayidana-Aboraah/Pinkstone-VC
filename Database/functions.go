@@ -33,7 +33,7 @@ func GetLine(selection string, dataType int, database []Sale) ([]string, [][]flo
 	var sales [][]float32
 	var names []string
 
-	for id, name := range NameKeys {
+	for id, val := range ItemKeys {
 		var totals []float32
 
 		for i := uint8(1); i < 32; i++ {
@@ -59,7 +59,7 @@ func GetLine(selection string, dataType int, database []Sale) ([]string, [][]flo
 		}
 
 		if totals != nil {
-			names = append(names, name)
+			names = append(names, val.Name)
 			sales = append(sales, totals)
 		}
 	}
@@ -98,7 +98,7 @@ func GetPie(selection string, dataType int) ([]string, []float32) {
 	var sales []float32
 	var names []string
 
-	for id, name := range NameKeys {
+	for id, val := range ItemKeys {
 		var total float32
 
 		for i := len(Reports[0]) - 1; i >= 0; i-- {
@@ -118,7 +118,7 @@ func GetPie(selection string, dataType int) ([]string, []float32) {
 		}
 
 		if total != 0 {
-			names = append(names, name)
+			names = append(names, val.Name)
 			sales = append(sales, total)
 		}
 	}
@@ -187,18 +187,4 @@ func Report(selection uint8, date []uint8) string {
 		gifts,                        // Gifts
 		item_sales[2]+expenses+gifts, // Report Total
 	)
-}
-
-func FindItem(ID int) Sale {
-	for i, z := 0, len(Reports[0]); i < len(Reports[0]); i++ {
-		if int(Reports[0][i].ID) == ID {
-			return Reports[0][i]
-		}
-
-		z -= 1
-		if int(Reports[0][z].ID) == ID {
-			return Reports[0][z]
-		}
-	}
-	return Sale{}
 }

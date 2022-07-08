@@ -21,15 +21,12 @@ func BuyCart(ShoppingCart []Sale) []Sale {
 
 func AddToCart(item Sale, ShoppingCart []Sale) []Sale {
 	for i, v := range ShoppingCart {
-		if v.ID != item.ID || v.Price != item.Price {
-			continue
+		if v.ID == item.ID && v.Price == item.Price {
+			ShoppingCart[i].Quantity++
+			return ShoppingCart
 		}
-
-		ShoppingCart[i].Quantity++
-		return ShoppingCart
 	}
-	ShoppingCart = append(ShoppingCart, item)
-	return ShoppingCart
+	return append(ShoppingCart, item)
 }
 
 func DecreaseFromCart(item Sale, ShoppingCart []Sale) []Sale {
@@ -108,5 +105,6 @@ func ConvertItem(id uint64) (result Sale) {
 	result.ID = id
 	result.Price = vals.Price
 	result.Cost = Items[vals.Idxes[0]].Cost
+	result.Quantity = 1
 	return
 }

@@ -75,16 +75,16 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 
 	title := widget.NewLabelWithStyle("Cart Total: 0.0", fyne.TextAlignCenter, fyne.TextStyle{})
 
-	cartList := binding.BindUntypedList(&[]interface{}{})
+	cartData := binding.NewUntypedList()
 
-	shoppingList := widget.NewListWithData(cartList,
+	shoppingList := widget.NewListWithData(cartData,
 		func() fyne.CanvasObject {
 			return container.NewBorder(nil, nil, nil, widget.NewButton("X", nil), widget.NewLabel(""))
 		}, func(item binding.DataItem, obj fyne.CanvasObject) {})
 
 	shoppingList.OnSelected = func(id widget.ListItemID) {
 		shoppingCart[id].Quantity++
-		cartList.Reload()
+		cartData.Set(Database.ConvertCart(shoppingCart))
 		title.SetText(fmt.Sprintf("Cart Total: %.2f", Database.GetCartTotal(shoppingCart)))
 		shoppingList.Unselect(id)
 	}
@@ -92,12 +92,13 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 	shoppingList.UpdateItem = func(id widget.ListItemID, obj fyne.CanvasObject) {
 		text := obj.(*fyne.Container).Objects[0].(*widget.Label)
 		btn := obj.(*fyne.Container).Objects[1].(*widget.Button)
-		val := shoppingCart[id]
-
+		v, _ := cartData.GetValue(id)
+		val := v.(Database.Sale)
 		text.SetText(Database.ItemKeys[val.ID].Name + " x" + strconv.Itoa(int(val.Quantity))) // NOTE: SWTICH -> ITEM DB
 
 		btn.OnTapped = func() {
-			cartList.Set(Database.ConvertCart(Database.DecreaseFromCart(val, shoppingCart)))
+			shoppingCart = Database.DecreaseFromCart(val, shoppingCart)
+			cartData.Set(Database.ConvertCart(shoppingCart))
 			title.SetText(fmt.Sprintf("Cart Total: %1.1f", Database.GetCartTotal(shoppingCart)))
 			text.SetText(Database.ItemKeys[val.ID].Name + " x" + strconv.Itoa(int(val.Quantity)))
 			shoppingList.Refresh()
@@ -113,13 +114,14 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 					if !b {
 						return
 					}
-					cartList.Set(Database.ConvertCart(Database.BuyCart(shoppingCart)))
+					shoppingCart = Database.BuyCart(shoppingCart)
+					cartData.Set(Database.ConvertCart(shoppingCart))
 					title.SetText(fmt.Sprintf("Cart Total: %1.1f", Database.GetCartTotal(shoppingCart)))
 					dialog.ShowInformation("Complete", "You're Purchase has been made.", w)
 				}, w)
 			}),
 			widget.NewButton("Clear Cart", func() {
-				cartList.Set([]interface{}{})
+				cartData.Set([]interface{}{})
 				shoppingCart = shoppingCart[:0]
 				title.SetText(fmt.Sprintf("Cart Total: %1.1f", Database.GetCartTotal(shoppingCart)))
 			}),
@@ -140,13 +142,14 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 						if !b {
 							return
 						}
-						cartList.Set(Database.ConvertCart(Database.AddToCart(Database.ConvertItem(uint64(id)), shoppingCart)))
+						shoppingCart = Database.AddToCart(Database.ConvertItem(uint64(id)), shoppingCart)
+						cartData.Set(Database.ConvertCart(shoppingCart))
 						title.SetText(fmt.Sprintf("Cart Total: %1.1f", Database.GetCartTotal(shoppingCart)))
 						shoppingList.Refresh()
 					}, w)
 			}),
 			widget.NewButton("Reload", func() { // DEBUG
-				cartList.Set(Database.ConvertCart(shoppingCart))
+				cartData.Set(Database.ConvertCart(shoppingCart))
 				title.SetText(fmt.Sprintf("Cart Total: %1.1f", Database.GetCartTotal(shoppingCart)))
 				shoppingList.Refresh()
 			}),
@@ -198,6 +201,8 @@ func makeStatsMenu(w fyne.Window) fyne.CanvasObject {
 				case "Year":
 					variant = Database.YEARLY
 				case "Date": //The user will have to double tap when using Dates
+					financeEntry.Hidden = false
+					reportDisplay.SetText("Type a date and select the date option again to get a report")
 					if financeEntry.Text == "" {
 						return
 					}
@@ -220,12 +225,11 @@ func makeStatsMenu(w fyne.Window) fyne.CanvasObject {
 					if err != nil {
 						variant = 2
 					}
-					financeEntry.Hidden = false
 
 					date = []uint8{uint8(day), uint8(month), uint8(year)}
 				}
 
-				reportDisplay.Text = Database.Report(variant, date)
+				reportDisplay.SetText(Database.Report(variant, date))
 
 			}),
 			reportDisplay,

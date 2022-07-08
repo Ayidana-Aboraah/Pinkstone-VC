@@ -112,4 +112,5 @@ func TestReport(t *testing.T) {
 		t.Log(YearReport)
 	}
 
+	t.Log(YearReport)
 }

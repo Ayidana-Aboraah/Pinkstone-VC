@@ -12,7 +12,7 @@ import (
 )
 
 func TestMenu(shoppingCart *[]Database.Sale, a fyne.App, w fyne.Window) fyne.CanvasObject {
-	idData := binding.BindIntList(&[]int{})
+	idData := binding.NewIntList()
 	idData.Set(Database.ConvertItemKeys())
 
 	items := widget.NewListWithData(
@@ -39,6 +39,7 @@ func TestMenu(shoppingCart *[]Database.Sale, a fyne.App, w fyne.Window) fyne.Can
 			Database.ItemKeys = TestItemKeys
 			Database.Items = TestItems
 			Database.Reports = TestDB
+			fmt.Println(TestDB[0])
 		}),
 		widget.NewButton("Load Test Expenses", func() { Database.Expenses = TestExpenses }),
 		widget.NewButton("Add Item to Shopping Cart", func() {

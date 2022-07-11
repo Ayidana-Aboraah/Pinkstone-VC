@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func GetLine(selection string, dataType int, database []Sale) ([]string, [][]float32) {
+func GetLine(selection string, dataType, db int) ([]string, [][]float32) {
 	if selection == "" {
 		return nil, nil
 	}
@@ -33,25 +33,25 @@ func GetLine(selection string, dataType int, database []Sale) ([]string, [][]flo
 	var sales [][]float32
 	var names []string
 
-	for id, name := range NameKeys {
+	for id := range ItemKeys {
 		var totals []float32
 
 		for i := uint8(1); i < 32; i++ {
 			var total float32
 
-			for v := len(Databases[REPORT]) - 1; i >= 0; i-- {
-				if Databases[1][v].ID != id || Databases[1][v].Day != i || Databases[1][v].Month != date[1] || Databases[1][v].Year != date[0] {
+			for v := len(Reports[db]) - 1; v >= 0; v-- {
+				if Reports[db][v].ID != id || Reports[db][v].Day != i || Reports[db][v].Month != date[1] || Reports[db][v].Year != date[0] {
 					continue
 				}
 				switch dataType {
 				case 0:
-					total += Databases[1][v].Price
+					total += Reports[db][v].Price
 				case 1:
-					total += Databases[1][v].Cost
+					total += Reports[db][v].Cost
 				case 2:
-					total += Databases[1][v].Price - Databases[1][v].Cost
+					total += Reports[db][v].Price - Reports[0][v].Cost
 				case 3:
-					total += float32(Databases[1][v].Quantity)
+					total += float32(Reports[db][v].Quantity)
 				}
 			}
 
@@ -59,7 +59,7 @@ func GetLine(selection string, dataType int, database []Sale) ([]string, [][]flo
 		}
 
 		if totals != nil {
-			names = append(names, name)
+			names = append(names, ItemKeys[id].Name)
 			sales = append(sales, totals)
 		}
 	}
@@ -98,27 +98,27 @@ func GetPie(selection string, dataType int) ([]string, []float32) {
 	var sales []float32
 	var names []string
 
-	for id, name := range NameKeys {
+	for id, val := range ItemKeys {
 		var total float32
 
-		for i := len(Databases[1]) - 1; i >= 0; i-- {
-			if Databases[1][i].ID != id || Databases[1][i].Day != date[2] || Databases[1][i].Month != date[1] || Databases[1][i].Year != date[0] {
+		for i := len(Reports[0]) - 1; i >= 0; i-- {
+			if Reports[0][i].ID != id || Reports[0][i].Day != date[2] || Reports[0][i].Month != date[1] || Reports[0][i].Year != date[0] {
 				continue
 			}
 			switch dataType {
 			case 0:
-				total += Databases[REPORT][i].Price
+				total += Reports[0][i].Price
 			case 1:
-				total += Databases[REPORT][i].Cost
+				total += Reports[0][i].Cost
 			case 2:
-				total += Databases[REPORT][i].Price - Databases[1][i].Cost
+				total += Reports[0][i].Price - Reports[0][i].Cost
 			case 3:
-				total += float32(Databases[1][i].Quantity)
+				total += float32(Reports[0][i].Quantity)
 			}
 		}
 
 		if total != 0 {
-			names = append(names, name)
+			names = append(names, val.Name)
 			sales = append(sales, total)
 		}
 	}
@@ -130,19 +130,19 @@ func Report(selection uint8, date []uint8) string {
 	// For Date: 0 = day, 1 = month, 2 = year, 3 = now
 
 	if len(date) == 0 {
-		day, month, y := time.Now().Date()
+		y, month, day := time.Now().Date()
 		year, _ := strconv.Atoi(strconv.Itoa(y)[1:])
 		date = []uint8{uint8(day), uint8(month), uint8(year)}
 	}
 
 	var item_sales [3]float32
 
-	for _, v := range Databases[REPORT] {
-		if v.Year != date[2] {
+	for _, v := range Reports[0] {
+		if v.Year != date[YEARLY] {
 			continue
 		}
 
-		if selection != 2 && v.Month != date[1] {
+		if selection != YEARLY && v.Month != date[MONTHLY] {
 			continue
 		}
 
@@ -158,16 +158,16 @@ func Report(selection uint8, date []uint8) string {
 	var expenses float32
 	var gifts float32
 
-	for i := len(Expenses) - 1; i >= 0; i-- {
+	for i := len(Expenses) - 1; i > -1; i-- {
 		if Expenses[i].Date[YEARLY] != date[YEARLY] {
 			continue
 		}
 
-		if selection != 2 && Expenses[i].Date[MONTHLY] != date[MONTHLY]{
+		if selection != YEARLY && Expenses[i].Date[MONTHLY] != date[MONTHLY] {
 			continue
 		}
 
-		if selection == ONCE && Expenses[i].Date[ONCE] != date[ONCE]{
+		if selection == ONCE && Expenses[i].Date[ONCE] != date[ONCE] {
 			continue
 		}
 
@@ -187,18 +187,4 @@ func Report(selection uint8, date []uint8) string {
 		gifts,                        // Gifts
 		item_sales[2]+expenses+gifts, // Report Total
 	)
-}
-
-func FindItem(ID int) Sale {
-	for i, z := 0, len(Databases[0]); i < len(Databases[0]); i++ {
-		if int(Databases[ITEMS][i].ID) == ID {
-			return Databases[ITEMS][i]
-		}
-
-		z -= 1
-		if int(Databases[ITEMS][z].ID) == ID {
-			return Databases[ITEMS][z]
-		}
-	}
-	return Sale{}
 }

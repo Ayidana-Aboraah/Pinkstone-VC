@@ -1,27 +1,32 @@
 package Database
 
 import (
-	"fmt"
 	"strconv"
+	"time"
 )
 
 func BuyCart(ShoppingCart []Sale) []Sale {
-	Databases[1] = append(Databases[1], ShoppingCart...)
+	for _, v := range ShoppingCart {
+		y, month, day := time.Now().Date()
+		year, _ := strconv.Atoi(strconv.Itoa(y)[1:])
+		v.Day = uint8(day)
+		v.Month = uint8(month)
+		v.Year = uint8(year)
+		Reports[0] = append(Reports[0], v)
+		Items[ItemKeys[v.ID].Idxes[0]].Quantity -= v.Quantity
+	}
 	SaveData()
 	return ShoppingCart[:0]
 }
 
 func AddToCart(item Sale, ShoppingCart []Sale) []Sale {
 	for i, v := range ShoppingCart {
-		if v.ID != item.ID || v.Price != item.Price {
-			continue
+		if v.ID == item.ID && v.Price == item.Price {
+			ShoppingCart[i].Quantity++
+			return ShoppingCart
 		}
-
-		ShoppingCart[i].Quantity++
-		return ShoppingCart
 	}
-	ShoppingCart = append(ShoppingCart, item)
-	return ShoppingCart
+	return append(ShoppingCart, item)
 }
 
 func DecreaseFromCart(item Sale, ShoppingCart []Sale) []Sale {
@@ -55,6 +60,26 @@ func ConvertCart(shoppingCart []Sale) (intercart []interface{}) {
 	return
 }
 
+func ConvertItemKeys() (inter []int) {
+	for k := range ItemKeys {
+		inter = append(inter, int(k))
+	}
+	return
+}
+
+func ConvertItemIdxes(target uint64) (list []int) {
+	for _, v := range ItemKeys[target].Idxes {
+		list = append(list, v)
+	}
+	return
+}
+
+func RemoveItem(idx int, id uint64) {
+	Free_Spaces = append(Free_Spaces, ItemKeys[id].Idxes[idx])
+	ItemKeys[id].Idxes[idx] = ItemKeys[id].Idxes[len(ItemKeys[id].Idxes)-1]
+	ItemKeys[id].Idxes = ItemKeys[id].Idxes[:len(ItemKeys[id].Idxes)-1]
+}
+
 func ConvertExpenses() (inter []interface{}) {
 	for i := range Expenses {
 		inter = append(inter, Expenses[i])
@@ -74,14 +99,12 @@ func ConvertString(Price, Cost, Quantity string) (float32, float32, uint16) {
 	return float32(newPrice), float32(newCost), uint16(newQuantity)
 }
 
-func ConvertSale(item Sale) []string {
-	p := fmt.Sprint(item.Price)
-	c := fmt.Sprint(item.Cost)
-	inven := strconv.Itoa(int(item.Quantity))
+func ConvertItem(id uint64) (result Sale) {
+	vals := ItemKeys[id]
 
-	return []string{
-		p,
-		c,
-		inven,
-	}
+	result.ID = id
+	result.Price = vals.Price
+	result.Cost = Items[vals.Idxes[0]].Cost
+	result.Quantity = 1
+	return
 }

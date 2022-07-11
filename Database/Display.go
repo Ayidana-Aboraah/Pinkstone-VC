@@ -22,21 +22,20 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 	nameLabel := widget.NewLabel("Name")
 	priceLabel := widget.NewLabel("Price")
 	costLabel := widget.NewLabel("Cost")
-	inventoryLabel := widget.NewLabel("Inventory")
 
-	inventoryData := binding.BindUntypedList(&[]interface{}{})
-	inventoryData.Set(ConvertCart(Databases[0]))
+	inventoryData := binding.NewIntList()
+	inventoryData.Set(ConvertItemKeys())
 
-	expenseData := binding.BindUntypedList(&[]interface{}{})
+	expenseData := binding.NewUntypedList()
 	expenseData.Set(ConvertExpenses())
 
 	inventoryList := widget.NewListWithData(inventoryData, func() fyne.CanvasObject {
 		return container.NewBorder(nil, nil, nil, nil, widget.NewLabel("N"))
-	}, func(item binding.DataItem, obj fyne.CanvasObject) {})
-
-	inventoryList.UpdateItem = func(idx widget.ListItemID, obj fyne.CanvasObject) {
-		obj.(*fyne.Container).Objects[0].(*widget.Label).SetText(NameKeys[Databases[0][idx].ID])
-	}
+	}, func(item binding.DataItem, obj fyne.CanvasObject) {
+		val, err := item.(binding.Int).Get() // NOTE: Err handling
+		UI.HandleError(err)
+		obj.(*fyne.Container).Objects[0].(*widget.Label).SetText(ItemKeys[uint64(val)].Name)
+	})
 
 	expenseList := widget.NewListWithData(expenseData, func() fyne.CanvasObject {
 		return container.NewBorder(nil, nil, nil, nil, widget.NewLabel("N"))
@@ -49,23 +48,26 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 	var target int
 	var arr uint8
 
-	inventoryList.OnSelected = func(id widget.ListItemID) {
-		item := Databases[0][id]
-		values := ConvertSale(item)
+	inventoryList.OnSelected = func(idx widget.ListItemID) {
+		id, _ := inventoryData.GetValue(idx) // NOTE: Handle Err
 
-		idLabel.SetText(strconv.Itoa(int(item.ID)))
-		nameLabel.SetText(NameKeys[item.ID])
-		priceLabel.SetText(values[0])
-		costLabel.SetText(values[1])
-		inventoryLabel.SetText(values[2])
-		inventoryList.Unselect(id)
+		ctq := "Cost : Quantity\n"
+		for _, v := range ItemKeys[uint64(id)].Idxes {
+			ctq += fmt.Sprintf("%1.1f : %d\n", Items[v].Cost, Items[v].Quantity)
+		}
+
+		idLabel.SetText(strconv.Itoa(id))
+		nameLabel.SetText(ItemKeys[uint64(id)].Name)
+		priceLabel.SetText(fmt.Sprint(ItemKeys[uint64(id)].Price))
+		costLabel.SetText(ctq)
+		inventoryList.Unselect(idx)
 
 		arr = 0
 		target = id
 	}
 
 	expenseList.OnSelected = func(id widget.ListItemID) {
-		idLabel.SetText("" + Expenses[id].Name)
+		idLabel.SetText("ID: " + Expenses[id].Name)
 		nameLabel.SetText(fmt.Sprintf("Amount: %v", Expenses[id].Amount))
 
 		freq_text := "Frequency: "
@@ -76,17 +78,83 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 		case MONTHLY:
 			freq_text += "Monthly"
 		case ONCE:
-			freq_text += fmt.Sprintf("20%v/%v/%v", Expenses[id].Date[2], Expenses[id].Date[1], Expenses[id].Date[0])
+			freq_text += fmt.Sprintf("Year/Month/Day: 20%v/%v/%v", Expenses[id].Date[2], Expenses[id].Date[1], Expenses[id].Date[0])
 		}
 
 		priceLabel.SetText(freq_text)
 		costLabel.SetText("")
-		inventoryLabel.SetText("")
 		expenseList.Unselect(id)
 
 		arr = 1
 		target = id
 	}
+
+	itemData := binding.NewIntList()
+
+	itemList := widget.NewListWithData(itemData,
+		func() fyne.CanvasObject { return container.NewBorder(nil, nil, nil, nil, widget.NewLabel("N")) },
+		func(item binding.DataItem, obj fyne.CanvasObject) {
+			val, err := item.(binding.Int).Get()
+			UI.HandleError(err)
+			obj.(*fyne.Container).Objects[0].(*widget.Label).SetText(fmt.Sprintf("%1.1f : %d", Items[val].Cost, Items[val].Quantity))
+		})
+
+	var menu uint8
+
+	itemList.OnSelected = func(id widget.ListItemID) {
+		itemList.Unselect(id)
+		switch menu {
+		case 0:
+			RemoveItem(id, uint64(target))
+			itemData.Set(ConvertItemIdxes(uint64(target)))
+		case 1:
+			nameEntry := widget.NewEntry()
+			nameEntry.SetPlaceHolder("Product Name with _ for spaces.")
+			nameEntry.Validator = validation.NewRegexp(`^[A-Za-z0-9_-]+$`, "username can only contain letters, numbers, '_', and '-'")
+
+			items := []*widget.FormItem{
+				widget.NewFormItem("ID", idLabel),
+				widget.NewFormItem("Name", nameEntry),
+				widget.NewFormItem("Price", UI.NewNumEntry("Selling Price")),
+				widget.NewFormItem("Cost", UI.NewNumEntry("How much you bought it for")),
+				widget.NewFormItem("Inventory", UI.NewNumEntry("Current Inventory")),
+			}
+
+			dialog.ShowForm("Item", "Save", "Cancel",
+				items,
+				func(b bool) {
+					if !b {
+						return
+					}
+
+					priceText := items[2].Widget.(*UI.NumEntry).Text
+					costText := items[3].Widget.(*UI.NumEntry).Text
+					inventoryText := items[4].Widget.(*UI.NumEntry).Text
+
+					price, cost, inventory := ConvertString(priceText, costText, inventoryText)
+					y, month, day := time.Now().Date()
+					year, _ := strconv.Atoi(strconv.Itoa(y)[1:])
+
+					Reports[1] = append(Reports[1], Sale{Year: uint8(year), Month: uint8(month), Day: uint8(day), ID: uint64(target), Price: price, Cost: cost, Quantity: inventory})
+
+					val, err := itemData.GetValue(id)
+					UI.HandleErrorWindow(err, w)
+
+					ItemKeys[uint64(target)] = &ItemEV{Name: nameEntry.Text, Price: price, Idxes: ItemKeys[uint64(target)].Idxes} // WATCH: Unsure of how this will go
+					Items[val] = Item{Quantity: inventory, Cost: cost}
+
+					inventoryData.Set(ConvertItemKeys())
+
+					UI.HandleErrorWindow(SaveData(), w)
+
+					dialog.NewInformation("Success!", "Your data has been saved successfully!", w)
+					itemData.Set(ConvertItemIdxes(uint64(target)))
+				}, w)
+
+		}
+	}
+
+	itemList_title := widget.NewLabelWithStyle("Price : Cost\n", fyne.TextAlignCenter, fyne.TextStyle{})
 
 	return container.New(layout.NewGridLayout(2),
 		container.NewVBox(
@@ -95,22 +163,25 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 			nameLabel,
 			priceLabel,
 			costLabel,
-			inventoryLabel,
 			widget.NewButton("New Item", func() {
 				id := Cam.OpenCam(&w)
 				if id == 0 {
 					return
 				}
 
-				result := FindItem(id)
-				labels := ConvertSale(result)
+				val, found := ItemKeys[uint64(id)]
+				if !found {
+					val = &ItemEV{Idxes: []int{len(Items)}}
+					ItemKeys[uint64(id)] = val
+					Items = append(Items, Item{})
+				}
 
-				idLabel.SetText(strconv.Itoa(id))
-				nameLabel.SetText(NameKeys[result.ID])
-				priceLabel.SetText(labels[0])
-				costLabel.SetText(labels[1])
-				inventoryLabel.SetText(labels[2])
-
+				ctq := "Cost : Quantity\n"
+				for _, v := range ItemKeys[uint64(id)].Idxes {
+					ctq += fmt.Sprintf("%1.1f : %d\n", Items[v].Cost, Items[v].Quantity)
+				}
+				inventoryData.Set(ConvertItemKeys())
+				inventoryList.Select(inventoryList.Length() - 1)
 			}),
 			widget.NewButton("New Expense/Gift", func() {
 				var expense_frequency uint8
@@ -160,12 +231,14 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 					}
 
 					if arr == 0 { // Inventory
-						if len(Databases[ITEMS])-1 == 0 {
-							dialog.ShowInformation("Nope", "You cannot remove all your items like this, try adding a new item, and removing the last old one.", w)
+						if target == 0 {
 							return
 						}
-						Databases[ITEMS][target] = Databases[ITEMS][len(Databases[ITEMS])-1]
-						Databases[ITEMS] = Databases[ITEMS][:len(Databases[ITEMS])-1]
+						menu = 0
+
+						itemData.Set(ConvertItemIdxes(uint64(target)))
+						dialog.ShowCustom("Which one?", "Done", container.NewVBox(itemList_title, container.NewMax(itemList)), w)
+
 						inventoryList.Refresh()
 					} else { // Expenses
 						if len(Expenses)-1 == 0 {
@@ -180,57 +253,36 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 			}),
 
 			widget.NewButton("Modify", func() {
-				conID, _ := strconv.Atoi(idLabel.Text)
-
-				nameEntry := widget.NewEntry()
-				nameEntry.SetPlaceHolder("Product Name with _ for spaces.")
-				nameEntry.Validator = validation.NewRegexp(`^[A-Za-z0-9_-]+$`, "username can only contain letters, numbers, '_', and '-'")
-
-				items := []*widget.FormItem{
-					widget.NewFormItem("ID", idLabel),
-					widget.NewFormItem("Name", nameEntry),
-					widget.NewFormItem("Price", UI.NewNumEntry("Selling Price")),
-					widget.NewFormItem("Cost", UI.NewNumEntry("How much you bought it for")),
-					widget.NewFormItem("Inventory", UI.NewNumEntry("Current Inventory")),
+				if target == 0 {
+					return
 				}
 
-				dialog.ShowForm("Item", "Save", "Cancel",
-					items,
-					func(b bool) {
+				menu = 1
+				itemData.Set(ConvertItemIdxes(uint64(target)))
+
+				costEntry := UI.NewNumEntry("How much did you buy it for?")
+				invenEntry := UI.NewNumEntry("How much in stock with this cost?")
+
+				createBtn := widget.NewButton("New Inventory", func() {
+					dialog.ShowForm("New Entry", "Create", "Cancel", []*widget.FormItem{
+						widget.NewFormItem("ID", widget.NewLabel(strconv.Itoa(target))),
+						widget.NewFormItem("Name", widget.NewLabel(ItemKeys[uint64(target)].Name)),
+						widget.NewFormItem("Cost", costEntry),
+						widget.NewFormItem("Quantity", invenEntry),
+					}, func(b bool) {
 						if !b {
 							return
 						}
 
-						priceText := items[2].Widget.(*UI.NumEntry).Text
-						costText := items[3].Widget.(*UI.NumEntry).Text
-						inventoryText := items[4].Widget.(*UI.NumEntry).Text
-
-						price, cost, inventory := ConvertString(priceText, costText, inventoryText)
-						newItem := Sale{ID: uint64(conID), Price: price, Cost: cost, Quantity: inventory}
-
-						Databases[2] = append(Databases[2], newItem)
-						NameKeys[uint64(conID)] = nameEntry.Text
-
-						func(found bool) {
-							for i, v := range Databases[0] {
-								if v.ID == newItem.ID {
-									Databases[0][i] = newItem
-									found = true
-									break
-								}
-							}
-
-							if !found {
-								Databases[0] = append(Databases[0], newItem)
-							}
-						}(false)
-
-						inventoryData.Set(ConvertCart(Databases[0]))
-
-						UI.HandleErrorWindow(SaveData(), w)
-
-						dialog.NewInformation("Success!", "Your data has been saved successfully!", w)
+						_, cost, quan := ConvertString("0", costEntry.Text, invenEntry.Text)
+						ItemKeys[uint64(target)].Idxes = append(ItemKeys[uint64(target)].Idxes, len(Items))
+						Items = append(Items, Item{Quantity: quan, Cost: cost})
 					}, w)
+				})
+
+				dialog.ShowCustom("Which one?", "Done", container.NewVBox(itemList_title, container.NewMax(itemList), createBtn), w)
+				inventoryList.Refresh()
+				w.Content().Refresh()
 			}),
 		),
 		container.NewVSplit(

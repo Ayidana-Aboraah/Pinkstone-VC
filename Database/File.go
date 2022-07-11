@@ -296,7 +296,7 @@ func LoadBackUp() error {
 	}
 
 	load_expense([]byte(exp), order)
-	load_kv([]byte(NameKV), order) // NOTE: Watch for odd activity
+	load_kv([]byte(NameKV), order) // NOTE: Watch for odd activity | [2:] works the same as [], so may be something ups
 
 	return nil
 }

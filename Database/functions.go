@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func GetLine(selection string, dataType int, database []Sale) ([]string, [][]float32) {
+func GetLine(selection string, dataType, db int) ([]string, [][]float32) {
 	if selection == "" {
 		return nil, nil
 	}
@@ -33,25 +33,25 @@ func GetLine(selection string, dataType int, database []Sale) ([]string, [][]flo
 	var sales [][]float32
 	var names []string
 
-	for id, val := range ItemKeys {
+	for id := range ItemKeys {
 		var totals []float32
 
 		for i := uint8(1); i < 32; i++ {
 			var total float32
 
-			for v := len(Reports[0]) - 1; i >= 0; i-- {
-				if Reports[0][v].ID != id || Reports[0][v].Day != i || Reports[0][v].Month != date[1] || Reports[0][v].Year != date[0] {
+			for v := len(Reports[db]) - 1; v >= 0; v-- {
+				if Reports[db][v].ID != id || Reports[db][v].Day != i || Reports[db][v].Month != date[1] || Reports[db][v].Year != date[0] {
 					continue
 				}
 				switch dataType {
 				case 0:
-					total += Reports[0][v].Price
+					total += Reports[db][v].Price
 				case 1:
-					total += Reports[0][v].Cost
+					total += Reports[db][v].Cost
 				case 2:
-					total += Reports[0][v].Price - Reports[0][v].Cost
+					total += Reports[db][v].Price - Reports[0][v].Cost
 				case 3:
-					total += float32(Reports[0][v].Quantity)
+					total += float32(Reports[db][v].Quantity)
 				}
 			}
 
@@ -59,7 +59,7 @@ func GetLine(selection string, dataType int, database []Sale) ([]string, [][]flo
 		}
 
 		if totals != nil {
-			names = append(names, val.Name)
+			names = append(names, ItemKeys[id].Name)
 			sales = append(sales, totals)
 		}
 	}
@@ -130,7 +130,7 @@ func Report(selection uint8, date []uint8) string {
 	// For Date: 0 = day, 1 = month, 2 = year, 3 = now
 
 	if len(date) == 0 {
-		day, month, y := time.Now().Date()
+		y, month, day := time.Now().Date()
 		year, _ := strconv.Atoi(strconv.Itoa(y)[1:])
 		date = []uint8{uint8(day), uint8(month), uint8(year)}
 	}
@@ -138,11 +138,11 @@ func Report(selection uint8, date []uint8) string {
 	var item_sales [3]float32
 
 	for _, v := range Reports[0] {
-		if v.Year != date[2] {
+		if v.Year != date[YEARLY] {
 			continue
 		}
 
-		if selection != 2 && v.Month != date[1] {
+		if selection != YEARLY && v.Month != date[MONTHLY] {
 			continue
 		}
 
@@ -158,12 +158,12 @@ func Report(selection uint8, date []uint8) string {
 	var expenses float32
 	var gifts float32
 
-	for i := len(Expenses) - 1; i >= 0; i-- {
+	for i := len(Expenses) - 1; i > -1; i-- {
 		if Expenses[i].Date[YEARLY] != date[YEARLY] {
 			continue
 		}
 
-		if selection != 2 && Expenses[i].Date[MONTHLY] != date[MONTHLY] {
+		if selection != YEARLY && Expenses[i].Date[MONTHLY] != date[MONTHLY] {
 			continue
 		}
 

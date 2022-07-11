@@ -123,7 +123,7 @@ func load_kv(buf []byte, order binary.ByteOrder) {
 	for _, v := range entries[:len(entries)-1] {
 		data, name, found := strings.Cut(v, string([]byte{255, 255}))
 		if !found {
-			fmt.Println("Seems as if the character does not exist") // NOTE: return a error
+			fmt.Println("Seems as if the character does not exist") // DEBUG
 		}
 		ItemKeys[FromUint40([]byte(data))] = &ItemEV{
 			Price: math.Float32frombits(order.Uint32([]byte(data)[5:9])),

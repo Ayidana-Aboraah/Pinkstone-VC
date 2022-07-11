@@ -163,13 +163,13 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 			nameLabel,
 			priceLabel,
 			costLabel,
-			widget.NewButton("New Item", func() { // REVIEW: Change name
+			widget.NewButton("New Item", func() {
 				id := Cam.OpenCam(&w)
 				if id == 0 {
 					return
 				}
 
-				val, found := ItemKeys[uint64(id)] // NOTE: if !found {Open up modify menu or something of the sort}
+				val, found := ItemKeys[uint64(id)]
 				if !found {
 					val = &ItemEV{Idxes: []int{len(Items)}}
 					ItemKeys[uint64(id)] = val

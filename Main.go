@@ -23,7 +23,9 @@ func main() {
 	a := app.NewWithID("Bronze Hermes")
 	go Graph.StartServer()
 
-	Database.DataInit(false)
+    Database.DataInit(false)
+    // TODO: Access Bluetooth
+    // TODO: Connect to Printer
 
 	CreateWindow(a)
 }
@@ -113,7 +115,9 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 					shoppingCart = Database.BuyCart(shoppingCart)
 					cartData.Set(Database.ConvertCart(shoppingCart))
 					title.SetText(fmt.Sprintf("Cart Total: %1.1f", Database.GetCartTotal(shoppingCart)))
-					dialog.ShowInformation("Complete", "You're Purchase has been made.", w)
+                    // TODO: Get the data that would be added to the report
+                    // TODO: Send the data to the printer
+					dialog.ShowInformation("Complete", "You're Purchase has been made. Printing Receipt", w)
 				}, w)
 			}),
 			widget.NewButton("Clear Cart", func() {

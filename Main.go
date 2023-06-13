@@ -22,15 +22,17 @@ func main() {
 	a := app.NewWithID("Bronze Hermes")
 	go Graph.StartServer()
 
-    Database.DataInit(false)
-    // TODO: Access USB
-    // TODO: Connect to Printer
+	Database.DataInit(false)
+	// TODO: Access USB
+	// TODO: Connect to Printer
 
 	CreateWindow(a)
 }
 
+var w fyne.Window
+
 func CreateWindow(a fyne.App) {
-	w := a.NewWindow("Bronze Hermes")
+	w = a.NewWindow("Bronze Hermes")
 	w.SetOnClosed(Graph.StopSever)
 
 	if UI.HandleErrorWindow(Database.LoadData(), w) {
@@ -39,10 +41,10 @@ func CreateWindow(a fyne.App) {
 	}
 
 	w.SetContent(container.NewVBox(container.NewAppTabs(
-		container.NewTabItem("Main", makeMainMenu(a, w)),
-		container.NewTabItem("Shop", makeShoppingMenu(w)),
+		container.NewTabItem("Main", makeMainMenu(a)),
+		container.NewTabItem("Shop", makeShoppingMenu()),
 		container.NewTabItem("Inventory", Database.MakeInfoMenu(w)),
-		container.NewTabItem("Statistics", makeStatsMenu(w)),
+		container.NewTabItem("Statistics", makeStatsMenu()),
 	)))
 
 	w.SetOnClosed(func() { Database.SaveBackUp() })
@@ -50,7 +52,7 @@ func CreateWindow(a fyne.App) {
 	w.ShowAndRun()
 }
 
-func makeMainMenu(a fyne.App, w fyne.Window) fyne.CanvasObject {
+func makeMainMenu(a fyne.App) fyne.CanvasObject {
 	return container.NewVBox(
 		widget.NewLabelWithStyle("Welcome", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
 		widget.NewButton("Save Backup Data", func() {
@@ -68,7 +70,7 @@ func makeMainMenu(a fyne.App, w fyne.Window) fyne.CanvasObject {
 
 var shoppingCart []Database.Sale
 
-func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
+func makeShoppingMenu() fyne.CanvasObject {
 
 	title := widget.NewLabelWithStyle("Cart Total: 0.0", fyne.TextAlignCenter, fyne.TextStyle{})
 
@@ -102,61 +104,67 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 		}
 	}
 
-    barcodeEntry := UI.NewNumEntry("Click and Scan");
+	barcodeEntry := UI.NewNumEntry("Click and Scan")
 
-	screen := container.New(layout.NewGridLayoutWithRows(3),
+	return container.New(layout.NewGridLayoutWithRows(3),
 		title,
 		container.NewMax(shoppingList),
 		container.NewGridWithColumns(3,
 			widget.NewButton("Buy Cart", func() {
 				dialog.ShowConfirm("Buying", "Do you want to buy all items in the Cart?", func(b bool) {
-					if !b {
+					if !b || len(shoppingCart) == 0 {
 						return
 					}
 					shoppingCart = Database.BuyCart(shoppingCart)
 					cartData.Set(Database.ConvertCart(shoppingCart))
 					title.SetText(fmt.Sprintf("Cart Total: %1.1f", Database.GetCartTotal(shoppingCart)))
-                    // TODO: Get the data that would be added to the report
-                    // TODO: Send the data to the printer
+					// TODO: Get the data that would be added to the report
+					// TODO: Send the data to the printer
 					dialog.ShowInformation("Complete", "You're Purchase has been made. Printing Receipt", w)
 				}, w)
 			}),
+
 			widget.NewButton("Clear Cart", func() {
 				cartData.Set([]interface{}{})
 				shoppingCart = shoppingCart[:0]
 				title.SetText(fmt.Sprintf("Cart Total: %1.1f", Database.GetCartTotal(shoppingCart)))
 			}),
+
 			widget.NewButton("New Item", func() {
-                dialog.ShowCustomConfirm("Scan Item", "Confirm", "Cancel", container.NewVBox(barcodeEntry), func(confirmed bool) {
-                    if (!confirmed){ return }
-                    id, err := strconv.ParseUint(barcodeEntry.Text, 10, 64);
-				    if err != nil {
-                        dialog.ShowInformation("Nope...", "Invalid Barcode", w)
-				    	return
-				    }
+				dialog.ShowCustomConfirm("Scan Item", "Confirm", "Cancel", container.NewVBox(barcodeEntry), func(confirmed bool) {
+					if !confirmed {
+						return
+					}
 
-				    val, found := Database.ItemKeys[uint64(id)]
-				    if !found {
-				    	dialog.ShowInformation("Oops", "Item not recorded in database", w)
-				    	return
-				    }
+					id, err := strconv.ParseUint(barcodeEntry.Text, 10, 64)
+					if err != nil {
+						dialog.ShowInformation("Nope...", "Invalid Barcode", w)
+						return
+					}
 
-				    dialog.ShowCustomConfirm("Just Checking...", "Yes", "No", container.NewVBox(widget.NewLabel("Is this the right item: "+val.Name)),
-				    	func(b bool) {
-				    		if !b { return }
-				    		shoppingCart = Database.AddToCart(Database.ConvertItem(uint64(id)), shoppingCart)
-				    		cartData.Set(Database.ConvertCart(shoppingCart))
-				    		title.SetText(fmt.Sprintf("Cart Total: %1.1f", Database.GetCartTotal(shoppingCart)))
-				    		shoppingList.Refresh()
-				    	}, w)
-			    },w)
-            }),
+					val, found := Database.ItemKeys[uint64(id)]
+					if !found {
+						dialog.ShowInformation("Oops", "Item not recorded in database", w)
+						return
+					}
+
+					dialog.ShowCustomConfirm("Just Checking...", "Yes", "No", container.NewVBox(widget.NewLabel("Is this the right item: "+val.Name)),
+						func(b bool) {
+							if !b {
+								return
+							}
+							shoppingCart = Database.AddToCart(Database.ConvertItem(uint64(id)), shoppingCart)
+							cartData.Set(Database.ConvertCart(shoppingCart))
+							title.SetText(fmt.Sprintf("Cart Total: %1.1f", Database.GetCartTotal(shoppingCart)))
+							shoppingList.Refresh()
+						}, w)
+				}, w)
+			}),
 		),
 	)
-	return screen
 }
 
-func makeStatsMenu(w fyne.Window) fyne.CanvasObject {
+func makeStatsMenu() fyne.CanvasObject {
 	u, _ := url.Parse("http://localhost:8081/line")
 	r, _ := url.Parse("http://localhost:8081/pie")
 

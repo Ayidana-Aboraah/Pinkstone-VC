@@ -1,7 +1,6 @@
 package Database
 
 import (
-	"BronzeHermes/Cam"
 	"BronzeHermes/UI"
 	"fmt"
 	"log"
@@ -22,6 +21,8 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 	nameLabel := widget.NewLabel("Name")
 	priceLabel := widget.NewLabel("Price")
 	costLabel := widget.NewLabel("Cost")
+
+    barcodeEntry := UI.NewNumEntry("Click and Scan");
 
 	inventoryData := binding.NewIntList()
 	inventoryData.Set(ConvertItemKeys())
@@ -164,10 +165,13 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 			priceLabel,
 			costLabel,
 			widget.NewButton("New Item", func() {
-				id := Cam.OpenCam(&w)
-				if id == 0 {
-					return
-				}
+                dialog.ShowCustomConfirm("Scan Item", "Confirm", "Cancel", container.NewVBox(barcodeEntry), func(confirmed bool) {
+                    if (!confirmed){ return }
+                    id, err := strconv.ParseUint(barcodeEntry.Text, 10, 64);
+				    if err != nil {
+                        dialog.ShowInformation("Nope...", "Invalid Barcode", w)
+				    	return
+				    }
 
 				val, found := ItemKeys[uint64(id)]
 				if !found {
@@ -182,7 +186,8 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 				}
 				inventoryData.Set(ConvertItemKeys())
 				inventoryList.Select(inventoryList.Length() - 1)
-			}),
+			    },w)
+            }),
 			widget.NewButton("New Expense/Gift", func() {
 				var expense_frequency uint8
 

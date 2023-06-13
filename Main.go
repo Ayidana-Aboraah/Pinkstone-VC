@@ -1,7 +1,6 @@
 package main
 
 import (
-	"BronzeHermes/Cam"
 	"BronzeHermes/Database"
 	"BronzeHermes/Graph"
 	"BronzeHermes/UI"
@@ -24,7 +23,7 @@ func main() {
 	go Graph.StartServer()
 
     Database.DataInit(false)
-    // TODO: Access Bluetooth
+    // TODO: Access USB
     // TODO: Connect to Printer
 
 	CreateWindow(a)
@@ -103,6 +102,8 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 		}
 	}
 
+    barcodeEntry := UI.NewNumEntry("Click and Scan");
+
 	screen := container.New(layout.NewGridLayoutWithRows(3),
 		title,
 		container.NewMax(shoppingList),
@@ -126,28 +127,30 @@ func makeShoppingMenu(w fyne.Window) fyne.CanvasObject {
 				title.SetText(fmt.Sprintf("Cart Total: %1.1f", Database.GetCartTotal(shoppingCart)))
 			}),
 			widget.NewButton("New Item", func() {
-				id := Cam.OpenCam(&w)
-				if id == 0 {
-					return
-				}
+                dialog.ShowCustomConfirm("Scan Item", "Confirm", "Cancel", container.NewVBox(barcodeEntry), func(confirmed bool) {
+                    if (!confirmed){ return }
+                    id, err := strconv.ParseUint(barcodeEntry.Text, 10, 64);
+				    if err != nil {
+                        dialog.ShowInformation("Nope...", "Invalid Barcode", w)
+				    	return
+				    }
 
-				val, found := Database.ItemKeys[uint64(id)]
-				if !found {
-					dialog.ShowInformation("Oops", "Item not recorded in database", w)
-					return
-				}
+				    val, found := Database.ItemKeys[uint64(id)]
+				    if !found {
+				    	dialog.ShowInformation("Oops", "Item not recorded in database", w)
+				    	return
+				    }
 
-				dialog.ShowCustomConfirm("Just Checking...", "Yes", "No", container.NewVBox(widget.NewLabel("Is this the right item: "+val.Name)),
-					func(b bool) {
-						if !b {
-							return
-						}
-						shoppingCart = Database.AddToCart(Database.ConvertItem(uint64(id)), shoppingCart)
-						cartData.Set(Database.ConvertCart(shoppingCart))
-						title.SetText(fmt.Sprintf("Cart Total: %1.1f", Database.GetCartTotal(shoppingCart)))
-						shoppingList.Refresh()
-					}, w)
-			}),
+				    dialog.ShowCustomConfirm("Just Checking...", "Yes", "No", container.NewVBox(widget.NewLabel("Is this the right item: "+val.Name)),
+				    	func(b bool) {
+				    		if !b { return }
+				    		shoppingCart = Database.AddToCart(Database.ConvertItem(uint64(id)), shoppingCart)
+				    		cartData.Set(Database.ConvertCart(shoppingCart))
+				    		title.SetText(fmt.Sprintf("Cart Total: %1.1f", Database.GetCartTotal(shoppingCart)))
+				    		shoppingList.Refresh()
+				    	}, w)
+			    },w)
+            }),
 		),
 	)
 	return screen

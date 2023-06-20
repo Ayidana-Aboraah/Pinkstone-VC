@@ -59,6 +59,7 @@ func CreateWindow(a fyne.App) {
 }
 
 func makeMainMenu(a fyne.App) fyne.CanvasObject {
+	usrData := binding.BindStringList(&Database.Users)
 	titleText := widget.NewLabelWithStyle("Welcome", fyne.TextAlignCenter, fyne.TextStyle{Bold: true})
 	return container.NewVBox(
 		titleText,
@@ -67,7 +68,7 @@ func makeMainMenu(a fyne.App) fyne.CanvasObject {
 			var CreateUser dialog.Dialog
 
 			nameEntry := widget.NewEntry()
-			usrList := widget.NewListWithData(binding.BindStringList(&Database.Users), func() fyne.CanvasObject {
+			usrList := widget.NewListWithData(usrData, func() fyne.CanvasObject {
 				return container.NewBorder(nil, nil, nil, nil, widget.NewLabel(""))
 			}, func(di binding.DataItem, co fyne.CanvasObject) {
 				text := co.(*fyne.Container).Objects[0].(*widget.Label)
@@ -87,14 +88,10 @@ func makeMainMenu(a fyne.App) fyne.CanvasObject {
 					return
 				}
 
-				if Database.Users[0] == "" {
-					Database.Users[0] = nameEntry.Text
-				} else {
-					Database.Users = append(Database.Users, nameEntry.Text)
-				}
-
+				Database.Users = append(Database.Users, nameEntry.Text)
 				Database.Current_User = uint8(len(Database.Users) - 1)
 				titleText.SetText("Welcome " + nameEntry.Text) // change the title Text
+				usrData.Set(Database.Users)
 				Database.SaveData()
 			}, w)
 
@@ -141,8 +138,6 @@ func makeMainMenu(a fyne.App) fyne.CanvasObject {
 				UI.HandleError(Database.SaveData())
 
 			}, w)
-
-			//TODO: make a list indicating each sale in a report
 		}),
 		widget.NewButton("Save Backup Data", func() {
 			go UI.HandleErrorWindow(Database.SaveBackUp(), w)
@@ -169,13 +164,10 @@ func makeMainMenu(a fyne.App) fyne.CanvasObject {
 						Database.Expenses = []Database.Expense{}
 						Database.Free_Spaces = []int{}
 						Database.Current_User = 0
-						Database.Users = []string{""}
+						Database.Users = []string{}
 
-						label := w.Canvas().Content().(*fyne.Container).Objects[0].         //open vbox
-						(*container.AppTabs).Items[0].Content.(*fyne.Container).Objects[0]. // Open Vbox in Main menu
-						(*widget.Label)
-
-						label.SetText("Welcome " + Database.Users[Database.Current_User]) // change the title Text
+						usrData.Set(nil)
+						titleText.SetText("Welcome")
 						Database.SaveData()
 					}, w)
 				}, w)
@@ -267,12 +259,22 @@ func makeShoppingMenu() fyne.CanvasObject {
 						return
 					}
 
-					dialog.ShowCustomConfirm("Just Checking...", "Yes", "No", container.NewVBox(widget.NewLabel("Is this the right item: "+val.Name)),
+					barginEntry := UI.NewNumEntry("")
+
+					dialog.ShowCustomConfirm("Just Checking...", "Yes", "No", container.NewVBox(widget.NewLabel(val.Name+"\nBargin Price?"), barginEntry),
 						func(b bool) {
 							if !b {
 								return
 							}
-							shoppingCart = Database.AddToCart(Database.ConvertItem(uint64(id)), shoppingCart)
+							s := Database.ConvertItem(uint64(id))
+							if barginEntry.Text != "" {
+								f, err := strconv.ParseFloat(barginEntry.Text, 32)
+								if err != nil {
+									dialog.ShowInformation("Invalid", "Invalid values passed into bargin entry", w)
+								}
+								s.Price = float32(f)
+							}
+							shoppingCart = Database.AddToCart(s, shoppingCart)
 							cartData.Set(Database.ConvertCart(shoppingCart))
 							title.SetText(fmt.Sprintf("Cart Total: %1.1f", Database.GetCartTotal(shoppingCart)))
 							shoppingList.Refresh()

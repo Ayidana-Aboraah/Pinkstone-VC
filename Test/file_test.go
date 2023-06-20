@@ -10,7 +10,6 @@ import (
 func TestFileSave(t *testing.T) {
 	a := app.NewWithID("Testing")
 
-	Database.Items = TestItems
 	Database.Reports = TestDB
 	Database.ItemKeys = TestItemKeys
 	Database.Expenses = TestExpenses
@@ -37,7 +36,6 @@ func TestFileSave(t *testing.T) {
 func TestSaveBackUp(t *testing.T) {
 	a := app.NewWithID("Testing")
 
-	Database.Items = TestItems
 	Database.Reports = TestDB
 	Database.ItemKeys = TestItemKeys
 	Database.Expenses = TestExpenses
@@ -61,17 +59,6 @@ func TestSaveBackUp(t *testing.T) {
 }
 
 func SaveAndLoadTest(t *testing.T) {
-	if len(TestItems) != len(Database.Items) {
-		t.Errorf("Lengths of test and normal items don't match up: Test: %v, Items: %v", len(TestItems), len(Database.Items))
-	}
-
-	for i := range TestItems {
-		if TestItems[i] != Database.Items[i] {
-			t.Errorf("DB Item %d does not match up with Test", i)
-			t.Errorf("DB Item: %v\n Test Item: %v", Database.Items[i], TestItems[i])
-		}
-	}
-
 	for i := range TestDB {
 		if len(TestDB[i]) != len(Database.Reports[i]) {
 			t.Logf("Test DB and Datbase %v aren't the same", i)
@@ -102,7 +89,6 @@ func SaveAndLoadTest(t *testing.T) {
 	}
 
 	t.Logf("%v\n", Database.Expenses)
-	t.Logf("%v\n", Database.Items)
 	t.Logf("%v\n", Database.Reports)
 	for k, v := range Database.ItemKeys {
 		t.Logf("%v : %v\n", k, v)

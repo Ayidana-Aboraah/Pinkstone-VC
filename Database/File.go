@@ -10,22 +10,17 @@ import (
 	"fyne.io/fyne/v2"
 )
 
-type Item struct {
-	Quantity uint16
-	Cost     float32
-}
-
 type ItemEV struct { //EV = Entry Value
-	Price float32
-	Name  string
-	Idxes []int // Every instance of this item with this price
+	Quantity uint16
+	Price    float32
+	Name     string
 }
 
 type Sale struct {
 	Year, Month, Day uint8
 	Usr              uint8
 	Quantity         uint16
-	Price, Cost      float32
+	Price            float32
 	ID               uint64
 }
 
@@ -36,13 +31,13 @@ type Expense struct { // - for expense, + for gift
 	Name      string
 }
 
-var Items []Item
+// var Items []Item
 var ItemKeys = map[uint64]*ItemEV{}
 var Reports [2][]Sale
 var Expenses []Expense
 var Free_Spaces []int
 
-var Users = []string{""}
+var Users = []string{}
 var Current_User uint8
 
 const (
@@ -65,7 +60,7 @@ func FromUint40(b []byte) uint64 {
 }
 
 func DataInit(remove bool) error {
-	for i, file := 0, ""; i < 8; i++ {
+	for i, file := 0, ""; i < 7; i++ {
 		switch i {
 		case 0:
 			file = "Item_Reference.red"
@@ -74,14 +69,12 @@ func DataInit(remove bool) error {
 		case 2:
 			file = "Price_Log.red"
 		case 3:
-			file = "Name_Map.red"
-		case 4:
 			file = "Expenses.red"
-		case 5:
+		case 4:
 			file = "BackUp.red"
-		case 6:
+		case 5:
 			file = "BackUp_Map.red"
-		case 7:
+		case 6:
 			file = "Usrs.red"
 		}
 
@@ -104,12 +97,13 @@ func SaveData() error {
 	order := binary.BigEndian
 	file := "Item_Reference.red"
 
-	save, err := fyne.CurrentApp().Storage().Save(file)
+	db, err := fyne.CurrentApp().Storage().Save(file)
 	if err != nil {
 		return err
 	}
+	defer db.Close()
 
-	_, err = save.Write(save_itemDB(order))
+	_, err = db.Write(save_kv(order))
 	if err != nil {
 		return err
 	}
@@ -156,15 +150,6 @@ func SaveData() error {
 		return err
 	}
 
-	// New Key saving
-	names, err := fyne.CurrentApp().Storage().Save("Name_Map.red")
-	if err != nil {
-		return err
-	}
-	defer names.Close()
-
-	_, err = names.Write(save_kv(order))
-
 	return err
 }
 
@@ -183,7 +168,7 @@ func LoadData() error {
 	}
 	f.Close()
 
-	load_itemDB(buf, order)
+	load_kv(buf, order)
 
 	for idx := range Reports {
 		switch idx {
@@ -233,20 +218,6 @@ func LoadData() error {
 
 	load_expense(exp_bytes, order)
 
-	names, err := fyne.CurrentApp().Storage().Open("Name_Map.red")
-	if err != nil && err != io.EOF {
-		return err
-	}
-	defer names.Close()
-
-	// New Key Loading
-	arr, err := io.ReadAll(names)
-	if err != nil && err != io.EOF {
-		return err
-	}
-
-	load_kv(arr, order)
-
 	return nil
 }
 
@@ -260,15 +231,18 @@ func SaveBackUp() error {
 
 	var BackUp_Buff []byte
 
-	BackUp_Buff = append(BackUp_Buff, save_itemDB(order)...)
-	BackUp_Buff = append(BackUp_Buff, []byte{10, 10}...)
+	BackUp_Buff = append(BackUp_Buff, save_kv(order)...)
+	BackUp_Buff = append(BackUp_Buff, []byte{10, 10, 10}...)
 
 	BackUp_Buff = append(BackUp_Buff, save_report(Reports[0], order)...)
-	BackUp_Buff = append(BackUp_Buff, []byte{10, 10}...)
+	BackUp_Buff = append(BackUp_Buff, []byte{10, 10, 10}...)
 
 	BackUp_Buff = append(BackUp_Buff, save_report(Reports[1], order)...)
 
 	_, err = save.Write(BackUp_Buff)
+	if err != nil {
+		return err
+	}
 	save.Close()
 
 	names, err := fyne.CurrentApp().Storage().Save("BackUp_Map.red")
@@ -302,9 +276,9 @@ func LoadBackUp() error {
 		return err
 	}
 
-	black := strings.Split(string(buf), "\n\n")
+	black := strings.Split(string(buf), "\n\n\n")
 
-	load_itemDB([]byte(black[0]), order)
+	load_kv([]byte(black[0]), order)
 	Reports[0] = load_report([]byte(black[1]), order)
 	Reports[1] = load_report([]byte(black[2]), order)
 
@@ -321,7 +295,7 @@ func LoadBackUp() error {
 
 	exp, NameKV, found := strings.Cut(string(raw), "X\n\n")
 	if !found {
-		return errors.New("Data not found in BackUp_Map.red")
+		return errors.New("data not found in BackUp_Map.red")
 	}
 
 	load_expense([]byte(exp), order)

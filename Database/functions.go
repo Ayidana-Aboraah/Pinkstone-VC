@@ -47,10 +47,6 @@ func GetLine(selection string, dataType, db int) ([]string, [][]float32) {
 				case 0:
 					total += Reports[db][v].Price
 				case 1:
-					total += Reports[db][v].Cost
-				case 2:
-					total += Reports[db][v].Price - Reports[0][v].Cost
-				case 3:
 					total += float32(Reports[db][v].Quantity)
 				}
 			}
@@ -109,10 +105,6 @@ func GetPie(selection string, dataType int) ([]string, []float32) {
 			case 0:
 				total += Reports[0][i].Price
 			case 1:
-				total += Reports[0][i].Cost
-			case 2:
-				total += Reports[0][i].Price - Reports[0][i].Cost
-			case 3:
 				total += float32(Reports[0][i].Quantity)
 			}
 		}
@@ -135,7 +127,7 @@ func Report(selection uint8, date []uint8) string {
 		date = []uint8{uint8(day), uint8(month), uint8(year)}
 	}
 
-	var item_sales [3]float32
+	var item_sales float32
 
 	for _, v := range Reports[0] {
 		if v.Year != date[YEARLY] {
@@ -150,9 +142,7 @@ func Report(selection uint8, date []uint8) string {
 			continue
 		}
 
-		item_sales[0] += v.Price * float32(v.Quantity)
-		item_sales[1] += v.Cost * float32(v.Quantity)
-		item_sales[2] += (v.Price - v.Cost) * float32(v.Quantity)
+		item_sales += v.Price * float32(v.Quantity)
 	}
 
 	var expenses float32
@@ -179,12 +169,10 @@ func Report(selection uint8, date []uint8) string {
 	}
 
 	return fmt.Sprintf(
-		"Item Gain: %.2f,\n Item Loss: %.2f,\n Item Profit: %.2f,\n Expenses: %.2f,\n Gains: %.2f,\n Report Total: %.2f",
-		item_sales[0],                // Sold Amount
-		item_sales[1],                // Cost
-		item_sales[2],                // Profit
-		expenses,                     // Expenses
-		gifts,                        // Gifts
-		item_sales[2]+expenses+gifts, // Report Total
+		"Item Revenue: %.2f,\nExpenses: %.2f,\nGains: %.2f,\nReport Total: %.2f",
+		item_sales,                // Sold Amount
+		expenses,                  // Expenses
+		gifts,                     // Gifts
+		item_sales+expenses+gifts, // Report Total
 	)
 }

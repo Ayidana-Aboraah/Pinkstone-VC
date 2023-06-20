@@ -2,13 +2,12 @@ package Database
 
 import (
 	"encoding/binary"
-	"fmt"
 	"math"
 	"strings"
 )
 
-const DATA_SIZE = 19
-const ITEM_DS = 6
+const DATA_SIZE = 15
+const ITEM_DS = 2
 
 func save_users() (result []byte) {
 	for _, v := range Users {
@@ -19,26 +18,7 @@ func save_users() (result []byte) {
 
 func load_users(buf []byte) {
 	Users = strings.Split(string(buf), "\n")
-}
-
-func save_itemDB(order binary.ByteOrder) (result []byte) {
-	result = make([]byte, len(Items)*ITEM_DS)
-	for i := range Items {
-		c := i * ITEM_DS
-		order.PutUint16(result[c:c+2], Items[i].Quantity)
-		order.PutUint32(result[c+2:c+ITEM_DS], math.Float32bits(Items[i].Cost))
-	}
-	return
-}
-
-func load_itemDB(buf []byte, order binary.ByteOrder) {
-	Items = make([]Item, len(buf)/ITEM_DS)
-
-	for i := range Items {
-		c := ITEM_DS * i
-		Items[i].Quantity = order.Uint16(buf[c : c+2])
-		Items[i].Cost = math.Float32frombits(order.Uint32(buf[c+2 : c+ITEM_DS]))
-	}
+	Users = Users[:len(Users)-1]
 }
 
 func save_report(data []Sale, order binary.ByteOrder) (result []byte) {
@@ -53,8 +33,7 @@ func save_report(data []Sale, order binary.ByteOrder) (result []byte) {
 
 		order.PutUint16(result[c+4:c+6], x.Quantity)
 		order.PutUint32(result[c+6:c+10], math.Float32bits(x.Price))
-		order.PutUint32(result[c+10:c+14], math.Float32bits(x.Cost))
-		PutUint40(result[c+14:c+DATA_SIZE], x.ID)
+		PutUint40(result[c+10:c+DATA_SIZE], x.ID)
 	}
 
 	return
@@ -72,8 +51,7 @@ func load_report(buf []byte, order binary.ByteOrder) (report []Sale) {
 
 		report[i].Quantity = order.Uint16(buf[c+4 : c+6])
 		report[i].Price = math.Float32frombits(order.Uint32(buf[c+6 : c+10]))
-		report[i].Cost = math.Float32frombits(order.Uint32(buf[c+10 : c+14]))
-		report[i].ID = FromUint40(buf[c+14 : c+DATA_SIZE])
+		report[i].ID = FromUint40(buf[c+10 : c+DATA_SIZE])
 	}
 	return
 }
@@ -113,39 +91,35 @@ func load_expense(buf []byte, order binary.ByteOrder) {
 	}
 }
 
-func save_kv(order binary.ByteOrder) (result []byte) {
-	for k, v := range ItemKeys {
-		mine := make([]byte, 9+(len(v.Idxes)*2))
-		PutUint40(mine[:5], k)
-		order.PutUint32(mine[5:9], math.Float32bits(v.Price))
+const kvSize = 11
 
-		for i := range v.Idxes {
-			c := 9 + (i * 2)
-			order.PutUint16(mine[c:c+2], uint16(v.Idxes[i]))
-		}
-		mine = append(mine, []byte{255, 255}...)
-		mine = append(mine, []byte(v.Name+"\n\n")...)
-		result = append(result, mine...)
+func save_kv(order binary.ByteOrder) (result []byte) {
+	sect := make([]byte, len(ItemKeys)*kvSize)
+	names := ""
+	var i int32
+
+	for k, v := range ItemKeys {
+		// ID[5], Quantity[2], Price[4]
+		order.PutUint16(sect[i:i+2], v.Quantity)
+		order.PutUint32(sect[i+2:i+6], math.Float32bits(v.Price))
+		PutUint40(sect[i+6:i+kvSize], k)
+		i += kvSize
+		names += v.Name + "\n"
 	}
+	names = "\n\n" + names
+	result = append(sect, names...)
 	return
 }
 
 func load_kv(buf []byte, order binary.ByteOrder) {
-	entries := strings.Split(string(buf), "\n\n")
+	sides := strings.SplitN(string(buf), "\n\n", 2)
 
-	for _, v := range entries[:len(entries)-1] {
-		data, name, found := strings.Cut(v, string([]byte{255, 255}))
-		if !found {
-			fmt.Println("Seems as if the character does not exist") // DEBUG
-		}
-		ItemKeys[FromUint40([]byte(data))] = &ItemEV{
-			Price: math.Float32frombits(order.Uint32([]byte(data)[5:9])),
-			Name:  name,
-		}
+	names := strings.Split(sides[1], "\n")
+	names = names[:len(names)-1]
 
-		for i := 0; i < len([]byte(data)[9:])/2; i++ {
-			c := 9 + (i * 2)
-			ItemKeys[FromUint40([]byte(data))].Idxes = append(ItemKeys[FromUint40([]byte(data))].Idxes, int(order.Uint16([]byte(data)[c:c+2])))
-		}
+	var c int
+	for i := 0; i < len(sides[0])/kvSize; i++ {
+		c = i * kvSize
+		ItemKeys[FromUint40(buf[c+6:c+kvSize])] = &ItemEV{Quantity: order.Uint16(buf[c : c+2]), Price: math.Float32frombits(order.Uint32(buf[c+2 : c+6])), Name: names[i]}
 	}
 }

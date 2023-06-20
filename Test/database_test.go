@@ -98,7 +98,6 @@ func TestReport(t *testing.T) {
 		t.Log(test_report_outputs[0])
 		t.Log(DayReport)
 	}
-	strings.Compare(DayReport, test_report_outputs[0])
 
 	if strings.Compare(MonthReport, test_report_outputs[1]) != 0 {
 		t.Error("Month's report does not match up!")

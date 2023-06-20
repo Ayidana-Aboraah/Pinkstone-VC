@@ -37,7 +37,6 @@ func TestMenu(shoppingCart *[]Database.Sale, a fyne.App, w fyne.Window) fyne.Can
 		}),
 		widget.NewButton("Load Test DB", func() {
 			Database.ItemKeys = TestItemKeys
-			Database.Items = TestItems
 			Database.Reports = TestDB
 			fmt.Println(TestDB[0])
 		}),
@@ -49,34 +48,23 @@ func TestMenu(shoppingCart *[]Database.Sale, a fyne.App, w fyne.Window) fyne.Can
 }
 
 var TestItemKeys = map[uint64]*Database.ItemEV{
-	999999999999: {Price: 234.23, Name: "sammy", Idxes: []int{0}},
-	674398202423: {Price: 100.50, Name: "Clark", Idxes: []int{1, 3}},
-	389432143927: {Price: 3974.89, Name: "Banker", Idxes: []int{2}},
-	402933466372: {Price: 1324.89, Name: "Blackest", Idxes: []int{4}},
-	198998421024: {Price: 1094.89, Name: "Reeses puffs", Idxes: []int{5}},
-	412341251434: {Price: 3974.89, Name: "Sus", Idxes: []int{6, 7}},
-}
-
-var TestItems = []Database.Item{
-	{Cost: 1324, Quantity: 1},
-	{Cost: 1324, Quantity: 1},
-	{Cost: 8934.24, Quantity: 5},
-	{Cost: 48.24, Quantity: 87},
-	{Cost: 21432.24, Quantity: 4124},
-	{Cost: 9021038.24, Quantity: 5},
-	{Cost: 8934.24, Quantity: 41},
-	{Cost: 10.0, Quantity: 10},
+	999999999999: {Price: 234.23, Name: "sammy", Quantity: 1},
+	674398202423: {Price: 100.50, Name: "Clark", Quantity: 1},
+	389432143927: {Price: 3974.89, Name: "Banker", Quantity: 5},
+	402933466372: {Price: 1324.89, Name: "Blackest", Quantity: 87},
+	198998421024: {Price: 1094.89, Name: "Reeses puffs", Quantity: 4124},
+	412341251434: {Price: 3974.89, Name: "Sus", Quantity: 5},
 }
 
 var TestDB = [2][]Database.Sale{
 	{
-		{Year: 22, Month: 10, Day: 1, ID: 674398202423, Price: 111.23, Cost: 1324, Quantity: 1},
-		{Year: 22, Month: 9, Day: 4, ID: 674398202423, Price: 100.50, Cost: 555, Quantity: 1},
-		{Year: 22, Month: 8, Day: 5, ID: 389432143927, Price: 222.89, Cost: 332.24, Quantity: 5},
-		{Year: 22, Month: 7, Day: 6, ID: 674398202423, Price: 444.22, Cost: 222.24, Quantity: 7},
-		{Year: 22, Month: 6, Day: 4, ID: 402933466372, Price: 333.21, Cost: 232.24, Quantity: 4},
-		{Year: 22, Month: 6, Day: 4, ID: 198998421024, Price: 555.22, Cost: 938.24, Quantity: 5},
-		{Year: 22, Month: 6, Day: 7, ID: 412341251434, Price: 666.22, Cost: 834.24, Quantity: 1},
+		{Year: 22, Month: 10, Day: 1, ID: 674398202423, Price: 111.23, Quantity: 1},
+		{Year: 22, Month: 9, Day: 4, ID: 674398202423, Price: 100.50, Quantity: 1},
+		{Year: 22, Month: 8, Day: 5, ID: 389432143927, Price: 222.89, Quantity: 5},
+		{Year: 22, Month: 7, Day: 6, ID: 674398202423, Price: 444.22, Quantity: 7},
+		{Year: 22, Month: 6, Day: 4, ID: 402933466372, Price: 333.21, Quantity: 4},
+		{Year: 22, Month: 6, Day: 4, ID: 198998421024, Price: 555.22, Quantity: 5},
+		{Year: 22, Month: 6, Day: 7, ID: 412341251434, Price: 666.22, Quantity: 1},
 	},
 	{},
 }

@@ -6,17 +6,15 @@ import (
 	"time"
 )
 
-func MakeReceipt(cart []Sale) (out string, total float32) {
+func MakeReceipt(cart []Sale) (out string) {
 
 	y, m, d := time.Now().Date()
 	out = fmt.Sprintf("\t Pinkstone Ltd. : %d/%d/%d\n", y, m, d)
 
-	total = GetCartTotal(cart)
-
 	for _, v := range cart {
 		out += fmt.Sprintf("%s x%d for ₵%1.1f\n", ItemKeys[v.ID].Name, v.Quantity, v.Price)
 	}
-	out += fmt.Sprintf("Total: %1.1f\n\n Cashier: "+Users[Current_User], total)
+	out += fmt.Sprintf("Total: %1.1f\n\n Cashier: "+Users[Current_User], GetCartTotal(cart))
 	return
 }
 
@@ -28,7 +26,7 @@ func BuyCart(ShoppingCart []Sale) []Sale {
 		v.Month = uint8(month)
 		v.Year = uint8(year)
 		Reports[0] = append(Reports[0], v)
-		Items[ItemKeys[v.ID].Idxes[0]].Quantity -= v.Quantity
+		ItemKeys[v.ID].Quantity -= v.Quantity
 	}
 	SaveData()
 	return ShoppingCart[:0]
@@ -79,21 +77,20 @@ func ConvertItemKeys() (inter []int) {
 	for k := range ItemKeys {
 		inter = append(inter, int(k))
 	}
+
 	return
 }
 
-func ConvertItemIdxes(target uint64) (list []int) {
-	for _, v := range ItemKeys[target].Idxes {
-		list = append(list, v)
-	}
-	return
-}
+// func ConvertItemIdxes(target uint64) (list []int) {
+// 	list = append(list, ItemKeys[target].Idxes...)
+// 	return
+// }
 
-func RemoveItem(idx int, id uint64) {
-	Free_Spaces = append(Free_Spaces, ItemKeys[id].Idxes[idx])
-	ItemKeys[id].Idxes[idx] = ItemKeys[id].Idxes[len(ItemKeys[id].Idxes)-1]
-	ItemKeys[id].Idxes = ItemKeys[id].Idxes[:len(ItemKeys[id].Idxes)-1]
-}
+// func RemoveItem(idx int, id uint64) {
+// 	Free_Spaces = append(Free_Spaces, ItemKeys[id].Idxes[idx])
+// 	ItemKeys[id].Idxes[idx] = ItemKeys[id].Idxes[len(ItemKeys[id].Idxes)-1]
+// 	ItemKeys[id].Idxes = ItemKeys[id].Idxes[:len(ItemKeys[id].Idxes)-1]
+// }
 
 func ConvertExpenses() (inter []interface{}) {
 	for i := range Expenses {
@@ -112,11 +109,10 @@ func RemoveExpense(index int) {
 	Expenses = Expenses[:len(Expenses)-1]
 }
 
-func ConvertString(Price, Cost, Quantity string) (float32, float32, uint16) {
+func ConvertString(Price, Quantity string) (float32, uint16) {
 	newPrice, _ := strconv.ParseFloat(Price, 64)
-	newCost, _ := strconv.ParseFloat(Cost, 64)
 	newQuantity, _ := strconv.Atoi(Quantity)
-	return float32(newPrice), float32(newCost), uint16(newQuantity)
+	return float32(newPrice), uint16(newQuantity)
 }
 
 func ConvertItem(id uint64) (result Sale) {
@@ -124,7 +120,6 @@ func ConvertItem(id uint64) (result Sale) {
 
 	result.ID = id
 	result.Price = vals.Price
-	result.Cost = Items[vals.Idxes[0]].Cost
 	result.Quantity = 1
 	result.Usr = uint8(Current_User)
 	return

@@ -52,6 +52,8 @@ func CreateWindow(a fyne.App) {
 		container.NewTabItem("Inventory", Database.MakeInfoMenu(w)),
 		container.NewTabItem("Statistics", makeStatsMenu()),
 	)))
+	// Start Sign In Menu
+	w.Canvas().Content().(*fyne.Container).Objects[0].(*container.AppTabs).Items[0].Content.(*fyne.Container).Objects[1].(*widget.Button).OnTapped()
 
 	w.ShowAndRun()
 }
@@ -85,23 +87,22 @@ func makeMainMenu(a fyne.App) fyne.CanvasObject {
 					return
 				}
 
-				Database.Users = append(Database.Users, nameEntry.Text)
+				if Database.Users[0] == "" {
+					Database.Users[0] = nameEntry.Text
+				} else {
+					Database.Users = append(Database.Users, nameEntry.Text)
+				}
+
 				Database.Current_User = uint8(len(Database.Users) - 1)
 				titleText.SetText("Welcome " + nameEntry.Text) // change the title Text
 				Database.SaveData()
 			}, w)
 
-			SignInStartUp = dialog.NewConfirm("Sign In", "Create New User", func(b bool) {
+			SignInStartUp = dialog.NewCustomConfirm("Sign In", "Login", "Create New", container.NewMax(usrList), func(b bool) {
 				if b {
-					CreateUser.Show()
+					titleText.SetText("Welcome " + Database.Users[Database.Current_User])
 				} else {
-					dialog.ShowCustomConfirm("User Select", "Done", "Back", usrList, func(b bool) {
-						if !b {
-							SignInStartUp.Show()
-						} else {
-							titleText.SetText("Welcome " + Database.Users[Database.Current_User]) // change the title Text
-						}
-					}, w)
+					CreateUser.Show()
 				}
 			}, w)
 
@@ -120,18 +121,17 @@ func makeMainMenu(a fyne.App) fyne.CanvasObject {
 				text := obj.(*fyne.Container).Objects[0].(*widget.Label)
 				v, _ := reportData.GetValue(id)
 				val := v.(Database.Sale)
-				text.SetText(Database.ItemKeys[val.ID].Name + " " + strconv.Itoa(int(val.Quantity)) + " by " + Database.Users[val.Usr])
+				text.SetText(Database.ItemKeys[val.ID].Name + " x" + strconv.Itoa(int(val.Quantity)) + " by " + Database.Users[val.Usr])
 			}
 
 			reportList.OnSelected = func(id widget.ListItemID) {
-				refunded_item = 0
+				refunded_item = id
 			}
 
 			dialog.ShowCustomConfirm("Refund", "Refund", "Cancel", reportList, func(b bool) {
 				if !b {
 					return
 				}
-				fmt.Println(refunded_item)
 				if refunded_item < 0 {
 					dialog.ShowInformation("Hmm", "No Refund selected, try selecting first", w)
 					return
@@ -163,7 +163,7 @@ func makeMainMenu(a fyne.App) fyne.CanvasObject {
 							return
 						}
 
-						Database.Items = []Database.Item{}
+						// Database.Items = []Database.Item{}
 						Database.ItemKeys = map[uint64]*Database.ItemEV{}
 						Database.Reports = [2][]Database.Sale{}
 						Database.Expenses = []Database.Expense{}
@@ -232,10 +232,10 @@ func makeShoppingMenu() fyne.CanvasObject {
 					if !b || len(shoppingCart) == 0 {
 						return
 					}
-					receipt, total := Database.MakeReceipt(shoppingCart)
+					receipt := Database.MakeReceipt(shoppingCart)
 					shoppingCart = Database.BuyCart(shoppingCart)
 					cartData.Set(Database.ConvertCart(shoppingCart))
-					title.SetText(fmt.Sprintf("Cart Total: %1.1f", total))
+					title.SetText("Cart Total: 0.0")
 					// TODO: Get the data that would be added to the report
 					// TODO: Send the data to the printer
 					dialog.ShowInformation("Complete", receipt, w)
@@ -249,7 +249,8 @@ func makeShoppingMenu() fyne.CanvasObject {
 			}),
 
 			widget.NewButton("New Item", func() {
-				dialog.ShowCustomConfirm("Scan Item", "Confirm", "Cancel", container.NewVBox(barcodeEntry), func(confirmed bool) {
+				barcodeEntry.SetText("")
+				dialog.ShowCustomConfirm("Scan Item", "Confirm", "Cancel", barcodeEntry, func(confirmed bool) {
 					if !confirmed {
 						return
 					}
@@ -290,19 +291,7 @@ func makeStatsMenu() fyne.CanvasObject {
 
 	selectionEntry := UI.NewNumEntry("Year/Month")
 
-	var profitDataSelect int
 	var buttonType int
-
-	dataSelectOptions := widget.NewSelect([]string{"Revenue", "Cost", "Profit"}, func(dataType string) {
-		switch dataType {
-		case "Revenue":
-			profitDataSelect = 0
-		case "Cost":
-			profitDataSelect = 1
-		case "Profit":
-			profitDataSelect = 2
-		}
-	})
 
 	reportDisplay := widget.NewLabel("")
 	financeEntry := UI.NewNumEntry("YYYY/MM/DD [Select Custom again to select the date]")
@@ -334,7 +323,6 @@ func makeStatsMenu() fyne.CanvasObject {
 
 					year, err := strconv.Atoi(raw[0][1:])
 					if err != nil {
-						fmt.Println("Something Seems up!") //DEBUG: REMOVE AFTER TESTING
 						return
 					}
 
@@ -368,38 +356,28 @@ func makeStatsMenu() fyne.CanvasObject {
 				case "Items Graph":
 					buttonType = 0
 					link.URL = u
-					dataSelectOptions.Hidden = false
 				case "Price Changes":
 					buttonType = 1
 					link.URL = u
-					dataSelectOptions.Hidden = false
 				case "Item Popularity":
 					buttonType = 2
 					link.URL = r
-					dataSelectOptions.Hidden = false
 				case "Item Sales":
 					buttonType = 3
 					link.URL = r
-					dataSelectOptions.Hidden = true
 				case "Sales Over Time":
 					buttonType = 4
 					link.URL = u
-					dataSelectOptions.Hidden = true
 				}
 			}),
-			dataSelectOptions,
 			widget.NewButton("Graph", func() {
 				switch buttonType {
 				case 0:
-					Graph.Labels, Graph.LineInputs = Database.GetLine(selectionEntry.Text, profitDataSelect, 0)
+					Graph.Labels, Graph.LineInputs = Database.GetLine(selectionEntry.Text, 0, 0)
 				case 1:
-					Graph.Labels, Graph.LineInputs = Database.GetLine(selectionEntry.Text, profitDataSelect, 1)
+					Graph.Labels, Graph.Inputs = Database.GetPie(selectionEntry.Text, 1)
 				case 2:
-					Graph.Labels, Graph.Inputs = Database.GetPie(selectionEntry.Text, profitDataSelect)
-				case 3:
-					Graph.Labels, Graph.Inputs = Database.GetPie(selectionEntry.Text, 3)
-				case 4:
-					Graph.Labels, Graph.LineInputs = Database.GetLine(selectionEntry.Text, 3, 0)
+					Graph.Labels, Graph.LineInputs = Database.GetLine(selectionEntry.Text, 1, 0)
 				}
 			}),
 			link,

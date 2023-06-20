@@ -18,11 +18,12 @@ type Item struct {
 type ItemEV struct { //EV = Entry Value
 	Price float32
 	Name  string
-	Idxes []int
+	Idxes []int // Every instance of this item with this price
 }
 
 type Sale struct {
 	Year, Month, Day uint8
+	Usr              uint8
 	Quantity         uint16
 	Price, Cost      float32
 	ID               uint64
@@ -40,6 +41,9 @@ var ItemKeys = map[uint64]*ItemEV{}
 var Reports [2][]Sale
 var Expenses []Expense
 var Free_Spaces []int
+
+var Users = []string{""}
+var Current_User uint8
 
 const (
 	ONCE uint8 = iota
@@ -61,7 +65,7 @@ func FromUint40(b []byte) uint64 {
 }
 
 func DataInit(remove bool) error {
-	for i, file := 0, ""; i < 7; i++ {
+	for i, file := 0, ""; i < 8; i++ {
 		switch i {
 		case 0:
 			file = "Item_Reference.red"
@@ -77,6 +81,8 @@ func DataInit(remove bool) error {
 			file = "BackUp.red"
 		case 6:
 			file = "BackUp_Map.red"
+		case 7:
+			file = "Usrs.red"
 		}
 
 		if !remove {
@@ -123,10 +129,20 @@ func SaveData() error {
 
 		_, err = save.Write(save_report(database, order))
 		save.Close()
-
 		if err != nil {
 			return err
 		}
+	}
+
+	usrFile, err := fyne.CurrentApp().Storage().Save("Usrs.red")
+	if err != nil && err != io.EOF {
+		return err
+	}
+
+	_, err = usrFile.Write(save_users())
+	usrFile.Close()
+	if err != nil {
+		return err
 	}
 
 	expenses, err := fyne.CurrentApp().Storage().Save("Expenses.red")
@@ -135,10 +151,10 @@ func SaveData() error {
 	}
 
 	_, err = expenses.Write(save_expense(order))
+	expenses.Close()
 	if err != nil {
 		return err
 	}
-	expenses.Close()
 
 	// New Key saving
 	names, err := fyne.CurrentApp().Storage().Save("Name_Map.red")
@@ -190,6 +206,19 @@ func LoadData() error {
 
 		Reports[idx] = load_report(buf, order)
 	}
+
+	usrFile, err := fyne.CurrentApp().Storage().Open("Usrs.red")
+	if err != nil && err != io.EOF {
+		return err
+	}
+
+	usrBytes, err := io.ReadAll(usrFile)
+	usrFile.Close()
+	if err != nil && err != io.EOF {
+		return err
+	}
+
+	load_users(usrBytes)
 
 	expenses, err := fyne.CurrentApp().Storage().Open("Expenses.red")
 	if err != nil && err != io.EOF {

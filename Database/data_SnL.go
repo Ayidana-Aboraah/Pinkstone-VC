@@ -7,8 +7,19 @@ import (
 	"strings"
 )
 
-const DATA_SIZE = 18
+const DATA_SIZE = 19
 const ITEM_DS = 6
+
+func save_users() (result []byte) {
+	for _, v := range Users {
+		result = append(result, []byte(v+"\n")...)
+	}
+	return
+}
+
+func load_users(buf []byte) {
+	Users = strings.Split(string(buf), "\n")
+}
 
 func save_itemDB(order binary.ByteOrder) (result []byte) {
 	result = make([]byte, len(Items)*ITEM_DS)
@@ -38,11 +49,12 @@ func save_report(data []Sale, order binary.ByteOrder) (result []byte) {
 		result[c] = x.Year
 		result[c+1] = x.Month
 		result[c+2] = x.Day
+		result[c+3] = x.Usr
 
-		order.PutUint16(result[c+3:c+5], x.Quantity)
-		order.PutUint32(result[c+5:c+9], math.Float32bits(x.Price))
-		order.PutUint32(result[c+9:c+13], math.Float32bits(x.Cost))
-		PutUint40(result[c+13:c+DATA_SIZE], x.ID)
+		order.PutUint16(result[c+4:c+6], x.Quantity)
+		order.PutUint32(result[c+6:c+10], math.Float32bits(x.Price))
+		order.PutUint32(result[c+10:c+14], math.Float32bits(x.Cost))
+		PutUint40(result[c+14:c+DATA_SIZE], x.ID)
 	}
 
 	return
@@ -56,11 +68,12 @@ func load_report(buf []byte, order binary.ByteOrder) (report []Sale) {
 		report[i].Year = uint8(buf[c])
 		report[i].Month = uint8(buf[c+1])
 		report[i].Day = uint8(buf[c+2])
+		report[i].Usr = uint8(buf[c+3])
 
-		report[i].Quantity = order.Uint16(buf[c+3 : c+5])
-		report[i].Price = math.Float32frombits(order.Uint32(buf[c+5 : c+9]))
-		report[i].Cost = math.Float32frombits(order.Uint32(buf[c+9 : c+13]))
-		report[i].ID = FromUint40(buf[c+13 : c+DATA_SIZE])
+		report[i].Quantity = order.Uint16(buf[c+4 : c+6])
+		report[i].Price = math.Float32frombits(order.Uint32(buf[c+6 : c+10]))
+		report[i].Cost = math.Float32frombits(order.Uint32(buf[c+10 : c+14]))
+		report[i].ID = FromUint40(buf[c+14 : c+DATA_SIZE])
 	}
 	return
 }

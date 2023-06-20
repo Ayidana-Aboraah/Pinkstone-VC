@@ -1,9 +1,24 @@
 package Database
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 )
+
+func MakeReceipt(cart []Sale) (out string, total float32) {
+
+	y, m, d := time.Now().Date()
+	out = fmt.Sprintf("\t Pinkstone Ltd. : %d/%d/%d\n", y, m, d)
+
+	total = GetCartTotal(cart)
+
+	for _, v := range cart {
+		out += fmt.Sprintf("%s x%d for ₵%1.1f\n", ItemKeys[v.ID].Name, v.Quantity, v.Price)
+	}
+	out += fmt.Sprintf("Total: %1.1f\n\n Cashier: "+Users[Current_User], total)
+	return
+}
 
 func BuyCart(ShoppingCart []Sale) []Sale {
 	for _, v := range ShoppingCart {
@@ -87,6 +102,11 @@ func ConvertExpenses() (inter []interface{}) {
 	return
 }
 
+func RemoveReportEntry(report, index int) {
+	Reports[report][index] = Reports[report][len(Reports[report])-1]
+	Reports[report] = Reports[report][:len(Reports[report])-1]
+}
+
 func RemoveExpense(index int) {
 	Expenses[index] = Expenses[len(Expenses)-1]
 	Expenses = Expenses[:len(Expenses)-1]
@@ -106,5 +126,6 @@ func ConvertItem(id uint64) (result Sale) {
 	result.Price = vals.Price
 	result.Cost = Items[vals.Idxes[0]].Cost
 	result.Quantity = 1
+	result.Usr = uint8(Current_User)
 	return
 }

@@ -22,8 +22,6 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 	priceLabel := widget.NewLabel("Price")
 	costLabel := widget.NewLabel("Cost")
 
-    barcodeEntry := UI.NewNumEntry("Click and Scan");
-
 	inventoryData := binding.NewIntList()
 	inventoryData.Set(ConvertItemKeys())
 
@@ -52,14 +50,19 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 	inventoryList.OnSelected = func(idx widget.ListItemID) {
 		id, _ := inventoryData.GetValue(idx) // NOTE: Handle Err
 
-		ctq := "Cost : Quantity\n"
+		ctq := "Cost : Stock\n"
+
+		add := ""
+
 		for _, v := range ItemKeys[uint64(id)].Idxes {
-			ctq += fmt.Sprintf("%1.1f : %d\n", Items[v].Cost, Items[v].Quantity)
+			add = fmt.Sprintf("%1.1f : %d\n", Items[v].Cost, Items[v].Quantity)
 		}
 
-		idLabel.SetText(strconv.Itoa(id))
-		nameLabel.SetText(ItemKeys[uint64(id)].Name)
-		priceLabel.SetText(fmt.Sprint(ItemKeys[uint64(id)].Price))
+		ctq += add
+
+		idLabel.SetText("ID: " + strconv.Itoa(id))
+		nameLabel.SetText("Name: " + ItemKeys[uint64(id)].Name)
+		priceLabel.SetText("Price: " + fmt.Sprint(ItemKeys[uint64(id)].Price))
 		costLabel.SetText(ctq)
 		inventoryList.Unselect(idx)
 
@@ -164,30 +167,44 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 			nameLabel,
 			priceLabel,
 			costLabel,
+
 			widget.NewButton("New Item", func() {
-                dialog.ShowCustomConfirm("Scan Item", "Confirm", "Cancel", container.NewVBox(barcodeEntry), func(confirmed bool) {
-                    if (!confirmed){ return }
-                    id, err := strconv.ParseUint(barcodeEntry.Text, 10, 64);
-				    if err != nil {
-                        dialog.ShowInformation("Nope...", "Invalid Barcode", w)
-				    	return
-				    }
+				idEntry := UI.NewNumEntry("Click and Scan")
+				nameEntry := widget.NewEntry()
+				priceEntry := UI.NewNumEntry("Price to Sell it at")
+				costEntry := UI.NewNumEntry("Cost of purchasing this")
+				invenEntry := UI.NewNumEntry("Cost of purchasing this")
 
-				val, found := ItemKeys[uint64(id)]
-				if !found {
-					val = &ItemEV{Idxes: []int{len(Items)}}
-					ItemKeys[uint64(id)] = val
-					Items = append(Items, Item{})
-				}
+				dialog.ShowForm("New Entry", "Create", "Cancel", []*widget.FormItem{
+					widget.NewFormItem("ID", idEntry),
+					widget.NewFormItem("Name", nameEntry),
+					widget.NewFormItem("Price", priceEntry),
+					widget.NewFormItem("Cost", costEntry),
+					widget.NewFormItem("Current Stock", invenEntry),
+				}, func(b bool) {
+					if !b {
+						return
+					}
 
-				ctq := "Cost : Quantity\n"
-				for _, v := range ItemKeys[uint64(id)].Idxes {
-					ctq += fmt.Sprintf("%1.1f : %d\n", Items[v].Cost, Items[v].Quantity)
-				}
-				inventoryData.Set(ConvertItemKeys())
-				inventoryList.Select(inventoryList.Length() - 1)
-			    },w)
-            }),
+					id, err := strconv.ParseUint(idEntry.Text, 10, 64)
+					if err != nil {
+						dialog.ShowInformation("Nope...", "Invalid Barcode", w)
+						return
+					}
+
+					price, cost, quan := ConvertString(priceEntry.Text, costEntry.Text, invenEntry.Text)
+
+					ItemKeys[uint64(id)] = &ItemEV{Price: price, Name: nameEntry.Text, Idxes: []int{len(Items)}}
+					Items = append(Items, Item{Quantity: quan, Cost: cost})
+
+					UI.HandleErrorWindow(SaveData(), w)
+
+					inventoryData.Set(ConvertItemKeys()) //TODO: figure out how to ensure the list is updated visually
+					inventoryList.Select(inventoryList.Length() - 1)
+					inventoryList.Refresh()
+				}, w)
+			}),
+
 			widget.NewButton("New Expense/Gift", func() {
 				var expense_frequency uint8
 
@@ -229,7 +246,8 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 					UI.HandleErrorWindow(SaveData(), w)
 				}, w)
 			}),
-			widget.NewButton("Remove", func() {
+
+			widget.NewButton("Remove", func() { //TODO: make adjustments to functionality
 				dialog.ShowConfirm("Are you sure?", "Are you sure you want to delete this?", func(b bool) {
 					if !b {
 						return
@@ -258,38 +276,36 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 			}),
 
 			widget.NewButton("Modify", func() {
-				if target == 0 {
-					return
-				}
+				priceEntry := UI.NewNumEntry("Price to Sell it at")
+				costEntry := UI.NewNumEntry("Cost of purchasing this")
+				invenEntry := UI.NewNumEntry("Cost of purchasing this")
 
-				menu = 1
-				itemData.Set(ConvertItemIdxes(uint64(target)))
+				dialog.ShowForm("New Entry", "Create", "Cancel", []*widget.FormItem{
+					widget.NewFormItem("ID", widget.NewLabel(strconv.Itoa(target))),
+					widget.NewFormItem("Name", widget.NewLabel(ItemKeys[uint64(target)].Name)),
+					widget.NewFormItem("Price", priceEntry),
+					widget.NewFormItem("Cost", costEntry),
+					widget.NewFormItem("Current Stock", invenEntry),
+				}, func(b bool) {
+					if !b {
+						return
+					}
 
-				costEntry := UI.NewNumEntry("How much did you buy it for?")
-				invenEntry := UI.NewNumEntry("How much in stock with this cost?")
+					price, cost, quan := ConvertString(priceEntry.Text, costEntry.Text, invenEntry.Text)
 
-				createBtn := widget.NewButton("New Inventory", func() {
-					dialog.ShowForm("New Entry", "Create", "Cancel", []*widget.FormItem{
-						widget.NewFormItem("ID", widget.NewLabel(strconv.Itoa(target))),
-						widget.NewFormItem("Name", widget.NewLabel(ItemKeys[uint64(target)].Name)),
-						widget.NewFormItem("Cost", costEntry),
-						widget.NewFormItem("Quantity", invenEntry),
-					}, func(b bool) {
-						if !b {
-							return
-						}
+					ItemKeys[uint64(target)] = &ItemEV{Price: price, Name: ItemKeys[uint64(target)].Name, Idxes: []int{len(Items)}}
 
-						_, cost, quan := ConvertString("0", costEntry.Text, invenEntry.Text)
-						ItemKeys[uint64(target)].Idxes = append(ItemKeys[uint64(target)].Idxes, len(Items))
-						Items = append(Items, Item{Quantity: quan, Cost: cost})
-					}, w)
-				})
+					Items = append(Items, Item{Quantity: quan, Cost: cost})
 
-				dialog.ShowCustom("Which one?", "Done", container.NewVBox(itemList_title, container.NewMax(itemList), createBtn), w)
-				inventoryList.Refresh()
-				w.Content().Refresh()
+					UI.HandleErrorWindow(SaveData(), w)
+
+					inventoryData.Set(ConvertItemKeys()) //TODO: figure out how to ensure the list is updated visually
+					inventoryList.Select(inventoryList.Length() - 1)
+					inventoryList.Refresh()
+				}, w)
 			}),
 		),
+
 		container.NewVSplit(
 			container.NewMax(inventoryList),
 			container.NewMax(expenseList),

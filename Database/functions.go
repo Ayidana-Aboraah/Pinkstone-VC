@@ -12,7 +12,11 @@ func GetLine(selection string, dataType, db int) ([]string, [][]float32) {
 		return nil, nil
 	}
 
-	raw := strings.Split(selection, "/")
+	raw := strings.Split(selection, "-")
+
+	if len(raw) < 2 {
+		return nil, nil
+	}
 
 	year, err := strconv.Atoi(raw[0][1:])
 	if err != nil {
@@ -33,7 +37,7 @@ func GetLine(selection string, dataType, db int) ([]string, [][]float32) {
 	var sales [][]float32
 	var names []string
 
-	for id := range ItemKeys {
+	for id := range Item {
 		var totals []float32
 
 		for i := uint8(1); i < 32; i++ {
@@ -55,7 +59,7 @@ func GetLine(selection string, dataType, db int) ([]string, [][]float32) {
 		}
 
 		if totals != nil {
-			names = append(names, ItemKeys[id].Name)
+			names = append(names, Item[id].Name)
 			sales = append(sales, totals)
 		}
 	}
@@ -68,7 +72,7 @@ func GetPie(selection string, dataType int) ([]string, []float32) {
 		return nil, nil
 	}
 
-	raw := strings.Split(selection, "/")
+	raw := strings.Split(selection, "-")
 
 	year, err := strconv.Atoi(raw[0][1:])
 	if err != nil {
@@ -94,7 +98,7 @@ func GetPie(selection string, dataType int) ([]string, []float32) {
 	var sales []float32
 	var names []string
 
-	for id, val := range ItemKeys {
+	for id, val := range Item {
 		var total float32
 
 		for i := len(Reports[0]) - 1; i >= 0; i-- {
@@ -127,7 +131,7 @@ func Report(selection uint8, date []uint8) string {
 		date = []uint8{uint8(day), uint8(month), uint8(year)}
 	}
 
-	var item_sales float32
+	var item_sales [2]float32
 
 	for _, v := range Reports[0] {
 		if v.Year != date[YEARLY] {
@@ -142,7 +146,8 @@ func Report(selection uint8, date []uint8) string {
 			continue
 		}
 
-		item_sales += v.Price * float32(v.Quantity)
+		item_sales[0] += v.Price * float32(v.Quantity)
+		item_sales[1] += v.Cost * float32(v.Quantity)
 	}
 
 	var expenses float32
@@ -169,10 +174,11 @@ func Report(selection uint8, date []uint8) string {
 	}
 
 	return fmt.Sprintf(
-		"Item Revenue: %.2f,\nExpenses: %.2f,\nGains: %.2f,\nReport Total: %.2f",
-		item_sales,                // Sold Amount
-		expenses,                  // Expenses
-		gifts,                     // Gifts
-		item_sales+expenses+gifts, // Report Total
+		"Item Revenue: %.2f,\nItem Cost: %.2f\nExpenses: %.2f,\nGains: %.2f,\nReport Total: %.2f",
+		item_sales[0], // Gain
+		item_sales[1], // Cost
+		expenses,      // Expenses
+		gifts,         // Gifts
+		item_sales[0]-item_sales[1]+expenses+gifts, // Report Total
 	)
 }

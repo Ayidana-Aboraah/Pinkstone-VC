@@ -10,9 +10,10 @@ import (
 	"fyne.io/fyne/v2"
 )
 
-type ItemEV struct { //EV = Entry Value
-	Quantity uint16
+type Entry struct {
+	Quantity [3]uint16
 	Price    float32
+	Cost     [3]float32
 	Name     string
 }
 
@@ -20,7 +21,7 @@ type Sale struct {
 	Year, Month, Day uint8
 	Usr              uint8
 	Quantity         uint16
-	Price            float32
+	Price, Cost      float32
 	ID               uint64
 }
 
@@ -31,8 +32,7 @@ type Expense struct { // - for expense, + for gift
 	Name      string
 }
 
-// var Items []Item
-var ItemKeys = map[uint64]*ItemEV{}
+var Item = map[uint64]*Entry{}
 var Reports [2][]Sale
 var Expenses []Expense
 var Free_Spaces []int

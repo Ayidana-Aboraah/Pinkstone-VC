@@ -91,18 +91,20 @@ func load_expense(buf []byte, order binary.ByteOrder) {
 	}
 }
 
-const kvSize = 11
+const kvSize = 16
 
 func save_kv(order binary.ByteOrder) (result []byte) {
-	sect := make([]byte, len(ItemKeys)*kvSize)
+	sect := make([]byte, len(Item)*kvSize)
 	names := ""
 	var i int32
 
-	for k, v := range ItemKeys {
+	for k, v := range Item {
 		// ID[5], Quantity[2], Price[4]
-		order.PutUint16(sect[i:i+2], v.Quantity)
-		order.PutUint32(sect[i+2:i+6], math.Float32bits(v.Price))
-		PutUint40(sect[i+6:i+kvSize], k)
+		order.PutUint16(sect[i:i+2], v.Quantity[0])
+		order.PutUint16(sect[i+2:i+4], v.Quantity[1])
+		order.PutUint16(sect[i+4:i+6], v.Quantity[2])
+		order.PutUint32(sect[i+6:i+10], math.Float32bits(v.Price))
+		PutUint40(sect[i+10:i+kvSize], k)
 		i += kvSize
 		names += v.Name + "\n"
 	}
@@ -112,6 +114,9 @@ func save_kv(order binary.ByteOrder) (result []byte) {
 }
 
 func load_kv(buf []byte, order binary.ByteOrder) {
+	if len(buf) == 0 {
+		return
+	}
 	sides := strings.SplitN(string(buf), "\n\n", 2)
 
 	names := strings.Split(sides[1], "\n")
@@ -120,6 +125,9 @@ func load_kv(buf []byte, order binary.ByteOrder) {
 	var c int
 	for i := 0; i < len(sides[0])/kvSize; i++ {
 		c = i * kvSize
-		ItemKeys[FromUint40(buf[c+6:c+kvSize])] = &ItemEV{Quantity: order.Uint16(buf[c : c+2]), Price: math.Float32frombits(order.Uint32(buf[c+2 : c+6])), Name: names[i]}
+		Item[FromUint40(buf[c+10:c+kvSize])] = &Entry{
+			Quantity: [3]uint16{order.Uint16(buf[c : c+2]), order.Uint16(buf[c+2 : c+4]), order.Uint16(buf[c+4 : c+6])},
+			Price:    math.Float32frombits(order.Uint32(buf[c+6 : c+10])),
+			Name:     names[i]}
 	}
 }

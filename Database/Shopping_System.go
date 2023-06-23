@@ -6,15 +6,17 @@ import (
 	"time"
 )
 
-func MakeReceipt(cart []Sale) (out string) {
-
+func MakeReceipt(cart []Sale, customer string) (out string) {
 	y, m, d := time.Now().Date()
-	out = fmt.Sprintf("\t Pinkstone Ltd. : %d/%d/%d\n", y, m, d)
+	hr, min, _ := time.Now().Clock()
+	out = fmt.Sprintf("%d/%d/%d , %d:%2d\n", y, m, d, hr, min)
+	out += "Loc: Santasi\nTel/Vodacash: 0506695927\nTel/MOMO: 0558324302\nMerchant ID: 868954\nCustomer: " + customer + "\n"
 
 	for _, v := range cart {
-		out += fmt.Sprintf("%s x%d for ₵%1.1f\n", ItemKeys[v.ID].Name, v.Quantity, v.Price)
+		out += fmt.Sprintf("\n%s x%d for ₵%1.2f\n", Item[v.ID].Name, v.Quantity, v.Price)
 	}
-	out += fmt.Sprintf("Total: %1.1f\n\n Cashier: "+Users[Current_User], GetCartTotal(cart))
+	out += fmt.Sprintf("Total: %1.1f\n\n Cashier: %s\n", GetCartTotal(cart), Users[Current_User])
+	out += "ALL SALES ARE FINAL\nThank you, please do come again\nSoftware Developed By Ayidana Aboraah\nTEL: +1 571-697-9347\nredstonegameraa@gmail.com\n"
 	return
 }
 
@@ -25,8 +27,22 @@ func BuyCart(ShoppingCart []Sale) []Sale {
 		v.Day = uint8(day)
 		v.Month = uint8(month)
 		v.Year = uint8(year)
+		if int16(Item[v.ID].Quantity[0])-int16(v.Quantity) < 0 {
+			newbie := v
+			newbie.Cost = Item[v.ID].Cost[1]
+			newbie.Quantity = uint16((int16(Item[v.ID].Quantity[0]) - int16(v.Quantity)) * -1)
+			Item[v.ID].Quantity[1] -= newbie.Quantity
+			v.Quantity -= newbie.Quantity
+
+			Item[v.ID].Quantity[0] = Item[v.ID].Quantity[1]
+			Item[v.ID].Quantity[1] = Item[v.ID].Quantity[2]
+
+			Item[v.ID].Cost[0] = Item[v.ID].Cost[1]
+			Item[v.ID].Cost[1] = Item[v.ID].Cost[2]
+		}
+		Item[v.ID].Quantity[0] -= v.Quantity
 		Reports[0] = append(Reports[0], v)
-		ItemKeys[v.ID].Quantity -= v.Quantity
+
 	}
 	SaveData()
 	return ShoppingCart[:0]
@@ -74,23 +90,12 @@ func ConvertCart(shoppingCart []Sale) (intercart []interface{}) {
 }
 
 func ConvertItemKeys() (inter []int) {
-	for k := range ItemKeys {
+	for k := range Item {
 		inter = append(inter, int(k))
 	}
 
 	return
 }
-
-// func ConvertItemIdxes(target uint64) (list []int) {
-// 	list = append(list, ItemKeys[target].Idxes...)
-// 	return
-// }
-
-// func RemoveItem(idx int, id uint64) {
-// 	Free_Spaces = append(Free_Spaces, ItemKeys[id].Idxes[idx])
-// 	ItemKeys[id].Idxes[idx] = ItemKeys[id].Idxes[len(ItemKeys[id].Idxes)-1]
-// 	ItemKeys[id].Idxes = ItemKeys[id].Idxes[:len(ItemKeys[id].Idxes)-1]
-// }
 
 func ConvertExpenses() (inter []interface{}) {
 	for i := range Expenses {
@@ -109,17 +114,19 @@ func RemoveExpense(index int) {
 	Expenses = Expenses[:len(Expenses)-1]
 }
 
-func ConvertString(Price, Quantity string) (float32, uint16) {
-	newPrice, _ := strconv.ParseFloat(Price, 64)
+func ConvertString(Price, Cost, Quantity string) (float32, float32, uint16) {
+	newPrice, _ := strconv.ParseFloat(Price, 32)
+	newCost, _ := strconv.ParseFloat(Cost, 32)
 	newQuantity, _ := strconv.Atoi(Quantity)
-	return float32(newPrice), uint16(newQuantity)
+	return float32(newPrice), float32(newCost), uint16(newQuantity)
 }
 
 func ConvertItem(id uint64) (result Sale) {
-	vals := ItemKeys[id]
+	vals := Item[id]
 
 	result.ID = id
 	result.Price = vals.Price
+	result.Cost = vals.Cost[0]
 	result.Quantity = 1
 	result.Usr = uint8(Current_User)
 	return

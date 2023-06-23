@@ -22,7 +22,7 @@ func TestMenu(shoppingCart *[]Database.Sale, a fyne.App, w fyne.Window) fyne.Can
 		},
 		func(item binding.DataItem, obj fyne.CanvasObject) {
 			val, _ := item.(binding.Int).Get() // NOTE: Err handling
-			obj.(*fyne.Container).Objects[0].(*widget.Label).SetText(Database.ItemKeys[uint64(val)].Name)
+			obj.(*fyne.Container).Objects[0].(*widget.Label).SetText(Database.Item[uint64(val)].Name)
 		},
 	)
 
@@ -36,7 +36,7 @@ func TestMenu(shoppingCart *[]Database.Sale, a fyne.App, w fyne.Window) fyne.Can
 			dialog.ShowInformation("Databases", fmt.Sprint(Database.Reports), w)
 		}),
 		widget.NewButton("Load Test DB", func() {
-			Database.ItemKeys = TestItemKeys
+			// Database.ItemKeys = TestItemKeys
 			Database.Reports = TestDB
 			fmt.Println(TestDB[0])
 		}),
@@ -47,14 +47,14 @@ func TestMenu(shoppingCart *[]Database.Sale, a fyne.App, w fyne.Window) fyne.Can
 	)
 }
 
-var TestItemKeys = map[uint64]*Database.ItemEV{
-	999999999999: {Price: 234.23, Name: "sammy", Quantity: 1},
-	674398202423: {Price: 100.50, Name: "Clark", Quantity: 1},
-	389432143927: {Price: 3974.89, Name: "Banker", Quantity: 5},
-	402933466372: {Price: 1324.89, Name: "Blackest", Quantity: 87},
-	198998421024: {Price: 1094.89, Name: "Reeses puffs", Quantity: 4124},
-	412341251434: {Price: 3974.89, Name: "Sus", Quantity: 5},
-}
+// var TestItemKeys = map[uint64]*Database.ItemEV{
+// 	999999999999: {Price: 234.23, Name: "sammy", Quantity: 1},
+// 	674398202423: {Price: 100.50, Name: "Clark", Quantity: 1},
+// 	389432143927: {Price: 3974.89, Name: "Banker", Quantity: 5},
+// 	402933466372: {Price: 1324.89, Name: "Blackest", Quantity: 87},
+// 	198998421024: {Price: 1094.89, Name: "Reeses puffs", Quantity: 4124},
+// 	412341251434: {Price: 3974.89, Name: "Sus", Quantity: 5},
+// }
 
 var TestDB = [2][]Database.Sale{
 	{

@@ -7,6 +7,7 @@ test:
 	go test -v ./Test/...
 
 win:
+	sudo systemctl start docker
 	fyne-cross windows -arch=* -icon="icon02.png" -app-id="Bronze.Hermes"
 #	env GOOS=windows GOARCH=amd64
 #	go build -o BH.exe Main.go CGO=ENABLED 

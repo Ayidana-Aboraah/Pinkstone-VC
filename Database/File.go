@@ -2,7 +2,6 @@ package Database
 
 import (
 	"encoding/binary"
-	"errors"
 	"io"
 	"io/ioutil"
 	"strings"
@@ -11,30 +10,20 @@ import (
 )
 
 type Entry struct {
-	Quantity [3]uint16
 	Price    float32
 	Cost     [3]float32
+	Quantity [3]float32
 	Name     string
 }
 
 type Sale struct {
-	Year, Month, Day uint8
-	Usr              uint8
-	Quantity         uint16
-	Price, Cost      float32
-	ID               uint64
+	Year, Month, Day, Usr uint8
+	ID                    uint16
+	Price, Cost, Quantity float32
 }
 
-type Expense struct { // - for expense, + for gift
-	Frequency uint8
-	Date      [3]uint8 // Day, Month Year
-	Amount    float32
-	Name      string
-}
-
-var Item = map[uint64]*Entry{}
+var Item = map[uint16]*Entry{}
 var Reports [2][]Sale
-var Expenses []Expense
 var Free_Spaces []int
 
 var Users = []string{}
@@ -60,7 +49,7 @@ func FromUint40(b []byte) uint64 {
 }
 
 func DataInit(remove bool) error {
-	for i, file := 0, ""; i < 7; i++ {
+	for i, file := 0, ""; i < 6; i++ {
 		switch i {
 		case 0:
 			file = "Item_Reference.red"
@@ -69,12 +58,10 @@ func DataInit(remove bool) error {
 		case 2:
 			file = "Price_Log.red"
 		case 3:
-			file = "Expenses.red"
-		case 4:
 			file = "BackUp.red"
-		case 5:
+		case 4:
 			file = "BackUp_Map.red"
-		case 6:
+		case 5:
 			file = "Usrs.red"
 		}
 
@@ -139,17 +126,6 @@ func SaveData() error {
 		return err
 	}
 
-	expenses, err := fyne.CurrentApp().Storage().Save("Expenses.red")
-	if err != nil && err != io.EOF {
-		return err
-	}
-
-	_, err = expenses.Write(save_expense(order))
-	expenses.Close()
-	if err != nil {
-		return err
-	}
-
 	return err
 }
 
@@ -205,19 +181,6 @@ func LoadData() error {
 
 	load_users(usrBytes)
 
-	expenses, err := fyne.CurrentApp().Storage().Open("Expenses.red")
-	if err != nil && err != io.EOF {
-		return err
-	}
-	defer expenses.Close()
-
-	exp_bytes, err := io.ReadAll(expenses)
-	if err != nil && err != io.EOF {
-		return err
-	}
-
-	load_expense(exp_bytes, order)
-
 	return nil
 }
 
@@ -251,13 +214,7 @@ func SaveBackUp() error {
 	}
 	defer names.Close()
 
-	var result []byte
-
-	result = append(result, save_expense(order)...)
-	result = append(result, []byte("X\n\n")...) // Just append a break character
-
-	result = append(result, save_kv(order)...)
-	_, err = names.Write(result)
+	_, err = names.Write(save_kv(order))
 	return err
 }
 
@@ -293,13 +250,7 @@ func LoadBackUp() error {
 		return err
 	}
 
-	exp, NameKV, found := strings.Cut(string(raw), "X\n\n")
-	if !found {
-		return errors.New("data not found in BackUp_Map.red")
-	}
-
-	load_expense([]byte(exp), order)
-	load_kv([]byte(NameKV), order) // NOTE: Watch for odd activity | [2:] works the same as [], so may be something ups
+	load_kv([]byte(raw), order) // NOTE: Watch for odd activity | [2:] works the same as [], so may be something ups
 
 	return nil
 }

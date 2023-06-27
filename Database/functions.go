@@ -37,7 +37,7 @@ func GetLine(selection string, dataType, db int) ([]string, [][]float32) {
 	var sales [][]float32
 	var names []string
 
-	for id := range Item {
+	for id, x := range Item {
 		var totals []float32
 
 		for i := uint8(1); i < 32; i++ {
@@ -59,7 +59,7 @@ func GetLine(selection string, dataType, db int) ([]string, [][]float32) {
 		}
 
 		if totals != nil {
-			names = append(names, Item[id].Name)
+			names = append(names, x.Name)
 			sales = append(sales, totals)
 		}
 	}
@@ -146,39 +146,23 @@ func Report(selection uint8, date []uint8) string {
 			continue
 		}
 
-		item_sales[0] += v.Price * float32(v.Quantity)
-		item_sales[1] += v.Cost * float32(v.Quantity)
+		item_sales[0] += v.Price * v.Quantity
+		item_sales[1] += v.Cost * v.Quantity
 	}
 
-	var expenses float32
-	var gifts float32
+	var damages float32
 
-	for i := len(Expenses) - 1; i > -1; i-- {
-		if Expenses[i].Date[YEARLY] != date[YEARLY] {
-			continue
-		}
-
-		if selection != YEARLY && Expenses[i].Date[MONTHLY] != date[MONTHLY] {
-			continue
-		}
-
-		if selection == ONCE && Expenses[i].Date[ONCE] != date[ONCE] {
-			continue
-		}
-
-		if Expenses[i].Amount < 0 {
-			expenses += Expenses[i].Amount
-		} else {
-			gifts += Expenses[i].Amount
+	for _, v := range Reports[0] {
+		if v.Usr == 255 {
+			damages += v.Cost * v.Quantity
 		}
 	}
 
 	return fmt.Sprintf(
-		"Item Revenue: %.2f,\nItem Cost: %.2f\nExpenses: %.2f,\nGains: %.2f,\nReport Total: %.2f",
-		item_sales[0], // Gain
-		item_sales[1], // Cost
-		expenses,      // Expenses
-		gifts,         // Gifts
-		item_sales[0]-item_sales[1]+expenses+gifts, // Report Total
+		"Item Revenue: %.2f,\nItem Cost: -%.2f\nDamages: -%.2f,\nReport Total: %.2f",
+		item_sales[0],               // Gain
+		item_sales[1],               // Cost
+		damages,                     // Damages
+		item_sales[0]-item_sales[1], // Report Total
 	)
 }

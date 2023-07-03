@@ -1,7 +1,6 @@
 package Database
 
 import (
-	"encoding/binary"
 	"io"
 	"io/ioutil"
 	"strings"
@@ -17,15 +16,15 @@ type Entry struct {
 }
 
 type Sale struct {
-	Year, Month, Day, Usr uint8
-	ID                    uint16
-	Price, Cost, Quantity float32
+	Year, Month, Day, Usr, Customer uint8
+	ID                              uint16
+	Price, Cost, Quantity           float32
 }
 
 var Item = map[uint16]*Entry{}
-var Reports [2][]Sale
-var Free_Spaces []int
+var Report []Sale
 
+var Customers = []string{}
 var Users = []string{}
 var Current_User uint8
 
@@ -35,19 +34,6 @@ const (
 	YEARLY
 )
 
-func PutUint40(b []byte, v uint64) {
-	_ = b[4]
-	b[0] = byte(v >> 32)
-	b[1] = byte(v >> 24)
-	b[2] = byte(v >> 16)
-	b[3] = byte(v >> 8)
-	b[4] = byte(v)
-}
-
-func FromUint40(b []byte) uint64 {
-	return uint64(b[4]) | uint64(b[3])<<8 | uint64(b[2])<<16 | uint64(b[1])<<24 | uint64(b[0])<<32
-}
-
 func DataInit(remove bool) error {
 	for i, file := 0, ""; i < 6; i++ {
 		switch i {
@@ -56,13 +42,13 @@ func DataInit(remove bool) error {
 		case 1:
 			file = "Report_Data.red"
 		case 2:
-			file = "Price_Log.red"
+			file = "Customers.red"
 		case 3:
-			file = "BackUp.red"
+			file = "Usrs.red"
 		case 4:
 			file = "BackUp_Map.red"
 		case 5:
-			file = "Usrs.red"
+			file = "BackUp.red"
 		}
 
 		if !remove {
@@ -81,38 +67,37 @@ func DataInit(remove bool) error {
 }
 
 func SaveData() error {
-	order := binary.BigEndian
-	file := "Item_Reference.red"
-
-	db, err := fyne.CurrentApp().Storage().Save(file)
+	db, err := fyne.CurrentApp().Storage().Save("Item_Reference.red")
 	if err != nil {
 		return err
 	}
 	defer db.Close()
 
-	_, err = db.Write(save_kv(order))
+	_, err = db.Write(save_kv())
 	if err != nil {
 		return err
 	}
 
-	for idx, database := range Reports {
-		switch idx {
-		case 0:
-			file = "Report_Data.red"
-		case 1:
-			file = "Price_Log.red"
-		}
+	save, err := fyne.CurrentApp().Storage().Save("Report_Data.red")
+	if err != nil {
+		return err
+	}
 
-		save, err := fyne.CurrentApp().Storage().Save(file)
-		if err != nil {
-			return err
-		}
+	_, err = save.Write(save_report(Report))
+	save.Close()
+	if err != nil {
+		return err
+	}
 
-		_, err = save.Write(save_report(database, order))
-		save.Close()
-		if err != nil {
-			return err
-		}
+	customerFile, err := fyne.CurrentApp().Storage().Save("Customers.red")
+	if err != nil && err != io.EOF {
+		return err
+	}
+
+	_, err = customerFile.Write(save_customers())
+	customerFile.Close()
+	if err != nil {
+		return err
 	}
 
 	usrFile, err := fyne.CurrentApp().Storage().Save("Usrs.red")
@@ -130,10 +115,7 @@ func SaveData() error {
 }
 
 func LoadData() error {
-	order := binary.BigEndian
-	file := "Item_Reference.red"
-
-	f, err := fyne.CurrentApp().Storage().Open(file)
+	f, err := fyne.CurrentApp().Storage().Open("Item_Reference.red")
 	if err != nil {
 		return err
 	}
@@ -144,29 +126,33 @@ func LoadData() error {
 	}
 	f.Close()
 
-	load_kv(buf, order)
+	load_kv(buf)
 
-	for idx := range Reports {
-		switch idx {
-		case 0:
-			file = "Report_Data.red"
-		case 1:
-			file = "Price_Log.red"
-		}
-
-		file, err := fyne.CurrentApp().Storage().Open(file)
-		if err != nil {
-			return err
-		}
-
-		buf, err := io.ReadAll(file)
-		if err != nil {
-			return err
-		}
-		file.Close()
-
-		Reports[idx] = load_report(buf, order)
+	reportFile, err := fyne.CurrentApp().Storage().Open("Report_Data.red")
+	if err != nil {
+		return err
 	}
+
+	buf, err = io.ReadAll(reportFile)
+	if err != nil {
+		return err
+	}
+	reportFile.Close()
+
+	load_report(buf)
+
+	customerFile, err := fyne.CurrentApp().Storage().Open("Customers.red")
+	if err != nil && err != io.EOF {
+		return err
+	}
+
+	custmBuf, err := io.ReadAll(customerFile)
+	customerFile.Close()
+	if err != nil && err != io.EOF {
+		return err
+	}
+
+	load_customers(custmBuf)
 
 	usrFile, err := fyne.CurrentApp().Storage().Open("Usrs.red")
 	if err != nil && err != io.EOF {
@@ -185,8 +171,6 @@ func LoadData() error {
 }
 
 func SaveBackUp() error {
-	order := binary.BigEndian
-
 	save, err := fyne.CurrentApp().Storage().Save("BackUp.red")
 	if err != nil {
 		return err
@@ -194,13 +178,11 @@ func SaveBackUp() error {
 
 	var BackUp_Buff []byte
 
-	BackUp_Buff = append(BackUp_Buff, save_kv(order)...)
+	BackUp_Buff = append(BackUp_Buff, save_kv()...)
 	BackUp_Buff = append(BackUp_Buff, []byte{10, 10, 10}...)
 
-	BackUp_Buff = append(BackUp_Buff, save_report(Reports[0], order)...)
+	BackUp_Buff = append(BackUp_Buff, save_report(Report)...)
 	BackUp_Buff = append(BackUp_Buff, []byte{10, 10, 10}...)
-
-	BackUp_Buff = append(BackUp_Buff, save_report(Reports[1], order)...)
 
 	_, err = save.Write(BackUp_Buff)
 	if err != nil {
@@ -214,13 +196,14 @@ func SaveBackUp() error {
 	}
 	defer names.Close()
 
-	_, err = names.Write(save_kv(order))
+	buf := append(save_kv(), "\n\n"...)
+	buf = append(buf, save_customers()...)
+
+	_, err = names.Write(buf)
 	return err
 }
 
 func LoadBackUp() error {
-	order := binary.BigEndian
-
 	file, err := fyne.CurrentApp().Storage().Open("BackUp.red")
 	if err != nil {
 		return err
@@ -235,9 +218,8 @@ func LoadBackUp() error {
 
 	black := strings.Split(string(buf), "\n\n\n")
 
-	load_kv([]byte(black[0]), order)
-	Reports[0] = load_report([]byte(black[1]), order)
-	Reports[1] = load_report([]byte(black[2]), order)
+	load_kv([]byte(black[0]))
+	load_report([]byte(black[1]))
 
 	names, err := fyne.CurrentApp().Storage().Open("BackUp_Map.red")
 	if err != nil {
@@ -250,7 +232,10 @@ func LoadBackUp() error {
 		return err
 	}
 
-	load_kv([]byte(raw), order) // NOTE: Watch for odd activity | [2:] works the same as [], so may be something ups
+	maps := strings.SplitN(string(raw), "\n\n", 2)
+
+	load_users([]byte(maps[0])) // NOTE: Watch for odd activity | [2:] works the same as [], so may be something ups
+	load_customers([]byte(maps[1]))
 
 	return nil
 }

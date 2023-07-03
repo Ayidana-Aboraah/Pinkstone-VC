@@ -1,20 +1,67 @@
 package Database
 
 import (
+	"BronzeHermes/UI"
 	"fmt"
 	"strconv"
 	"strings"
 	"time"
+
+	"fyne.io/fyne/v2"
 )
 
 func SearchInventory(input string) (Names []string, IDs []uint16) {
+	if input == "" {
+		for i, v := range Item {
+			IDs = append(IDs, i)
+			Names = append(Names, v.Name)
+		}
+		return
+	}
+
 	for id, iv := range Item {
-		if strings.Contains(strings.ToLower(iv.Name), strings.ToLower(input)) {
+		if strings.Contains(strings.ToLower(iv.Name), strings.ToLower(input)) && iv.Name[0] != byte(216) {
 			IDs = append(IDs, id)
 			Names = append(Names, iv.Name)
 		}
 	}
 	return
+}
+
+func SearchCustomers(input string) (Names []string, IDs []uint16) {
+	if input == "" {
+		Names = Customers
+		for i := range Customers {
+			IDs = append(IDs, uint16(i))
+		}
+		return
+	}
+
+	for i := 0; i < len(Customers); i++ {
+		if strings.Contains(strings.ToLower(Customers[i]), strings.ToLower(input)) && Customers[i][0] != byte(216) {
+			Names = append(Names, Customers[i])
+			IDs = append(IDs, uint16(i))
+		}
+	}
+	return
+}
+
+func CleanUpDeadItems() {
+	for k := range Item {
+		if Item[k].Name[0] == byte(216) {
+			found := false
+			for _, x := range Report {
+				if x.ID == k {
+					found = true
+					break
+				}
+			}
+			if !found {
+				// fmt.Println("Deleteing: " + Item[k].Name)
+				delete(Item, k)
+			}
+		}
+	}
 }
 
 func FilterUsers() (out []string) {
@@ -41,7 +88,6 @@ func MakeReceipt(cart []Sale, customer string) (out string) {
 }
 
 func ShiftQuantity(ID uint16) {
-
 	Item[ID].Quantity[0] = Item[ID].Quantity[1]
 	Item[ID].Quantity[1] = Item[ID].Quantity[2]
 	Item[ID].Quantity[2] = 0
@@ -51,23 +97,26 @@ func ShiftQuantity(ID uint16) {
 	Item[ID].Cost[2] = 0
 }
 
-func BuyCart(ShoppingCart []Sale) []Sale {
+func BuyCart(ShoppingCart []Sale, customer int) []Sale {
 	for _, v := range ShoppingCart {
 		y, month, day := time.Now().Date()
 		year, _ := strconv.Atoi(strconv.Itoa(y)[1:])
 		v.Day = uint8(day)
 		v.Month = uint8(month)
 		v.Year = uint8(year)
+		v.Customer = uint8(customer)
 
 		if Item[v.ID].Quantity[0]-v.Quantity <= 0 {
 			newbie := v
+			newbie.Price = v.Price
 			newbie.Cost = Item[v.ID].Cost[1]
-			newbie.Quantity = Item[v.ID].Quantity[0] - v.Quantity
-			v.Quantity += newbie.Quantity
+			newbie.Quantity = (Item[v.ID].Quantity[0] - v.Quantity) * -1
 
-			Item[v.ID].Quantity[1] += newbie.Quantity
-
-			Reports[0] = append(Reports[0], newbie)
+			if newbie.Quantity != 0 {
+				v.Quantity -= newbie.Quantity
+				Item[v.ID].Quantity[1] -= newbie.Quantity
+				Report = append(Report, newbie)
+			}
 
 			ShiftQuantity(v.ID)
 			if Item[v.ID].Quantity[0] == 0 {
@@ -77,7 +126,7 @@ func BuyCart(ShoppingCart []Sale) []Sale {
 			Item[v.ID].Quantity[0] -= v.Quantity
 		}
 
-		Reports[0] = append(Reports[0], v)
+		Report = append(Report, v)
 	}
 	SaveData()
 	return ShoppingCart[:0]
@@ -127,18 +176,52 @@ func ConvertCart(shoppingCart []Sale) (intercart []interface{}) {
 }
 
 func ConvertItemKeys() (inter []int) {
+	// var pop []int
 	for k := range Item {
 		if Item[k].Name[0] != byte(216) {
 			inter = append(inter, int(k))
 		}
 	}
+	// for inv := len(pop); inv > 0; inv-- {
+	// 	for i := 0; i < len(pop); i++ { // || I > val[i]
+
+	// 	}
+	// }
 
 	return
 }
 
-func RemoveReportEntry(report, index int) {
-	Reports[report][index] = Reports[report][len(Reports[report])-1]
-	Reports[report] = Reports[report][:len(Reports[report])-1]
+func ProcessQuantity(n string, w fyne.Window) (quantity float32) {
+	raw := strings.SplitN(n, " ", 2)
+	if len(raw) == 2 {
+		pop := strings.SplitN(raw[1], "/", 2)
+		numerator, denominator, whole := ConvertString(pop[0], pop[1], raw[0])
+		if UI.HandleKnownError(0, len(pop) != 2, w) {
+			return
+		}
+		quantity = whole + (numerator / denominator)
+	} else {
+		v, err := strconv.ParseFloat(raw[0], 32)
+		if UI.HandleKnownError(0, err != nil, w) {
+			return
+		}
+		quantity = float32(v)
+	}
+	return
+}
+
+func RemoveReportEntry(index int) {
+
+	for i, v := range Item[Report[index].ID].Cost {
+		if v == 0 || v == Report[index].Cost {
+			Item[Report[index].ID].Cost[i] = Report[index].Cost
+			Item[Report[index].ID].Quantity[i] += Report[index].Quantity
+			break
+		}
+	}
+
+	Report[index] = Report[len(Report)-1]
+	Report = Report[:len(Report)-1]
 }
 
 func ConvertString(Price, Cost, Quantity string) (float32, float32, float32) {

@@ -6,11 +6,9 @@ import (
 	"strings"
 )
 
-const DATA_SIZE = 18
-
 func save_users() (result []byte) {
 	for _, v := range Users {
-		result = append(result, []byte(v+"\n")...)
+		result = append(result, v+"\n"...)
 	}
 	return
 }
@@ -20,46 +18,71 @@ func load_users(buf []byte) {
 	Users = Users[:len(Users)-1]
 }
 
-func save_report(data []Sale, order binary.ByteOrder) (result []byte) {
-	result = make([]byte, DATA_SIZE*len(data))
+func SaveNLoadUsers() {
+	load_users(save_users())
+}
+
+func save_customers() (result []byte) {
+	for _, v := range Customers {
+		result = append(result, v+"\n"...)
+	}
+	return
+}
+
+func load_customers(buf []byte) {
+	Customers = strings.Split(string(buf), "\n")
+	Customers = Customers[:len(Customers)-1]
+}
+
+func SaveNLoadCustomers() {
+	load_customers(save_customers())
+}
+
+func save_report(data []Sale) (result []byte) {
+	order := binary.BigEndian
+	result = make([]byte, 19*len(data))
 	for i, x := range data {
-		c := (DATA_SIZE * i)
+		c := (19 * i)
 
 		result[c] = x.Year
 		result[c+1] = x.Month
 		result[c+2] = x.Day
 		result[c+3] = x.Usr
+		result[c+4] = x.Customer
 
-		order.PutUint16(result[c+4:c+6], x.ID)
-		order.PutUint32(result[c+6:c+10], math.Float32bits(x.Price))
-		order.PutUint32(result[c+10:c+14], math.Float32bits(x.Cost))
-		order.PutUint32(result[c+14:c+DATA_SIZE], math.Float32bits(x.Quantity))
+		order.PutUint16(result[c+5:c+7], x.ID)
+		order.PutUint32(result[c+7:c+11], math.Float32bits(x.Price))
+		order.PutUint32(result[c+11:c+15], math.Float32bits(x.Cost))
+		order.PutUint32(result[c+15:c+19], math.Float32bits(x.Quantity))
 	}
 
 	return
 }
 
-func load_report(buf []byte, order binary.ByteOrder) (report []Sale) {
-	report = make([]Sale, len(buf)/DATA_SIZE)
+func load_report(buf []byte) {
+	order := binary.BigEndian
+	report := make([]Sale, len(buf)/19)
 	for i := range report {
-		c := DATA_SIZE * i
+		c := 19 * i
 
 		report[i].Year = uint8(buf[c])
 		report[i].Month = uint8(buf[c+1])
 		report[i].Day = uint8(buf[c+2])
 		report[i].Usr = uint8(buf[c+3])
+		report[i].Customer = uint8(buf[c+4])
 
-		report[i].ID = order.Uint16(buf[c+4 : c+6])
-		report[i].Price = math.Float32frombits(order.Uint32(buf[c+6 : c+10]))
-		report[i].Cost = math.Float32frombits(order.Uint32(buf[c+10 : c+14]))
-		report[i].Quantity = math.Float32frombits(order.Uint32(buf[c+14 : c+DATA_SIZE]))
+		report[i].ID = order.Uint16(buf[c+5 : c+7])
+		report[i].Price = math.Float32frombits(order.Uint32(buf[c+7 : c+11]))
+		report[i].Cost = math.Float32frombits(order.Uint32(buf[c+11 : c+15]))
+		report[i].Quantity = math.Float32frombits(order.Uint32(buf[c+15 : c+19]))
 	}
-	return
+	Report = report
 }
 
 const kvSize = 30
 
-func save_kv(order binary.ByteOrder) (result []byte) {
+func save_kv() (result []byte) {
+	order := binary.BigEndian
 	sect := make([]byte, len(Item)*kvSize)
 	names := ""
 	var i int32
@@ -87,7 +110,8 @@ func save_kv(order binary.ByteOrder) (result []byte) {
 	return
 }
 
-func load_kv(buf []byte, order binary.ByteOrder) {
+func load_kv(buf []byte) {
+	order := binary.BigEndian
 	if len(buf) == 0 {
 		return
 	}
@@ -108,4 +132,8 @@ func load_kv(buf []byte, order binary.ByteOrder) {
 
 		c += kvSize
 	}
+}
+
+func SaveNLoadKV() {
+	load_kv(save_kv())
 }

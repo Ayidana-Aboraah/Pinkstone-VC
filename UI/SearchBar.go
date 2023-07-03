@@ -1,6 +1,8 @@
 package UI
 
 import (
+	"strings"
+
 	"fyne.io/fyne/v2/driver/mobile"
 	"fyne.io/fyne/v2/widget"
 )
@@ -22,6 +24,7 @@ func NewSearchBar(placeHolder string, search func(string) ([]string, []uint16)) 
 	e.PlaceHolder = placeHolder
 	e.search = search
 	e.names, e.idxs = search("")
+	e.SetOptions(e.names)
 	return e
 }
 
@@ -32,11 +35,9 @@ func (e *SearchBar) TypedRune(r rune) {
 }
 
 func (e *SearchBar) Result() int {
-	for _, idx := range e.idxs {
-		for _, ix := range e.names {
-			if ix == e.Text {
-				return int(idx)
-			}
+	for i, idx := range e.idxs {
+		if strings.EqualFold(e.names[i], e.Text) {
+			return int(idx)
 		}
 	}
 	return -1

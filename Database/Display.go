@@ -16,7 +16,11 @@ import (
 
 var InventoryData binding.IntList
 
-var UpdateInventoryDisplay func(id int)
+type ListID interface {
+	int | uint16
+}
+
+var UpdateInventoryDisplay func(id any)
 
 func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 	idLabel := widget.NewLabel("ID")
@@ -38,14 +42,20 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 
 	target := -1
 
-	UpdateInventoryDisplay = func(idx widget.ListItemID) {
-		id, _ := InventoryData.GetValue(idx) // NOTE: Handle Err
+	UpdateInventoryDisplay = func(idx any) {
+		var id int
+		switch x := idx.(type) {
+		case uint16:
+			id = int(x)
+		case int:
+			id, _ = InventoryData.GetValue(x) // NOTE: Handle Err
+			inventoryList.Unselect(x)
+		}
 
 		idLabel.SetText("ID: " + strconv.Itoa(id))
 		nameLabel.SetText("Name: " + Item[uint16(id)].Name)
 		priceLabel.SetText(fmt.Sprintf("Price: %1.2f", Item[uint16(id)].Price))
 		stockLabel.SetText(fmt.Sprintf("Stock: %1.2f\n", Item[uint16(id)].Quantity[0]+Item[uint16(id)].Quantity[1]+Item[uint16(id)].Quantity[2]))
-		inventoryList.Unselect(idx)
 
 		txt := "Cost: "
 
@@ -58,11 +68,12 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 		}
 
 		costLabel.SetText(txt[:len(txt)-1])
-
 		target = id
 	}
 
-	inventoryList.OnSelected = UpdateInventoryDisplay
+	inventoryList.OnSelected = func(id widget.ListItemID) {
+		UpdateInventoryDisplay(id)
+	}
 
 	return container.New(layout.NewGridLayout(2),
 		container.NewVBox(
@@ -89,19 +100,40 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 						return
 					}
 
-					price, cost, quantity := ConvertString(priceEntry.Text, costEntry.Text, invenEntry.Text)
+					price, cost, _ := ConvertString(priceEntry.Text, costEntry.Text, "")
+					quantity := ProcessQuantity(invenEntry.Text, w)
 
-					Item[uint16(len(Item))] = &Entry{Price: price, Name: nameEntry.Text, Quantity: [3]float32{quantity, 0, 0}, Cost: [3]float32{cost, 0, 0}}
+					// Check for an open slot
+					ID := uint16(len(Item))
+					v, found := Item[ID]
+
+					for found && v != nil {
+						v, found = Item[ID]
+						fmt.Println(ID, found, v != nil)
+						if !found || v == nil {
+							break
+						}
+						ID += 1
+					}
+
+					Item[ID] = &Entry{Price: price, Name: nameEntry.Text, Quantity: [3]float32{quantity, 0, 0}, Cost: [3]float32{cost, 0, 0}}
+					fmt.Println("!Found, Adding: ", Item[ID])
+
+					target = int(ID)
 
 					UI.HandleErrorWindow(SaveData(), w)
 
 					InventoryData.Set(ConvertItemKeys())
-					UpdateInventoryDisplay(0)
+					UpdateInventoryDisplay(ID)
 					inventoryList.Refresh()
 				}, w)
 			}),
 
 			widget.NewButton("Damages", func() {
+				if target == -1 {
+					return
+				}
+
 				dialog.ShowConfirm("Are You sure?", "Are you sure "+Item[uint16(target)].Name+" is damaged?", func(b bool) {
 					if !b {
 						return
@@ -129,8 +161,8 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 							Year:     uint8(year),
 						}
 
-						BuyCart([]Sale{s})
-						UpdateInventoryDisplay(0)
+						BuyCart([]Sale{s}, 0)
+						UpdateInventoryDisplay(uint16(target))
 					}, w)
 
 				}, w)
@@ -143,7 +175,7 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 
 				priceEntry := UI.NewNumEntry("Selling Price")
 				costEntry := UI.NewNumEntry("Cost Price")
-				invenEntry := UI.NewNumEntry("Added stock")
+				invenEntry := UI.NewNumEntry("Added stock, if only adding a fraction add a space before the fraction")
 
 				dialog.ShowForm("Add", "Done", "Cancel", []*widget.FormItem{
 					widget.NewFormItem("ID", widget.NewLabel(strconv.Itoa(target))),
@@ -155,8 +187,8 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 					if !b {
 						return
 					}
-					price, cost, quan := ConvertString(priceEntry.Text, costEntry.Text, invenEntry.Text)
-
+					price, cost, _ := ConvertString(priceEntry.Text, costEntry.Text, "")
+					quan := ProcessQuantity(invenEntry.Text, w)
 					Item[uint16(target)].Price = price
 
 					for i := 0; i < 3; i++ {
@@ -171,21 +203,16 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 						}
 					}
 					UI.HandleErrorWindow(SaveData(), w)
-					InventoryData.Set(ConvertItemKeys())
-					UpdateInventoryDisplay(0)
-					inventoryList.Refresh()
+					UpdateInventoryDisplay(uint16(target))
 				}, w)
 			}),
 
 			widget.NewButton("Remove", func() {
 				dialog.ShowConfirm("Are you sure?", "Are you sure you want to delete this?", func(b bool) {
-					if !b {
+					if !b || target == -1 {
 						return
 					}
 
-					if target == -1 {
-						return
-					}
 					Item[uint16(target)].Name = string([]byte{216}) + Item[uint16(target)].Name
 
 					InventoryData.Set(ConvertItemKeys())
@@ -201,7 +228,6 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 			container.NewMax(inventoryList),
 
 			widget.NewButton("Search", func() {
-				// selectionEntry := UI.NewNumEntry("Click and Scan")
 				searchBar := UI.NewSearchBar("Type Item Name", SearchInventory)
 
 				dialog.ShowCustomConfirm("Scan Item", "Confirm", "Cancel", searchBar, func(confirmed bool) {
@@ -214,24 +240,9 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 					if UI.HandleKnownError(0, id < 0, w) {
 						return
 					}
+					target = id
 
-					v := Item[uint16(id)]
-
-					idLabel.SetText("ID: " + strconv.Itoa(id))
-					nameLabel.SetText("Name: " + Item[uint16(id)].Name)
-					priceLabel.SetText("Price: " + fmt.Sprintf("%1.2f", v.Price))
-					stockLabel.SetText("Stock: " + fmt.Sprintf("%1.2f", v.Quantity[0]+v.Quantity[1]+v.Quantity[2]))
-					txt := "Cost: "
-
-					for i := 0; i < 3 && Item[uint16(id)].Cost[i] > 0; i++ {
-						txt += fmt.Sprintf("%1.2f, ", Item[uint16(id)].Cost[i])
-					}
-
-					if Item[uint16(id)].Cost[0] == 0 {
-						txt += "0.00 "
-					}
-
-					costLabel.SetText(txt[:len(txt)-1])
+					UpdateInventoryDisplay(uint16(target))
 				}, w)
 			}),
 		))

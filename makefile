@@ -8,7 +8,7 @@ test:
 
 win:
 	sudo systemctl start docker
-	fyne-cross windows -arch=* -icon="icon02.png" -app-id="Bronze.Hermes"
+	sudo fyne-cross windows -icon="icon02.png" -app-id="Bronze.Hermes" -name="Pinkstone"
 #	env GOOS=windows GOARCH=amd64
 #	go build -o BH.exe Main.go CGO=ENABLED 
 

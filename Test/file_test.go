@@ -1,96 +1,43 @@
 package Test
 
-// import (
-// 	"BronzeHermes/Database"
-// 	"testing"
+import (
+	"BronzeHermes/Database"
+	"testing"
+)
 
-// 	"fyne.io/fyne/v2/app"
-// )
+var testUserNames = []string{
+	"Bob",
+	"Penny",
+	"Poppy",
+	"123481023984012983",
+}
 
-// func TestFileSave(t *testing.T) {
-// 	a := app.NewWithID("Testing")
+func TestSaveUsers(t *testing.T) {
+	Database.Users = testUserNames
+	Database.SaveNLoadUsers()
+	if len(Database.Users) != len(testUserNames) {
+		t.Errorf("Unequal lengths after saving")
+	}
 
-// 	Database.Reports = TestDB
-// 	Database.ItemKeys = TestItemKeys
-// 	Database.Expenses = TestExpenses
+	for i := range testUserNames {
+		if testUserNames[i] != Database.Users[i] {
+			t.Errorf("%s != %s | idx: %d of testUsers, error after lodaing data", testUserNames[i], Database.Users[i], i)
+		}
+	}
+}
 
-// 	Database.DataInit(false)
-// 	err := Database.SaveData()
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
+func TestSaveNoUser(t *testing.T) {
+	Database.Users = []string{}
+	Database.SaveNLoadUsers()
+	if len(Database.Users) != 0 {
+		t.Error("Users Databasse lenght is != 0, when handed an empty array")
+	}
+}
 
-// 	Database.Expenses = []Database.Expense{}
-
-// 	err = Database.LoadData()
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
-
-// 	SaveAndLoadTest(t)
-
-// 	Database.DataInit(true)
-// 	a.Quit()
-// }
-
-// func TestSaveBackUp(t *testing.T) {
-// 	a := app.NewWithID("Testing")
-
-// 	Database.Reports = TestDB
-// 	Database.ItemKeys = TestItemKeys
-// 	Database.Expenses = TestExpenses
-
-// 	Database.DataInit(false)
-// 	err := Database.SaveBackUp()
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
-// 	Database.Expenses = []Database.Expense{}
-
-// 	err = Database.LoadBackUp()
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
-
-// 	SaveAndLoadTest(t)
-
-// 	// Database.DataInit(true)
-// 	a.Quit()
-// }
-
-// func SaveAndLoadTest(t *testing.T) {
-// 	for i := range TestDB {
-// 		if len(TestDB[i]) != len(Database.Reports[i]) {
-// 			t.Logf("Test DB and Datbase %v aren't the same", i)
-// 		}
-// 		for x := range TestDB[i] {
-// 			if Database.Reports[i][x] != TestDB[i][x] {
-// 				t.Errorf("Database %v, entry %v don't match up", i, x)
-// 			}
-// 		}
-// 	}
-
-// 	for k, v := range TestItemKeys {
-// 		if val, found := Database.ItemKeys[k]; !found {
-// 			t.Errorf("Key %v !found, value is %v", k, v)
-// 		} else {
-// 			if val != v {
-// 				t.Errorf("Key %v, values do not match up", k)
-// 				t.Errorf("Test: %v, DB Keys: %v", v, val)
-// 			}
-// 		}
-
-// 	}
-
-// 	for i := range TestExpenses {
-// 		if TestExpenses[i] != Database.Expenses[i] {
-// 			t.Errorf("Expenses do not match at %v", i)
-// 		}
-// 	}
-
-// 	t.Logf("%v\n", Database.Expenses)
-// 	t.Logf("%v\n", Database.Reports)
-// 	for k, v := range Database.ItemKeys {
-// 		t.Logf("%v : %v\n", k, v)
-// 	}
-// }
+func TestSaveBlankUser(t *testing.T) {
+	Database.Users = []string{""}
+	Database.SaveNLoadUsers()
+	if len(Database.Users) != 1 {
+		t.Error("Users Databasse lenght is != 1, when handed an empty string")
+	}
+}

@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func GetLine(selection string, dataType, db int) ([]string, [][]float32) {
+func GetLine(selection string, dataType int) ([]string, [][]float32) {
 	if selection == "" {
 		return nil, nil
 	}
@@ -43,15 +43,15 @@ func GetLine(selection string, dataType, db int) ([]string, [][]float32) {
 		for i := uint8(1); i < 32; i++ {
 			var total float32
 
-			for v := len(Reports[db]) - 1; v >= 0; v-- {
-				if Reports[db][v].ID != id || Reports[db][v].Day != i || Reports[db][v].Month != date[1] || Reports[db][v].Year != date[0] {
+			for v := len(Report) - 1; v >= 0; v-- {
+				if Report[v].ID != id || Report[v].Day != i || Report[v].Month != date[1] || Report[v].Year != date[0] {
 					continue
 				}
 				switch dataType {
 				case 0:
-					total += Reports[db][v].Price
+					total += Report[v].Price
 				case 1:
-					total += float32(Reports[db][v].Quantity)
+					total += float32(Report[v].Quantity)
 				}
 			}
 
@@ -101,15 +101,15 @@ func GetPie(selection string, dataType int) ([]string, []float32) {
 	for id, val := range Item {
 		var total float32
 
-		for i := len(Reports[0]) - 1; i >= 0; i-- {
-			if Reports[0][i].ID != id || Reports[0][i].Day != date[2] || Reports[0][i].Month != date[1] || Reports[0][i].Year != date[0] {
+		for i := len(Report) - 1; i >= 0; i-- {
+			if Report[i].ID != id || Report[i].Day != date[2] || Report[i].Month != date[1] || Report[i].Year != date[0] {
 				continue
 			}
 			switch dataType {
 			case 0:
-				total += Reports[0][i].Price
+				total += Report[i].Price
 			case 1:
-				total += float32(Reports[0][i].Quantity)
+				total += float32(Report[i].Quantity)
 			}
 		}
 
@@ -122,7 +122,7 @@ func GetPie(selection string, dataType int) ([]string, []float32) {
 	return names, sales
 }
 
-func Report(selection uint8, date []uint8) string {
+func CompileReport(selection uint8, date []uint8) string {
 	// For Date: 0 = day, 1 = month, 2 = year, 3 = now
 
 	if len(date) == 0 {
@@ -131,9 +131,10 @@ func Report(selection uint8, date []uint8) string {
 		date = []uint8{uint8(day), uint8(month), uint8(year)}
 	}
 
-	var item_sales [2]float32
+	var item_sales [3]float32
+	var damages float32
 
-	for _, v := range Reports[0] {
+	for _, v := range Report {
 		if v.Year != date[YEARLY] {
 			continue
 		}
@@ -146,23 +147,22 @@ func Report(selection uint8, date []uint8) string {
 			continue
 		}
 
+		fmt.Println((v.Price-v.Cost)*v.Quantity, v.Price, v.Cost, Item[v.ID].Name)
+
 		item_sales[0] += v.Price * v.Quantity
 		item_sales[1] += v.Cost * v.Quantity
-	}
+		item_sales[2] += (v.Price - v.Cost) * v.Quantity
 
-	var damages float32
-
-	for _, v := range Reports[0] {
 		if v.Usr == 255 {
 			damages += v.Cost * v.Quantity
 		}
 	}
 
 	return fmt.Sprintf(
-		"Item Revenue: %.2f,\nItem Cost: -%.2f\nDamages: -%.2f,\nReport Total: %.2f",
-		item_sales[0],               // Gain
-		item_sales[1],               // Cost
-		damages,                     // Damages
-		item_sales[0]-item_sales[1], // Report Total
+		"Item Revenue: %.2f,\nItem Cost: %.2f\nDamages: -%.2f,\nReport Total: %.2f",
+		item_sales[0],  // Gain
+		-item_sales[1], // Cost
+		damages,        // Damages
+		item_sales[2],  // Report Total
 	)
 }

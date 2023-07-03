@@ -35,6 +35,8 @@ func CreateWindow(a fyne.App) {
 	w.SetOnClosed(
 		func() {
 			// Graph.StopSever()
+			Database.CleanUpDeadItems()
+			Database.SaveData()
 			Database.SaveBackUp()
 		},
 	)
@@ -86,8 +88,6 @@ func makeMainMenu(a fyne.App) fyne.CanvasObject {
 							break
 						}
 					}
-
-					Database.SaveData()
 				}
 			})
 
@@ -120,46 +120,13 @@ func makeMainMenu(a fyne.App) fyne.CanvasObject {
 
 			SignInStartUp.Show()
 		}),
-		widget.NewButton("Refund", func() {
-			refunded_item := -1
 
-			reportData := binding.NewUntypedList()
-			reportData.Set(Database.ConvertCart(Database.Reports[0]))
-			reportList := widget.NewListWithData(reportData, func() fyne.CanvasObject {
-				return container.NewBorder(nil, nil, nil, nil, widget.NewLabel(""))
-			}, func(di binding.DataItem, co fyne.CanvasObject) {})
-
-			reportList.UpdateItem = func(id widget.ListItemID, obj fyne.CanvasObject) {
-				text := obj.(*fyne.Container).Objects[0].(*widget.Label)
-				v, _ := reportData.GetValue(id)
-				val := v.(Database.Sale)
-				text.SetText(Database.Item[val.ID].Name + " x" + fmt.Sprint(val.Quantity) + " by " + Database.Users[val.Usr])
-			}
-
-			reportList.OnSelected = func(id widget.ListItemID) {
-				refunded_item = id
-			}
-
-			dialog.ShowCustomConfirm("Refund", "Refund", "Cancel", reportList, func(b bool) {
-				if !b {
-					return
-				}
-				if refunded_item < 0 {
-					dialog.ShowInformation("Hmm", "No Refund selected, try selecting first", w)
-					return
-				}
-
-				Database.RemoveReportEntry(0, refunded_item)
-				UI.HandleError(Database.SaveData())
-
-			}, w)
-		}),
 		widget.NewButton("Save Backup Data", func() {
 			go UI.HandleErrorWindow(Database.SaveBackUp(), w)
 		}),
 		widget.NewButton("Load Backup Data", func() {
 			dialog.ShowInformation("Loading Back up Data", "Wait until back up is done loading...", w)
-			go UI.HandleErrorWindow(Database.LoadBackUp(), w) // TODO: Add progress bar on main thread while waiting for this to happen
+			UI.HandleErrorWindow(Database.LoadBackUp(), w)
 			dialog.ShowInformation("Loaded", "Back Up Loaded", w)
 		}),
 		widget.NewButton("Delete Database", func() {
@@ -173,12 +140,11 @@ func makeMainMenu(a fyne.App) fyne.CanvasObject {
 							return
 						}
 
-						// Database.Items = []Database.Item{}
 						Database.Item = map[uint16]*Database.Entry{}
-						Database.Reports = [2][]Database.Sale{}
-						Database.Free_Spaces = []int{}
+						Database.Report = []Database.Sale{}
 						Database.Current_User = 0
 						Database.Users = []string{}
+						Database.Customers = []string{}
 						CreateUser.Show()
 
 						usrData.Set(nil)
@@ -219,7 +185,7 @@ func makeShoppingMenu() fyne.CanvasObject {
 		v, _ := cartData.GetValue(id)
 		val := v.(Database.Sale)
 		text.SetText(Database.Item[val.ID].Name + " x" + fmt.Sprint(val.Quantity))
-
+		text.SetText(fmt.Sprintf("%s ₵%1.2f x%1.2f -> ₵%1.2f", Database.Item[val.ID].Name, val.Price, val.Quantity, val.Price*val.Quantity))
 		btn.OnTapped = func() {
 			shoppingCart = Database.DecreaseFromCart(val, shoppingCart)
 			cartData.Set(Database.ConvertCart(shoppingCart))
@@ -229,30 +195,43 @@ func makeShoppingMenu() fyne.CanvasObject {
 		}
 	}
 
-	customerEntry := widget.NewEntry()
+	customerEntry := UI.NewSearchBar("Customer Name Here", Database.SearchCustomers)
 
 	return container.New(layout.NewGridLayoutWithRows(3),
 		title,
 		container.NewMax(shoppingList),
 		container.NewGridWithColumns(3,
 			widget.NewButton("Buy Cart", func() {
+				customerEntry.SetText("")
 				dialog.ShowForm("Do you want to buy all items in the Cart?", "Yes", "No",
 					[]*widget.FormItem{widget.NewFormItem("Customer", customerEntry)}, func(b bool) {
 						if !b || len(shoppingCart) == 0 {
 							return
 						}
+
+						i := 0
+
+						for ; i < len(Database.Customers) && customerEntry.Text != Database.Customers[i]; i++ {
+						}
+
+						if i == len(Database.Customers) {
+							Database.Customers = append(Database.Customers, customerEntry.Text)
+						}
+
 						receipt := Database.MakeReceipt(shoppingCart, customerEntry.Text)
-						shoppingCart = Database.BuyCart(shoppingCart)
+						shoppingCart = Database.BuyCart(shoppingCart, i)
 						cartData.Set(Database.ConvertCart(shoppingCart))
 						title.SetText("Cart Total: 0.0")
+						txtDisplay := widget.NewLabelWithStyle(receipt, fyne.TextAlignCenter, fyne.TextStyle{})
 
-						// TODO: Get the data that would be added to the report
-						// TODO: Send the data to the printer
-
-						dialog.ShowCustom("Complete", "Done", container.NewVBox(
+						dialog.ShowCustomConfirm("Complete", "Print", "Done", container.NewVBox(
 							widget.NewLabelWithStyle("PINKSTONE TRADING", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
-							widget.NewLabelWithStyle(receipt, fyne.TextAlignCenter, fyne.TextStyle{}),
-						), w)
+							txtDisplay,
+						), func(printing bool) {
+							if printing {
+								// TODO: Send print msg to Printer & the receipt,
+							}
+						}, w)
 					}, w)
 			}),
 
@@ -278,12 +257,13 @@ func makeShoppingMenu() fyne.CanvasObject {
 
 					val := Database.Item[uint16(id)]
 
-					// barginEntry := UI.NewNumEntry("Bargin Price?")
+					barginEntry := UI.NewNumEntry("An Adjusted price based on the customer")
+					pieceEntry := UI.NewNumEntry("How many pieces are you buying?")
+					totalEntry := UI.NewNumEntry("How many in total?")
+
 					options := widget.NewAccordion(
-						widget.NewAccordionItem("Bargin Price", UI.NewNumEntry("Enter if applicable")),
-						widget.NewAccordionItem("Pieces", UI.NewNumEntry("How many pieces are you buying? if a pack")),
-						widget.NewAccordionItem("Total Pieces", UI.NewNumEntry("How many in total? if a pack")),
-					)
+						widget.NewAccordionItem("Bargin Price", barginEntry),
+						widget.NewAccordionItem("Pieces", container.NewVBox(pieceEntry, totalEntry)))
 
 					var menu dialog.Dialog
 					menu = dialog.NewCustomConfirm("Just Checking...", "Yes", "No", container.NewVBox(widget.NewLabel(val.Name), options),
@@ -293,28 +273,26 @@ func makeShoppingMenu() fyne.CanvasObject {
 							}
 							s := Database.ConvertItem(uint16(id))
 
-							if options.Items[1].Detail.(*UI.NumEntry).Text != "" || options.Items[2].Detail.(*UI.NumEntry).Text != "" {
-								if UI.HandleKnownError(1, options.Items[1].Detail.(*UI.NumEntry).Text == "" || options.Items[2].Detail.(*UI.NumEntry).Text == "", w) {
+							if pieceEntry.Text != "" || totalEntry.Text != "" {
+								if UI.HandleKnownError(1, pieceEntry.Text == "" || totalEntry.Text == "", w) {
 									menu.Show()
 								} else {
-									piece, err := strconv.ParseFloat(options.Items[1].Detail.(*UI.NumEntry).Text, 32)
+									piece, err := strconv.ParseFloat(pieceEntry.Text, 32)
 
 									if UI.HandleKnownError(0, err != nil || piece < 0, w) {
 										menu.Show()
 									}
 
-									total, err := strconv.ParseFloat(options.Items[2].Detail.(*UI.NumEntry).Text, 32)
+									total, err := strconv.ParseFloat(totalEntry.Text, 32)
 									if UI.HandleKnownError(0, err != nil || total < 0, w) {
 										menu.Show()
 									}
-
-									s.Quantity = float32(UI.Truncate(piece/total, 0.01))
-									fmt.Println("Quantity", s.Quantity)
+									s.Quantity = float32(piece / total)
 								}
 							}
 
-							if options.Items[0].Detail.(*UI.NumEntry).Text != "" {
-								f, err := strconv.ParseFloat(options.Items[0].Detail.(*UI.NumEntry).Text, 32)
+							if barginEntry.Text != "" {
+								f, err := strconv.ParseFloat(barginEntry.Text, 32)
 								UI.HandleKnownError(0, err != nil, w)
 								s.Price = float32(f) / s.Quantity
 							}
@@ -323,6 +301,7 @@ func makeShoppingMenu() fyne.CanvasObject {
 							cartData.Set(Database.ConvertCart(shoppingCart))
 							title.SetText(fmt.Sprintf("Cart Total: %1.2f", Database.GetCartTotal(shoppingCart)))
 							shoppingList.Refresh()
+							shoppingList.ScrollToBottom()
 						}, w)
 					menu.Show()
 				}, w)
@@ -353,7 +332,7 @@ func makeStatsMenu() fyne.CanvasObject {
 	date := []uint8{}
 
 	updateReport = func() {
-		reportDisplay.SetText(Database.Report(variant, date))
+		reportDisplay.SetText(Database.CompileReport(variant, date))
 	}
 
 	/*
@@ -369,7 +348,43 @@ func makeStatsMenu() fyne.CanvasObject {
 		}
 	*/
 
-	content := container.NewVScroll(container.NewMax(container.NewVBox(
+	customerSearch := UI.NewSearchBar("Customer Name here...", Database.SearchCustomers)
+
+	reportData := binding.NewUntypedList()
+	reportData.Set(Database.ConvertCart(Database.Report))
+
+	reportList := widget.NewListWithData(reportData, func() fyne.CanvasObject {
+		return container.NewBorder(nil, nil, nil, nil, widget.NewLabel(""))
+	}, func(di binding.DataItem, co fyne.CanvasObject) {
+		v, _ := di.(binding.Untyped).Get()
+		val := v.(Database.Sale)
+		display := co.(*fyne.Container).Objects[0].(*widget.Label)
+		display.SetText(fmt.Sprintf("%s x%1.2f for ₵%1.2f [%2d-%2d-20%2d] Customer: %s, Cashier: %s",
+			Database.Item[val.ID].Name, val.Quantity, val.Price*val.Quantity, val.Day, val.Month, val.Year, Database.Customers[val.Customer], Database.Users[val.Usr]))
+	})
+
+	reportList.OnSelected = func(id widget.ListItemID) {
+		v, err := reportData.GetValue(id)
+		UI.HandleError(err)
+		val := v.(Database.Sale)
+
+		infoText := fmt.Sprintf("Name: %s\nPrice: %1.2f\nCost: %1.2f\nQuantity: %1.2f\nTotal Revenue: %1.2f\nTotal Profit: %1.2f\nCustomer: %s\nCashier:%s",
+			Database.Item[val.ID].Name, val.Price, val.Cost, val.Quantity, val.Price*val.Quantity, (val.Price-val.Cost)*val.Quantity, Database.Customers[val.Customer], Database.Users[val.Usr])
+
+		dialog.ShowCustomConfirm("Info", "Refund", "Close", widget.NewLabel(infoText), func(b bool) {
+			if !b {
+				return
+			}
+
+			Database.RemoveReportEntry(id)
+			UI.HandleError(Database.SaveData())
+			reportData.Set(Database.ConvertCart(Database.Report))
+			reportList.Refresh()
+		}, w)
+		reportList.UnselectAll()
+	}
+
+	content := container.New(layout.NewGridLayoutWithRows(3),
 		widget.NewCard("Financial Reports", "", container.NewVBox(
 			financeEntry,
 			widget.NewSelect([]string{"Day", "Month", "Year", "Date"}, func(time string) {
@@ -418,6 +433,32 @@ func makeStatsMenu() fyne.CanvasObject {
 			}),
 			reportDisplay,
 		)),
+
+		widget.NewCard("Sales", "", container.NewVBox(
+			customerSearch,
+			widget.NewButton("Search", func() {
+				customerIdx := customerSearch.Result()
+				found := []Database.Sale{}
+
+				fmt.Println(customerIdx)
+
+				if customerIdx == -1 {
+					found = Database.Report
+
+				} else {
+					for _, v := range Database.Report {
+						if v.Customer == uint8(customerIdx) {
+							found = append(found, v)
+						}
+					}
+				}
+
+				reportData.Set(Database.ConvertCart(found))
+				reportList.Refresh()
+			}),
+		)),
+		container.NewMax(reportList),
+
 		/*
 			widget.NewCard("Data Graphs", "", container.NewVBox(
 				selectionEntry,
@@ -443,6 +484,6 @@ func makeStatsMenu() fyne.CanvasObject {
 				link,
 			)),
 		*/
-	)))
+	)
 	return content
 }

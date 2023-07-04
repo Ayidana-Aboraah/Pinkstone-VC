@@ -37,21 +37,21 @@ func GetLine(selection string, dataType int) ([]string, [][]float32) {
 	var sales [][]float32
 	var names []string
 
-	for id, x := range Item {
+	for id, x := range Items {
 		var totals []float32
 
 		for i := uint8(1); i < 32; i++ {
 			var total float32
 
-			for v := len(Report) - 1; v >= 0; v-- {
-				if Report[v].ID != id || Report[v].Day != i || Report[v].Month != date[1] || Report[v].Year != date[0] {
+			for v := len(Sales) - 1; v >= 0; v-- {
+				if Sales[v].ID != id || Sales[v].Day != i || Sales[v].Month != date[1] || Sales[v].Year != date[0] {
 					continue
 				}
 				switch dataType {
 				case 0:
-					total += Report[v].Price
+					total += Sales[v].Price
 				case 1:
-					total += float32(Report[v].Quantity)
+					total += float32(Sales[v].Quantity)
 				}
 			}
 
@@ -98,18 +98,18 @@ func GetPie(selection string, dataType int) ([]string, []float32) {
 	var sales []float32
 	var names []string
 
-	for id, val := range Item {
+	for id, val := range Items {
 		var total float32
 
-		for i := len(Report) - 1; i >= 0; i-- {
-			if Report[i].ID != id || Report[i].Day != date[2] || Report[i].Month != date[1] || Report[i].Year != date[0] {
+		for i := len(Sales) - 1; i >= 0; i-- {
+			if Sales[i].ID != id || Sales[i].Day != date[2] || Sales[i].Month != date[1] || Sales[i].Year != date[0] {
 				continue
 			}
 			switch dataType {
 			case 0:
-				total += Report[i].Price
+				total += Sales[i].Price
 			case 1:
-				total += float32(Report[i].Quantity)
+				total += float32(Sales[i].Quantity)
 			}
 		}
 
@@ -134,7 +134,7 @@ func CompileReport(selection uint8, date []uint8) string {
 	var item_sales [3]float32
 	var damages float32
 
-	for _, v := range Report {
+	for _, v := range Sales {
 		if v.Year != date[YEARLY] {
 			continue
 		}
@@ -147,7 +147,7 @@ func CompileReport(selection uint8, date []uint8) string {
 			continue
 		}
 
-		fmt.Println((v.Price-v.Cost)*v.Quantity, v.Price, v.Cost, Item[v.ID].Name)
+		fmt.Println((v.Price-v.Cost)*v.Quantity, v.Price, v.Cost, Items[v.ID].Name)
 
 		item_sales[0] += v.Price * v.Quantity
 		item_sales[1] += v.Cost * v.Quantity

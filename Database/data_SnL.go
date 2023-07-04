@@ -38,10 +38,10 @@ func SaveNLoadCustomers() {
 	load_customers(save_customers())
 }
 
-func save_report(data []Sale) (result []byte) {
+func save_sales() (result []byte) {
 	order := binary.BigEndian
-	result = make([]byte, 19*len(data))
-	for i, x := range data {
+	result = make([]byte, 19*len(Sales))
+	for i, x := range Sales {
 		c := (19 * i)
 
 		result[c] = x.Year
@@ -59,35 +59,39 @@ func save_report(data []Sale) (result []byte) {
 	return
 }
 
-func load_report(buf []byte) {
+func load_sales(buf []byte) {
 	order := binary.BigEndian
-	report := make([]Sale, len(buf)/19)
-	for i := range report {
+	sales := make([]Sale, len(buf)/19)
+	for i := range sales {
 		c := 19 * i
 
-		report[i].Year = uint8(buf[c])
-		report[i].Month = uint8(buf[c+1])
-		report[i].Day = uint8(buf[c+2])
-		report[i].Usr = uint8(buf[c+3])
-		report[i].Customer = uint8(buf[c+4])
+		sales[i].Year = uint8(buf[c])
+		sales[i].Month = uint8(buf[c+1])
+		sales[i].Day = uint8(buf[c+2])
+		sales[i].Usr = uint8(buf[c+3])
+		sales[i].Customer = uint8(buf[c+4])
 
-		report[i].ID = order.Uint16(buf[c+5 : c+7])
-		report[i].Price = math.Float32frombits(order.Uint32(buf[c+7 : c+11]))
-		report[i].Cost = math.Float32frombits(order.Uint32(buf[c+11 : c+15]))
-		report[i].Quantity = math.Float32frombits(order.Uint32(buf[c+15 : c+19]))
+		sales[i].ID = order.Uint16(buf[c+5 : c+7])
+		sales[i].Price = math.Float32frombits(order.Uint32(buf[c+7 : c+11]))
+		sales[i].Cost = math.Float32frombits(order.Uint32(buf[c+11 : c+15]))
+		sales[i].Quantity = math.Float32frombits(order.Uint32(buf[c+15 : c+19]))
 	}
-	Report = report
+	Sales = sales
+}
+
+func SaveNLoadSales() {
+	load_sales(save_sales())
 }
 
 const kvSize = 30
 
 func save_kv() (result []byte) {
 	order := binary.BigEndian
-	sect := make([]byte, len(Item)*kvSize)
+	sect := make([]byte, len(Items)*kvSize)
 	names := ""
 	var i int32
 
-	for k, v := range Item {
+	for k, v := range Items {
 		// ID[2], Price [4], Cost[4*3], Quantity[4*3]
 		order.PutUint16(sect[i:i+2], k)
 
@@ -123,7 +127,7 @@ func load_kv(buf []byte) {
 	c := 0
 	for i := 0; i < len(sides[0])/kvSize; i++ {
 
-		Item[order.Uint16(buf[c:c+2])] = &Entry{
+		Items[order.Uint16(buf[c:c+2])] = &Entry{
 			Name:     names[i],
 			Price:    math.Float32frombits(order.Uint32(buf[c+2 : c+6])),
 			Cost:     [3]float32{math.Float32frombits(order.Uint32(buf[c+6 : c+10])), math.Float32frombits(order.Uint32(buf[c+10 : c+14])), math.Float32frombits(order.Uint32(buf[c+14 : c+18]))},
@@ -136,4 +140,25 @@ func load_kv(buf []byte) {
 
 func SaveNLoadKV() {
 	load_kv(save_kv())
+}
+
+func saveBackupMap() (buf []byte) {
+	buf = append(save_users(), "\n\n"...)
+	buf = append(buf, save_customers()...)
+	return
+}
+
+func loadBackUpMap(buf []byte) {
+	usrs, customers, _ := strings.Cut(string(buf), "\n\n")
+	customers = customers[1:]
+	usrs += "\n"
+
+	load_users([]byte(usrs)) // NOTE: Watch for odd activity | [2:] works the same as [], so may be something ups
+	load_customers([]byte(customers))
+}
+
+func SaveNLoadBackUp() {
+	load_kv(save_kv())
+	load_sales(save_sales())
+	loadBackUpMap(saveBackupMap())
 }

@@ -3,7 +3,6 @@ package Database
 import (
 	"io"
 	"io/ioutil"
-	"strings"
 
 	"fyne.io/fyne/v2"
 )
@@ -21,8 +20,8 @@ type Sale struct {
 	Price, Cost, Quantity           float32
 }
 
-var Item = map[uint16]*Entry{}
-var Report []Sale
+var Items = map[uint16]*Entry{}
+var Sales []Sale
 
 var Customers = []string{}
 var Users = []string{}
@@ -48,6 +47,8 @@ func DataInit(remove bool) error {
 		case 4:
 			file = "BackUp_Map.red"
 		case 5:
+			file = "BackUp_Sales.red"
+		case 6:
 			file = "BackUp.red"
 		}
 
@@ -83,7 +84,7 @@ func SaveData() error {
 		return err
 	}
 
-	_, err = save.Write(save_report(Report))
+	_, err = save.Write(save_sales())
 	save.Close()
 	if err != nil {
 		return err
@@ -139,7 +140,7 @@ func LoadData() error {
 	}
 	reportFile.Close()
 
-	load_report(buf)
+	load_sales(buf)
 
 	customerFile, err := fyne.CurrentApp().Storage().Open("Customers.red")
 	if err != nil && err != io.EOF {
@@ -176,15 +177,18 @@ func SaveBackUp() error {
 		return err
 	}
 
-	var BackUp_Buff []byte
+	_, err = save.Write(save_kv())
+	if err != nil {
+		return err
+	}
+	save.Close()
 
-	BackUp_Buff = append(BackUp_Buff, save_kv()...)
-	BackUp_Buff = append(BackUp_Buff, []byte{10, 10, 10}...)
+	save, err = fyne.CurrentApp().Storage().Save("BackUp_Sales.red")
+	if err != nil {
+		return err
+	}
 
-	BackUp_Buff = append(BackUp_Buff, save_report(Report)...)
-	BackUp_Buff = append(BackUp_Buff, []byte{10, 10, 10}...)
-
-	_, err = save.Write(BackUp_Buff)
+	_, err = save.Write(save_kv())
 	if err != nil {
 		return err
 	}
@@ -196,10 +200,7 @@ func SaveBackUp() error {
 	}
 	defer names.Close()
 
-	buf := append(save_kv(), "\n\n"...)
-	buf = append(buf, save_customers()...)
-
-	_, err = names.Write(buf)
+	_, err = names.Write(saveBackupMap())
 	return err
 }
 
@@ -216,10 +217,21 @@ func LoadBackUp() error {
 		return err
 	}
 
-	black := strings.Split(string(buf), "\n\n\n")
+	load_kv(buf)
 
-	load_kv([]byte(black[0]))
-	load_report([]byte(black[1]))
+	file, err = fyne.CurrentApp().Storage().Open("BackUp_Sales.red")
+	if err != nil {
+		return err
+	}
+
+	buf, err = ioutil.ReadAll(file)
+	file.Close()
+
+	if err != nil {
+		return err
+	}
+
+	load_sales(buf)
 
 	names, err := fyne.CurrentApp().Storage().Open("BackUp_Map.red")
 	if err != nil {
@@ -232,10 +244,7 @@ func LoadBackUp() error {
 		return err
 	}
 
-	maps := strings.SplitN(string(raw), "\n\n", 2)
-
-	load_users([]byte(maps[0])) // NOTE: Watch for odd activity | [2:] works the same as [], so may be something ups
-	load_customers([]byte(maps[1]))
+	loadBackUpMap(raw)
 
 	return nil
 }

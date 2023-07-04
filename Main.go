@@ -140,8 +140,8 @@ func makeMainMenu(a fyne.App) fyne.CanvasObject {
 							return
 						}
 
-						Database.Item = map[uint16]*Database.Entry{}
-						Database.Report = []Database.Sale{}
+						Database.Items = map[uint16]*Database.Entry{}
+						Database.Sales = []Database.Sale{}
 						Database.Current_User = 0
 						Database.Users = []string{}
 						Database.Customers = []string{}
@@ -184,13 +184,13 @@ func makeShoppingMenu() fyne.CanvasObject {
 		btn := obj.(*fyne.Container).Objects[1].(*widget.Button)
 		v, _ := cartData.GetValue(id)
 		val := v.(Database.Sale)
-		text.SetText(Database.Item[val.ID].Name + " x" + fmt.Sprint(val.Quantity))
-		text.SetText(fmt.Sprintf("%s ₵%1.2f x%1.2f -> ₵%1.2f", Database.Item[val.ID].Name, val.Price, val.Quantity, val.Price*val.Quantity))
+		text.SetText(Database.Items[val.ID].Name + " x" + fmt.Sprint(val.Quantity))
+		text.SetText(fmt.Sprintf("%s ₵%1.2f x%1.2f -> ₵%1.2f", Database.Items[val.ID].Name, val.Price, val.Quantity, val.Price*val.Quantity))
 		btn.OnTapped = func() {
 			shoppingCart = Database.DecreaseFromCart(val, shoppingCart)
 			cartData.Set(Database.ConvertCart(shoppingCart))
 			title.SetText(fmt.Sprintf("Cart Total: %1.2f", Database.GetCartTotal(shoppingCart)))
-			text.SetText(Database.Item[val.ID].Name + " x" + fmt.Sprint(val.Quantity))
+			text.SetText(Database.Items[val.ID].Name + " x" + fmt.Sprint(val.Quantity))
 			shoppingList.Refresh()
 		}
 	}
@@ -255,7 +255,7 @@ func makeShoppingMenu() fyne.CanvasObject {
 						return
 					}
 
-					val := Database.Item[uint16(id)]
+					val := Database.Items[uint16(id)]
 
 					barginEntry := UI.NewNumEntry("An Adjusted price based on the customer")
 					pieceEntry := UI.NewNumEntry("How many pieces are you buying?")
@@ -351,7 +351,7 @@ func makeStatsMenu() fyne.CanvasObject {
 	customerSearch := UI.NewSearchBar("Customer Name here...", Database.SearchCustomers)
 
 	reportData := binding.NewUntypedList()
-	reportData.Set(Database.ConvertCart(Database.Report))
+	reportData.Set(Database.ConvertCart(Database.Sales))
 
 	reportList := widget.NewListWithData(reportData, func() fyne.CanvasObject {
 		return container.NewBorder(nil, nil, nil, nil, widget.NewLabel(""))
@@ -360,7 +360,7 @@ func makeStatsMenu() fyne.CanvasObject {
 		val := v.(Database.Sale)
 		display := co.(*fyne.Container).Objects[0].(*widget.Label)
 		display.SetText(fmt.Sprintf("%s x%1.2f for ₵%1.2f [%2d-%2d-20%2d] Customer: %s, Cashier: %s",
-			Database.Item[val.ID].Name, val.Quantity, val.Price*val.Quantity, val.Day, val.Month, val.Year, Database.Customers[val.Customer], Database.Users[val.Usr]))
+			Database.Items[val.ID].Name, val.Quantity, val.Price*val.Quantity, val.Day, val.Month, val.Year, Database.Customers[val.Customer], Database.Users[val.Usr]))
 	})
 
 	reportList.OnSelected = func(id widget.ListItemID) {
@@ -369,7 +369,7 @@ func makeStatsMenu() fyne.CanvasObject {
 		val := v.(Database.Sale)
 
 		infoText := fmt.Sprintf("Name: %s\nPrice: %1.2f\nCost: %1.2f\nQuantity: %1.2f\nTotal Revenue: %1.2f\nTotal Profit: %1.2f\nCustomer: %s\nCashier:%s",
-			Database.Item[val.ID].Name, val.Price, val.Cost, val.Quantity, val.Price*val.Quantity, (val.Price-val.Cost)*val.Quantity, Database.Customers[val.Customer], Database.Users[val.Usr])
+			Database.Items[val.ID].Name, val.Price, val.Cost, val.Quantity, val.Price*val.Quantity, (val.Price-val.Cost)*val.Quantity, Database.Customers[val.Customer], Database.Users[val.Usr])
 
 		dialog.ShowCustomConfirm("Info", "Refund", "Close", widget.NewLabel(infoText), func(b bool) {
 			if !b {
@@ -378,7 +378,7 @@ func makeStatsMenu() fyne.CanvasObject {
 
 			Database.RemoveReportEntry(id)
 			UI.HandleError(Database.SaveData())
-			reportData.Set(Database.ConvertCart(Database.Report))
+			reportData.Set(Database.ConvertCart(Database.Sales))
 			reportList.Refresh()
 		}, w)
 		reportList.UnselectAll()
@@ -443,10 +443,10 @@ func makeStatsMenu() fyne.CanvasObject {
 				fmt.Println(customerIdx)
 
 				if customerIdx == -1 {
-					found = Database.Report
+					found = Database.Sales
 
 				} else {
-					for _, v := range Database.Report {
+					for _, v := range Database.Sales {
 						if v.Customer == uint8(customerIdx) {
 							found = append(found, v)
 						}

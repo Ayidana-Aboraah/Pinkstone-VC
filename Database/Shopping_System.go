@@ -12,14 +12,14 @@ import (
 
 func SearchInventory(input string) (Names []string, IDs []uint16) {
 	if input == "" {
-		for i, v := range Item {
+		for i, v := range Items {
 			IDs = append(IDs, i)
 			Names = append(Names, v.Name)
 		}
 		return
 	}
 
-	for id, iv := range Item {
+	for id, iv := range Items {
 		if strings.Contains(strings.ToLower(iv.Name), strings.ToLower(input)) && iv.Name[0] != byte(216) {
 			IDs = append(IDs, id)
 			Names = append(Names, iv.Name)
@@ -47,10 +47,10 @@ func SearchCustomers(input string) (Names []string, IDs []uint16) {
 }
 
 func CleanUpDeadItems() {
-	for k := range Item {
-		if Item[k].Name[0] == byte(216) {
+	for k := range Items {
+		if Items[k].Name[0] == byte(216) {
 			found := false
-			for _, x := range Report {
+			for _, x := range Sales {
 				if x.ID == k {
 					found = true
 					break
@@ -58,7 +58,7 @@ func CleanUpDeadItems() {
 			}
 			if !found {
 				// fmt.Println("Deleteing: " + Item[k].Name)
-				delete(Item, k)
+				delete(Items, k)
 			}
 		}
 	}
@@ -80,7 +80,7 @@ func MakeReceipt(cart []Sale, customer string) (out string) {
 	out += "Loc: Santasi\nTel/Vodacash: 0506695927\nTel/MOMO: 0558324302\nMerchant ID: 868954\nCustomer: " + customer + "\n"
 
 	for _, v := range cart {
-		out += fmt.Sprintf("\n%s x%1.2f for ₵%1.2f\n", Item[v.ID].Name, v.Quantity, v.Price)
+		out += fmt.Sprintf("\n%s x%1.2f for ₵%1.2f\n", Items[v.ID].Name, v.Quantity, v.Price)
 	}
 	out += fmt.Sprintf("Total: %1.1f\n\n Cashier: %s\n", GetCartTotal(cart), Users[Current_User])
 	out += "ALL SALES ARE FINAL\nThank you, please do come again\nSoftware Developed By Ayidana Aboraah\nTEL: +1 571-697-9347\nredstonegameraa@gmail.com\n"
@@ -88,13 +88,13 @@ func MakeReceipt(cart []Sale, customer string) (out string) {
 }
 
 func ShiftQuantity(ID uint16) {
-	Item[ID].Quantity[0] = Item[ID].Quantity[1]
-	Item[ID].Quantity[1] = Item[ID].Quantity[2]
-	Item[ID].Quantity[2] = 0
+	Items[ID].Quantity[0] = Items[ID].Quantity[1]
+	Items[ID].Quantity[1] = Items[ID].Quantity[2]
+	Items[ID].Quantity[2] = 0
 
-	Item[ID].Cost[0] = Item[ID].Cost[1]
-	Item[ID].Cost[1] = Item[ID].Cost[2]
-	Item[ID].Cost[2] = 0
+	Items[ID].Cost[0] = Items[ID].Cost[1]
+	Items[ID].Cost[1] = Items[ID].Cost[2]
+	Items[ID].Cost[2] = 0
 }
 
 func BuyCart(ShoppingCart []Sale, customer int) []Sale {
@@ -106,27 +106,27 @@ func BuyCart(ShoppingCart []Sale, customer int) []Sale {
 		v.Year = uint8(year)
 		v.Customer = uint8(customer)
 
-		if Item[v.ID].Quantity[0]-v.Quantity <= 0 {
+		if Items[v.ID].Quantity[0]-v.Quantity <= 0 {
 			newbie := v
 			newbie.Price = v.Price
-			newbie.Cost = Item[v.ID].Cost[1]
-			newbie.Quantity = (Item[v.ID].Quantity[0] - v.Quantity) * -1
+			newbie.Cost = Items[v.ID].Cost[1]
+			newbie.Quantity = (Items[v.ID].Quantity[0] - v.Quantity) * -1
 
 			if newbie.Quantity != 0 {
 				v.Quantity -= newbie.Quantity
-				Item[v.ID].Quantity[1] -= newbie.Quantity
-				Report = append(Report, newbie)
+				Items[v.ID].Quantity[1] -= newbie.Quantity
+				Sales = append(Sales, newbie)
 			}
 
 			ShiftQuantity(v.ID)
-			if Item[v.ID].Quantity[0] == 0 {
+			if Items[v.ID].Quantity[0] == 0 {
 				ShiftQuantity(v.ID)
 			}
 		} else {
-			Item[v.ID].Quantity[0] -= v.Quantity
+			Items[v.ID].Quantity[0] -= v.Quantity
 		}
 
-		Report = append(Report, v)
+		Sales = append(Sales, v)
 	}
 	SaveData()
 	return ShoppingCart[:0]
@@ -177,8 +177,8 @@ func ConvertCart(shoppingCart []Sale) (intercart []interface{}) {
 
 func ConvertItemKeys() (inter []int) {
 	// var pop []int
-	for k := range Item {
-		if Item[k].Name[0] != byte(216) {
+	for k := range Items {
+		if Items[k].Name[0] != byte(216) {
 			inter = append(inter, int(k))
 		}
 	}
@@ -212,16 +212,16 @@ func ProcessQuantity(n string, w fyne.Window) (quantity float32) {
 
 func RemoveReportEntry(index int) {
 
-	for i, v := range Item[Report[index].ID].Cost {
-		if v == 0 || v == Report[index].Cost {
-			Item[Report[index].ID].Cost[i] = Report[index].Cost
-			Item[Report[index].ID].Quantity[i] += Report[index].Quantity
+	for i, v := range Items[Sales[index].ID].Cost {
+		if v == 0 || v == Sales[index].Cost {
+			Items[Sales[index].ID].Cost[i] = Sales[index].Cost
+			Items[Sales[index].ID].Quantity[i] += Sales[index].Quantity
 			break
 		}
 	}
 
-	Report[index] = Report[len(Report)-1]
-	Report = Report[:len(Report)-1]
+	Sales[index] = Sales[len(Sales)-1]
+	Sales = Sales[:len(Sales)-1]
 }
 
 func ConvertString(Price, Cost, Quantity string) (float32, float32, float32) {
@@ -232,7 +232,7 @@ func ConvertString(Price, Cost, Quantity string) (float32, float32, float32) {
 }
 
 func ConvertItem(id uint16) (result Sale) {
-	vals := Item[id]
+	vals := Items[id]
 
 	result.ID = id
 	result.Price = vals.Price

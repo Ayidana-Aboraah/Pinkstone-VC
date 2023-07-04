@@ -36,6 +36,7 @@ var testItems = map[uint16]*Database.Entry{
 	2: {Name: "Val", Price: 1, Cost: [3]float32{0, 0, 0}, Quantity: [3]float32{0, 0, 0}},
 	4: {Name: "Pop", Price: 1, Cost: [3]float32{2, 0, 0}, Quantity: [3]float32{1, 0, 0}},
 	5: {Name: "Villianous", Price: 0, Cost: [3]float32{0, 0, 0}, Quantity: [3]float32{0, 0, 0}},
+	6: {Name: "Carty", Price: 12, Cost: [3]float32{2, 3, 4}, Quantity: [3]float32{3, 4, 7}},
 }
 
 func TestSaveUsers(t *testing.T) {

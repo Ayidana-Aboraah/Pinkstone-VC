@@ -1,7 +1,8 @@
 .idea/
 .vscode/
-BronzeHermes.apk
-BronzeHermes.exe
+*.apk
+*.exe
+fyne-cross
 .gitpod.yml
 workspace
 Test/Old_Data/

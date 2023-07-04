@@ -109,7 +109,6 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 
 					for found && v != nil {
 						v, found = Items[ID]
-						fmt.Println(ID, found, v != nil)
 						if !found || v == nil {
 							break
 						}
@@ -162,6 +161,7 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 						}
 
 						BuyCart([]Sale{s}, 0)
+						UI.HandleError(SaveData())
 						UpdateInventoryDisplay(uint16(target))
 					}, w)
 

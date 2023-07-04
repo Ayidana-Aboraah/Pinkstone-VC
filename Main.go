@@ -223,6 +223,7 @@ func makeShoppingMenu() fyne.CanvasObject {
 						cartData.Set(Database.ConvertCart(shoppingCart))
 						title.SetText("Cart Total: 0.0")
 						txtDisplay := widget.NewLabelWithStyle(receipt, fyne.TextAlignCenter, fyne.TextStyle{})
+						UI.HandleError(Database.SaveData())
 
 						dialog.ShowCustomConfirm("Complete", "Print", "Done", container.NewVBox(
 							widget.NewLabelWithStyle("PINKSTONE TRADING", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
@@ -440,11 +441,8 @@ func makeStatsMenu() fyne.CanvasObject {
 				customerIdx := customerSearch.Result()
 				found := []Database.Sale{}
 
-				fmt.Println(customerIdx)
-
 				if customerIdx == -1 {
 					found = Database.Sales
-
 				} else {
 					for _, v := range Database.Sales {
 						if v.Customer == uint8(customerIdx) {

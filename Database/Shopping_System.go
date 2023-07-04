@@ -57,7 +57,6 @@ func CleanUpDeadItems() {
 				}
 			}
 			if !found {
-				// fmt.Println("Deleteing: " + Item[k].Name)
 				delete(Items, k)
 			}
 		}
@@ -98,9 +97,10 @@ func ShiftQuantity(ID uint16) {
 }
 
 func BuyCart(ShoppingCart []Sale, customer int) []Sale {
+	y, month, day := time.Now().Date()
+	year, _ := strconv.Atoi(strconv.Itoa(y)[1:])
 	for _, v := range ShoppingCart {
-		y, month, day := time.Now().Date()
-		year, _ := strconv.Atoi(strconv.Itoa(y)[1:])
+
 		v.Day = uint8(day)
 		v.Month = uint8(month)
 		v.Year = uint8(year)
@@ -108,13 +108,25 @@ func BuyCart(ShoppingCart []Sale, customer int) []Sale {
 
 		if Items[v.ID].Quantity[0]-v.Quantity <= 0 {
 			newbie := v
-			newbie.Price = v.Price
 			newbie.Cost = Items[v.ID].Cost[1]
 			newbie.Quantity = (Items[v.ID].Quantity[0] - v.Quantity) * -1
 
 			if newbie.Quantity != 0 {
 				v.Quantity -= newbie.Quantity
-				Items[v.ID].Quantity[1] -= newbie.Quantity
+
+				if Items[v.ID].Quantity[1]-newbie.Quantity < 0 {
+					newbie2 := newbie
+					newbie2.Cost = Items[v.ID].Cost[2]
+					newbie2.Quantity = (Items[v.ID].Quantity[1] - newbie.Quantity) * -1
+
+					newbie.Quantity -= newbie2.Quantity
+
+					Items[v.ID].Quantity[1] -= newbie.Quantity
+					Items[v.ID].Quantity[2] -= newbie2.Quantity
+
+					Sales = append(Sales, newbie2)
+				}
+
 				Sales = append(Sales, newbie)
 			}
 
@@ -128,7 +140,6 @@ func BuyCart(ShoppingCart []Sale, customer int) []Sale {
 
 		Sales = append(Sales, v)
 	}
-	SaveData()
 	return ShoppingCart[:0]
 }
 

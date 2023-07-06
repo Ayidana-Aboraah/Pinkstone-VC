@@ -16,7 +16,21 @@ var testCart = []Database.Sale{ // Use 6 since that's the one that has proper da
 	{ID: 6, Price: 16, Cost: 9, Quantity: 14},
 }
 
+func ResetTestCartAndQuantities() {
+	// testCart = []Database.Sale{ // Use 6 since that's the one that has proper data
+	// 	{ID: 6, Price: 12, Cost: 5, Quantity: 2},
+	// 	{ID: 6, Price: 13, Cost: 6, Quantity: 3},
+	// 	{ID: 6, Price: 14, Cost: 7, Quantity: 6},
+	// 	{ID: 6, Price: 15, Cost: 8, Quantity: 7},
+	// 	{ID: 6, Price: 16, Cost: 9, Quantity: 12},
+	// 	{ID: 6, Price: 16, Cost: 9, Quantity: 14},
+	// }
+	testItems[6].Cost = [3]float32{2, 3, 4}
+	testItems[6].Quantity = [3]float32{3, 4, 7}
+}
+
 func TestBuyingNormal(t *testing.T) {
+	ResetTestCartAndQuantities()
 	Database.Items = testItems
 	Database.BuyCart([]Database.Sale{testCart[0]}, 0)
 
@@ -67,6 +81,8 @@ func TestBuyingNormal(t *testing.T) {
 }
 
 func TestBuyingAllOfQuantity0(t *testing.T) {
+	ResetTestCartAndQuantities()
+
 	Database.Items = testItems
 	Database.BuyCart([]Database.Sale{testCart[1]}, 0)
 
@@ -117,6 +133,8 @@ func TestBuyingAllOfQuantity0(t *testing.T) {
 }
 
 func TestBuying2Quantities(t *testing.T) {
+	ResetTestCartAndQuantities()
+
 	Database.Items = testItems
 	Database.BuyCart([]Database.Sale{testCart[2]}, 0)
 
@@ -173,6 +191,8 @@ func TestBuying2Quantities(t *testing.T) {
 }
 
 func TestBuyingAllQuantities0n1(t *testing.T) {
+	ResetTestCartAndQuantities()
+
 	Database.Items = testItems
 	Database.BuyCart([]Database.Sale{testCart[3]}, 0)
 
@@ -231,6 +251,8 @@ func TestBuyingAllQuantities0n1(t *testing.T) {
 }
 
 func TestBuyingInto3rdQuantity(t *testing.T) {
+	ResetTestCartAndQuantities()
+
 	Database.Items = testItems
 	Database.BuyCart([]Database.Sale{testCart[4]}, 0)
 
@@ -290,6 +312,8 @@ func TestBuyingInto3rdQuantity(t *testing.T) {
 }
 
 func TestBuyingAllQuantities(t *testing.T) {
+	ResetTestCartAndQuantities()
+
 	Database.Items = testItems
 	Database.BuyCart([]Database.Sale{testCart[5]}, 0)
 

@@ -272,30 +272,11 @@ func makeShoppingMenu() fyne.CanvasObject {
 							if !b {
 								return
 							}
-							s := Database.ConvertItem(uint16(id))
+							s := Database.NewItem(uint16(id))
 
-							if pieceEntry.Text != "" || totalEntry.Text != "" {
-								if UI.HandleKnownError(1, pieceEntry.Text == "" || totalEntry.Text == "", w) {
-									menu.Show()
-								} else {
-									piece, err := strconv.ParseFloat(pieceEntry.Text, 32)
-
-									if UI.HandleKnownError(0, err != nil || piece < 0, w) {
-										menu.Show()
-									}
-
-									total, err := strconv.ParseFloat(totalEntry.Text, 32)
-									if UI.HandleKnownError(0, err != nil || total < 0, w) {
-										menu.Show()
-									}
-									s.Quantity = float32(piece / total)
-								}
-							}
-
-							if barginEntry.Text != "" {
-								f, err := strconv.ParseFloat(barginEntry.Text, 32)
-								UI.HandleKnownError(0, err != nil, w)
-								s.Price = float32(f) / s.Quantity
+							id := Database.ProcessNewItemData(barginEntry.Text, pieceEntry.Text, totalEntry.Text, &s)
+							if id != -1 && UI.HandleKnownError(id, true, w) {
+								menu.Show()
 							}
 
 							shoppingCart = Database.AddToCart(s, shoppingCart)
@@ -333,7 +314,8 @@ func makeStatsMenu() fyne.CanvasObject {
 	date := []uint8{}
 
 	updateReport = func() {
-		reportDisplay.SetText(Database.CompileReport(variant, date))
+		str, _ := Database.CompileReport(variant, date)
+		reportDisplay.SetText(str)
 	}
 
 	/*
@@ -377,7 +359,7 @@ func makeStatsMenu() fyne.CanvasObject {
 				return
 			}
 
-			Database.RemoveReportEntry(id)
+			Database.RemoveFromSales(id)
 			UI.HandleError(Database.SaveData())
 			reportData.Set(Database.ConvertCart(Database.Sales))
 			reportList.Refresh()

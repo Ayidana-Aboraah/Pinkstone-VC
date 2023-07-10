@@ -42,8 +42,12 @@ func CreateWindow(a fyne.App) {
 	)
 
 	if UI.HandleErrorWindow(Database.LoadData(), w) {
-		dialog.ShowInformation("Back Up", "Loading BackUp", w)
-		UI.HandleErrorWindow(Database.LoadBackUp(), w)
+		dialog.ShowConfirm("Back Up", "Failed to Load Normal Data, would you like to Load Backup", func(b bool) {
+			if !b {
+				return
+			}
+			UI.HandleErrorWindow(Database.LoadBackUp(), w)
+		}, w)
 	}
 
 	w.SetContent(container.NewVBox(container.NewAppTabs(
@@ -125,9 +129,13 @@ func makeMainMenu(a fyne.App) fyne.CanvasObject {
 			go UI.HandleErrorWindow(Database.SaveBackUp(), w)
 		}),
 		widget.NewButton("Load Backup Data", func() {
-			dialog.ShowInformation("Loading Back up Data", "Wait until back up is done loading...", w)
-			UI.HandleErrorWindow(Database.LoadBackUp(), w)
-			dialog.ShowInformation("Loaded", "Back Up Loaded", w)
+			dialog.ShowConfirm("Are you Sure?", "Are you sure you want to load the backup data?", func(b bool) {
+				if !b {
+					return
+				}
+				UI.HandleErrorWindow(Database.LoadBackUp(), w)
+				dialog.ShowInformation("Loaded", "Back Up Loaded", w)
+			}, w)
 		}),
 		widget.NewButton("Delete Database", func() {
 			dialog.ShowConfirm("Are you sure?", "DELETE EVERYTHING",
@@ -362,6 +370,7 @@ func makeStatsMenu() fyne.CanvasObject {
 			Database.RemoveFromSales(id)
 			UI.HandleError(Database.SaveData())
 			reportData.Set(Database.ConvertCart(Database.Sales))
+			updateReport()
 			reportList.Refresh()
 		}, w)
 		reportList.UnselectAll()

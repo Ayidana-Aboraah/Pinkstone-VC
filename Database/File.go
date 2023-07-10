@@ -188,7 +188,7 @@ func SaveBackUp() error {
 		return err
 	}
 
-	_, err = save.Write(save_kv())
+	_, err = save.Write(save_sales())
 	if err != nil {
 		return err
 	}

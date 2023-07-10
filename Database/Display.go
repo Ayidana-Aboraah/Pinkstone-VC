@@ -100,24 +100,10 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 						return
 					}
 
-					price, cost, _ := ConvertString(priceEntry.Text, costEntry.Text, "")
-					quantity := ProcessQuantity(invenEntry.Text, w)
-
-					// Check for an open slot
-					ID := uint16(len(Items))
-					v, found := Items[ID]
-
-					for found && v != nil {
-						v, found = Items[ID]
-						if !found || v == nil {
-							break
-						}
-						ID += 1
+					ID, errID := CreateItem(nameEntry.Text, priceEntry.Text, costEntry.Text, invenEntry.Text)
+					if UI.HandleKnownError(0, errID != -1, w) {
+						return
 					}
-
-					Items[ID] = &Entry{Price: price, Name: nameEntry.Text, Quantity: [3]float32{quantity, 0, 0}, Cost: [3]float32{cost, 0, 0}}
-					fmt.Println("!Found, Adding: ", Items[ID])
-
 					target = int(ID)
 
 					UI.HandleErrorWindow(SaveData(), w)
@@ -187,21 +173,26 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 					if !b {
 						return
 					}
-					price, cost, _ := ConvertString(priceEntry.Text, costEntry.Text, "")
-					quan := ProcessQuantity(invenEntry.Text, w)
-					Items[uint16(target)].Price = price
 
-					for i := 0; i < 3; i++ {
-						if Items[uint16(target)].Cost[i] == cost {
-							Items[uint16(target)].Quantity[i] += quan
-							break
-						}
-						if Items[uint16(target)].Quantity[i] == 0 {
-							Items[uint16(target)].Quantity[i] = quan
-							Items[uint16(target)].Cost[i] = cost
-							break
-						}
+					errID := AddItem(uint16(target), priceEntry.Text, costEntry.Text, invenEntry.Text)
+					if UI.HandleKnownError(0, errID != -1, w) {
+						return
 					}
+					// price, cost, _ := ConvertString(priceEntry.Text, costEntry.Text, "")
+					// quan := ProcessQuantity(invenEntry.Text, w)
+					// Items[uint16(target)].Price = price
+
+					// for i := 0; i < 3; i++ {
+					// 	if Items[uint16(target)].Cost[i] == cost {
+					// 		Items[uint16(target)].Quantity[i] += quan
+					// 		break
+					// 	}
+					// 	if Items[uint16(target)].Quantity[i] == 0 {
+					// 		Items[uint16(target)].Quantity[i] = quan
+					// 		Items[uint16(target)].Cost[i] = cost
+					// 		break
+					// 	}
+					// }
 					UI.HandleErrorWindow(SaveData(), w)
 					UpdateInventoryDisplay(uint16(target))
 				}, w)

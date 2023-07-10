@@ -12,15 +12,6 @@ var testUserNames = []string{
 	"123481023984012983",
 }
 
-var testCustomer = []string{
-	"",
-	"xxx",
-	"128340192830",
-	"Ball",
-	"Broom",
-	"aa",
-}
-
 var testSales = []Database.Sale{
 	{ID: 0, Price: 0, Cost: 0, Quantity: 0, Customer: 0, Usr: 0},
 	{ID: 1, Price: 2, Cost: 1, Quantity: 15, Customer: 1, Usr: 2},
@@ -37,6 +28,17 @@ var testItems = map[uint16]*Database.Entry{
 	4: {Name: "Pop", Price: 1, Cost: [3]float32{2, 0, 0}, Quantity: [3]float32{1, 0, 0}},
 	5: {Name: "Villianous", Price: 0, Cost: [3]float32{0, 0, 0}, Quantity: [3]float32{0, 0, 0}},
 	6: {Name: "Carty", Price: 12, Cost: [3]float32{2, 3, 4}, Quantity: [3]float32{3, 4, 7}},
+}
+
+func resetTestItems() {
+	testItems = map[uint16]*Database.Entry{
+		0: {Name: "", Price: 0, Cost: [3]float32{0, 0, 0}, Quantity: [3]float32{0, 0, 0}},
+		1: {Name: "Viva", Price: -1, Cost: [3]float32{0, 0, 0}, Quantity: [3]float32{0, 0, 0}},
+		2: {Name: "Val", Price: 1, Cost: [3]float32{0, 0, 0}, Quantity: [3]float32{0, 0, 0}},
+		4: {Name: "Pop", Price: 1, Cost: [3]float32{2, 0, 0}, Quantity: [3]float32{1, 0, 0}},
+		5: {Name: "Villianous", Price: 0, Cost: [3]float32{0, 0, 0}, Quantity: [3]float32{0, 0, 0}},
+		6: {Name: "Carty", Price: 12, Cost: [3]float32{2, 3, 4}, Quantity: [3]float32{3, 4, 7}},
+	}
 }
 
 func TestSaveUsers(t *testing.T) {

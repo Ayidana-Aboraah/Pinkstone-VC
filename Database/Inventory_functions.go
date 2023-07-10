@@ -1,11 +1,9 @@
 package Database
 
 import (
-	"BronzeHermes/UI"
+	"fmt"
 	"strconv"
 	"strings"
-
-	"fyne.io/fyne/v2"
 )
 
 func CleanUpDeadItems() {
@@ -68,21 +66,87 @@ func ConvertItemKeys() (inter []int) {
 	return
 }
 
-func ProcessQuantity(n string, w fyne.Window) (quantity float32) {
+func ProcessQuantity(n string) (quantity float32, errID int) {
 	raw := strings.SplitN(n, " ", 2)
 	if len(raw) == 2 {
 		pop := strings.SplitN(raw[1], "/", 2)
-		numerator, denominator, whole := ConvertString(pop[0], pop[1], raw[0])
-		if UI.HandleKnownError(0, len(pop) != 2, w) {
+		numerator, denominator, whole, err := ConvertString(pop[0], pop[1], raw[0])
+		if len(pop) != 2 || err != -1 {
+			errID = 0
 			return
 		}
+
 		quantity = whole + (numerator / denominator)
 	} else {
 		v, err := strconv.ParseFloat(raw[0], 32)
-		if UI.HandleKnownError(0, err != nil, w) {
+		if err != nil {
+			errID = 0
 			return
 		}
 		quantity = float32(v)
 	}
-	return
+	return quantity, -1
+}
+
+func CreateItem(name, priceTxt, costTxt, stockTxt string) (ID uint16, errID int) {
+	quantity, err := ProcessQuantity(stockTxt)
+	if err != -1 {
+		errID = err
+		return
+	}
+
+	price, cost, _, err := ConvertString(priceTxt, costTxt, "")
+	if err != -1 {
+		return 0, err
+	}
+
+	// Check for an open slot
+	ID = uint16(len(Items))
+	v, found := Items[ID]
+
+	for found && v != nil {
+		v, found = Items[ID]
+		if !found || v == nil {
+			break
+		}
+		ID += 1
+	}
+
+	Items[ID] = &Entry{Price: price, Name: name, Quantity: [3]float32{quantity, 0, 0}, Cost: [3]float32{cost, 0, 0}}
+	fmt.Println("!Found, Adding: ", Items[ID])
+	return ID, -1
+}
+
+func AddItem(target uint16, priceTxt, costTxt, stockTxt string) (errID int) {
+	quan, err := ProcessQuantity(stockTxt)
+	if err != -1 {
+		return err
+	}
+
+	price, cost, _, err := ConvertString(priceTxt, costTxt, "")
+	if err != -1 {
+		return err
+	}
+
+	Items[target].Price = price
+
+	rejections := 0
+	for i := 0; i < 3; i++ {
+		if Items[target].Cost[i] == cost {
+			Items[target].Quantity[i] += quan
+			break
+		}
+		if Items[target].Quantity[i] == 0 {
+			Items[target].Quantity[i] = quan
+			Items[target].Cost[i] = cost
+			break
+		}
+		rejections += 1
+	}
+
+	if rejections == 3 {
+		return 2
+	}
+
+	return -1
 }

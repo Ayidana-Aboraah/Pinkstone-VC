@@ -170,11 +170,14 @@ func ConvertCart(shoppingCart []Sale) (intercart []interface{}) {
 	return
 }
 
-func ConvertString(Price, Cost, Quantity string) (float32, float32, float32) {
-	newPrice, _ := strconv.ParseFloat(Price, 32)
-	newCost, _ := strconv.ParseFloat(Cost, 32)
-	newQuantity, _ := strconv.ParseFloat(Quantity, 32)
-	return float32(newPrice), float32(newCost), float32(newQuantity)
+func ConvertString(Price, Cost, Quantity string) (float32, float32, float32, int) {
+	newPrice, errA := strconv.ParseFloat(Price, 32)
+	newCost, errB := strconv.ParseFloat(Cost, 32)
+	newQuantity, errC := strconv.ParseFloat(Quantity, 32)
+	if errA != nil || errB != nil || (errC != nil && Quantity != "") {
+		return 0.0, 0.0, 0.0, 0
+	}
+	return float32(newPrice), float32(newCost), float32(newQuantity), -1
 }
 
 func NewItem(id uint16) (result Sale) {

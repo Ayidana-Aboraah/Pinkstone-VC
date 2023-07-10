@@ -10,8 +10,9 @@ import (
 )
 
 var knownErrors = []string{
-	"Invalid Input\nCheck your inpt",
+	"Invalid Input\nCheck your input",
 	"Pieces answered but not total pieces, unable to estimate how many items are being taken out of the given pack\nCheck your input",
+	"Cannot Add more Stock, 3 max cost prices",
 }
 
 func HandleErrorWindow(err error, w fyne.Window) bool {

@@ -207,7 +207,7 @@ func TestFailedItemCreation(t *testing.T) {
 }
 
 func TestAddItem(t *testing.T) {
-	resetTestItems()
+	resetTestItemsAndSales()
 	Database.Items = testItems
 	errID := Database.AddItem(0, "1", "12", "32")
 	if errID != -1 {
@@ -238,7 +238,7 @@ func TestAddItem(t *testing.T) {
 }
 
 func TestAddWithFraction(t *testing.T) {
-	resetTestItems()
+	resetTestItemsAndSales()
 	Database.Items = testItems
 	errID := Database.AddItem(0, "1", "12", "32 1/2")
 	if errID != -1 {
@@ -269,7 +269,7 @@ func TestAddWithFraction(t *testing.T) {
 }
 
 func TestFailedAdd(t *testing.T) {
-	resetTestItems()
+	resetTestItemsAndSales()
 	Database.Items = testItems
 	errID := Database.AddItem(0, "3", "12", "--32 -1-/-0.9-")
 	if errID != 0 {
@@ -300,7 +300,7 @@ func TestFailedAdd(t *testing.T) {
 }
 
 func TestAdd2Costs(t *testing.T) {
-	resetTestItems()
+	resetTestItemsAndSales()
 	Database.Items = testItems
 	errID := Database.AddItem(4, "1", "12", "32")
 	if errID != -1 {
@@ -339,7 +339,7 @@ func TestAdd2Costs(t *testing.T) {
 }
 
 func TestAdd2CostsWithFraction(t *testing.T) {
-	resetTestItems()
+	resetTestItemsAndSales()
 	Database.Items = testItems
 	errID := Database.AddItem(4, "1", "12", "32 1/2")
 	if errID != -1 {
@@ -378,7 +378,7 @@ func TestAdd2CostsWithFraction(t *testing.T) {
 }
 
 func TestAdd3Costs(t *testing.T) {
-	resetTestItems()
+	resetTestItemsAndSales()
 	Database.Items = testItems
 	errID := Database.AddItem(4, "1", "12", "32")
 
@@ -432,7 +432,7 @@ func TestAdd3Costs(t *testing.T) {
 }
 
 func TestAdd3CostsWithFraction(t *testing.T) {
-	resetTestItems()
+	resetTestItemsAndSales()
 	Database.Items = testItems
 	errID := Database.AddItem(4, "1", "12", "32 1/2")
 
@@ -486,7 +486,7 @@ func TestAdd3CostsWithFraction(t *testing.T) {
 }
 
 func TestFailedAdd4CostsWithFraction(t *testing.T) {
-	resetTestItems()
+	resetTestItemsAndSales()
 	Database.Items = testItems
 	errID := Database.AddItem(4, "1", "12", "32 1/2")
 

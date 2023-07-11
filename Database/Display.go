@@ -1,6 +1,7 @@
 package Database
 
 import (
+	"BronzeHermes/Debug"
 	"BronzeHermes/UI"
 	"fmt"
 	"strconv"
@@ -36,7 +37,7 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 		return container.NewBorder(nil, nil, nil, nil, widget.NewLabel("N"))
 	}, func(item binding.DataItem, obj fyne.CanvasObject) {
 		val, err := item.(binding.Int).Get()
-		UI.HandleError(err)
+		Debug.HandleError(err)
 		obj.(*fyne.Container).Objects[0].(*widget.Label).SetText(Items[uint16(val)].Name)
 	})
 
@@ -101,12 +102,12 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 					}
 
 					ID, errID := CreateItem(nameEntry.Text, priceEntry.Text, costEntry.Text, invenEntry.Text)
-					if UI.HandleKnownError(0, errID != -1, w) {
+					if Debug.HandleKnownError(0, errID != -1, w) {
 						return
 					}
 					target = int(ID)
 
-					UI.HandleErrorWindow(SaveData(), w)
+					Debug.HandleErrorWindow(SaveData(), w)
 
 					InventoryData.Set(ConvertItemKeys())
 					UpdateInventoryDisplay(ID)
@@ -130,7 +131,7 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 							return
 						}
 						quantity, err := strconv.ParseFloat(entry.Text, 32)
-						UI.HandleError(err)
+						Debug.HandleError(err)
 
 						y, month, day := time.Now().Date()
 						year, _ := strconv.Atoi(strconv.Itoa(y)[1:])
@@ -147,7 +148,7 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 						}
 
 						BuyCart([]Sale{s}, 0)
-						UI.HandleError(SaveData())
+						Debug.HandleError(SaveData())
 						UpdateInventoryDisplay(uint16(target))
 					}, w)
 
@@ -175,25 +176,11 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 					}
 
 					errID := AddItem(uint16(target), priceEntry.Text, costEntry.Text, invenEntry.Text)
-					if UI.HandleKnownError(0, errID != -1, w) {
+					if Debug.HandleKnownError(0, errID != -1, w) {
 						return
 					}
-					// price, cost, _ := ConvertString(priceEntry.Text, costEntry.Text, "")
-					// quan := ProcessQuantity(invenEntry.Text, w)
-					// Items[uint16(target)].Price = price
 
-					// for i := 0; i < 3; i++ {
-					// 	if Items[uint16(target)].Cost[i] == cost {
-					// 		Items[uint16(target)].Quantity[i] += quan
-					// 		break
-					// 	}
-					// 	if Items[uint16(target)].Quantity[i] == 0 {
-					// 		Items[uint16(target)].Quantity[i] = quan
-					// 		Items[uint16(target)].Cost[i] = cost
-					// 		break
-					// 	}
-					// }
-					UI.HandleErrorWindow(SaveData(), w)
+					Debug.HandleErrorWindow(SaveData(), w)
 					UpdateInventoryDisplay(uint16(target))
 				}, w)
 			}),
@@ -210,7 +197,7 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 					inventoryList.Refresh()
 					target = -1
 
-					UI.HandleErrorWindow(SaveData(), w)
+					Debug.HandleErrorWindow(SaveData(), w)
 				}, w)
 			}),
 		),
@@ -228,7 +215,7 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 
 					id := searchBar.Result()
 
-					if UI.HandleKnownError(0, id < 0, w) {
+					if Debug.HandleKnownError(0, id < 0, w) {
 						return
 					}
 					target = id

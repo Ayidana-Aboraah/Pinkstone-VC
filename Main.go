@@ -2,6 +2,7 @@ package main
 
 import (
 	"BronzeHermes/Database"
+	"BronzeHermes/Debug"
 	"BronzeHermes/UI"
 	"fmt"
 	"strconv"
@@ -41,12 +42,12 @@ func CreateWindow(a fyne.App) {
 		},
 	)
 
-	if UI.HandleErrorWindow(Database.LoadData(), w) {
+	if Debug.HandleErrorWindow(Database.LoadData(), w) {
 		dialog.ShowConfirm("Back Up", "Failed to Load Normal Data, would you like to Load Backup", func(b bool) {
 			if !b {
 				return
 			}
-			UI.HandleErrorWindow(Database.LoadBackUp(), w)
+			Debug.HandleErrorWindow(Database.LoadBackUp(), w)
 		}, w)
 	}
 
@@ -126,44 +127,75 @@ func makeMainMenu(a fyne.App) fyne.CanvasObject {
 		}),
 
 		widget.NewButton("Save Backup Data", func() {
-			go UI.HandleErrorWindow(Database.SaveBackUp(), w)
+			go Debug.HandleErrorWindow(Database.SaveBackUp(), w)
 		}),
 		widget.NewButton("Load Backup Data", func() {
 			dialog.ShowConfirm("Are you Sure?", "Are you sure you want to load the backup data?", func(b bool) {
 				if !b {
 					return
 				}
-				UI.HandleErrorWindow(Database.LoadBackUp(), w)
+				Debug.HandleErrorWindow(Database.LoadBackUp(), w)
 				dialog.ShowInformation("Loaded", "Back Up Loaded", w)
 			}, w)
 		}),
-		widget.NewButton("Delete Database", func() {
-			dialog.ShowConfirm("Are you sure?", "DELETE EVERYTHING",
-				func(confirmed bool) {
-					if !confirmed {
-						return
-					}
-					dialog.ShowConfirm("You sure you sure?", "You sure you sure?", func(b bool) {
-						if !confirmed {
+		widget.NewButton("Enter Debug", func() {
+			ItemSearch := UI.NewSearchBar("Item Name", Database.SearchInventory)
+			customerSearch := UI.NewSearchBar("Customer Name", Database.SearchCustomers)
+
+			PriceEntry := UI.NewNumEntry("Price It was sold at")
+			costEntry := UI.NewNumEntry("Cost Price")
+			quantityEntry := UI.NewNumEntry("How many were sold?")
+			dateEntry := UI.NewNumEntry("YYYY-MM-DD")
+
+			dialog.ShowCustom("Debug", "Close", container.NewVBox(
+				widget.NewButton("Create Sale", func() {
+					dialog.ShowForm("New Sale", "Done", "Close", []*widget.FormItem{
+						widget.NewFormItem("Item", ItemSearch),         // Item Search
+						widget.NewFormItem("Price", PriceEntry),        // Price Entry
+						widget.NewFormItem("Cost", costEntry),          // Cost Entry
+						widget.NewFormItem("Quantity", quantityEntry),  // Quantity Entry
+						widget.NewFormItem("Customer", customerSearch), // Customer Search
+						widget.NewFormItem("Date", dateEntry),          // Date Entry
+
+					}, func(b bool) {
+						if !b {
+							return
+						}
+						ID := ItemSearch.Result()
+						if Debug.HandleKnownError(0, ID == -1, w) {
 							return
 						}
 
-						Database.Items = map[uint16]*Database.Entry{}
-						Database.Sales = []Database.Sale{}
-						Database.Current_User = 0
-						Database.Users = []string{}
-						Database.Customers = []string{}
-						CreateUser.Show()
+						customer := customerSearch.Result()
+						if Debug.HandleKnownError(0, ID == -1, w) {
+							return
+						}
 
-						usrData.Set(nil)
-						Database.InventoryData.Set(nil)
-						titleText.SetText("Welcome")
-						Database.SaveData()
+						Database.CreateSale(uint16(ID), dateEntry.Text, PriceEntry.Text, costEntry.Text, quantityEntry.Text, customer)
 					}, w)
-				}, w)
-		}),
+				}),
+				widget.NewButton("Delete Database", func() {
+					dialog.ShowConfirm("Are you sure?", "DELETE EVERYTHING",
+						func(confirmed bool) {
+							if !confirmed {
+								return
+							}
+							dialog.ShowConfirm("You sure you sure?", "You sure you sure?", func(b bool) {
+								if !confirmed {
+									return
+								}
 
-		//Add inventory features here
+								Database.DeleteEverything()
+								CreateUser.Show()
+
+								usrData.Set(nil)
+								Database.InventoryData.Set(nil)
+								titleText.SetText("Welcome")
+								Database.SaveData()
+							}, w)
+						}, w)
+				})), w)
+		}),
 	)
 }
 
@@ -231,7 +263,7 @@ func makeShoppingMenu() fyne.CanvasObject {
 						cartData.Set(Database.ConvertCart(shoppingCart))
 						title.SetText("Cart Total: 0.0")
 						txtDisplay := widget.NewLabelWithStyle(receipt, fyne.TextAlignCenter, fyne.TextStyle{})
-						UI.HandleError(Database.SaveData())
+						Debug.HandleError(Database.SaveData())
 
 						dialog.ShowCustomConfirm("Complete", "Print", "Done", container.NewVBox(
 							widget.NewLabelWithStyle("PINKSTONE TRADING", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
@@ -260,7 +292,7 @@ func makeShoppingMenu() fyne.CanvasObject {
 
 					id := searchBar.Result()
 
-					if UI.HandleKnownError(0, id < 0, w) {
+					if Debug.HandleKnownError(0, id < 0, w) {
 						return
 					}
 
@@ -283,7 +315,7 @@ func makeShoppingMenu() fyne.CanvasObject {
 							s := Database.NewItem(uint16(id))
 
 							id := Database.ProcessNewItemData(barginEntry.Text, pieceEntry.Text, totalEntry.Text, &s)
-							if id != -1 && UI.HandleKnownError(id, true, w) {
+							if id != -1 && Debug.HandleKnownError(id, true, w) {
 								menu.Show()
 							}
 
@@ -356,7 +388,7 @@ func makeStatsMenu() fyne.CanvasObject {
 
 	reportList.OnSelected = func(id widget.ListItemID) {
 		v, err := reportData.GetValue(id)
-		UI.HandleError(err)
+		Debug.HandleError(err)
 		val := v.(Database.Sale)
 
 		infoText := fmt.Sprintf("Name: %s\nPrice: %1.2f\nCost: %1.2f\nQuantity: %1.2f\nTotal Revenue: %1.2f\nTotal Profit: %1.2f\nCustomer: %s\nCashier:%s",
@@ -368,7 +400,7 @@ func makeStatsMenu() fyne.CanvasObject {
 			}
 
 			Database.RemoveFromSales(id)
-			UI.HandleError(Database.SaveData())
+			Debug.HandleError(Database.SaveData())
 			reportData.Set(Database.ConvertCart(Database.Sales))
 			updateReport()
 			reportList.Refresh()

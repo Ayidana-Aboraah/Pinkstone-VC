@@ -1,8 +1,7 @@
-package UI
+package Debug
 
 import (
 	"fmt"
-	"math/big"
 	"testing"
 
 	"fyne.io/fyne/v2"
@@ -13,6 +12,7 @@ var knownErrors = []string{
 	"Invalid Input\nCheck your input",
 	"Pieces answered but not total pieces, unable to estimate how many items are being taken out of the given pack\nCheck your input",
 	"Cannot Add more Stock, 3 max cost prices",
+	"Need more info, check your input",
 }
 
 func HandleErrorWindow(err error, w fyne.Window) bool {
@@ -41,17 +41,4 @@ func HandleError(err error) {
 	if err != nil {
 		fmt.Println(err)
 	}
-}
-
-func Truncate(f float64, units float64) float64 {
-	bV := big.NewFloat(0).SetPrec(1000).SetFloat64(f)
-	bU := big.NewFloat(0).SetPrec(1000).SetFloat64(units)
-	bV.Quo(bV, bU)
-
-	i := big.NewInt(0)
-	bV.Int(i)
-	bV.SetInt(i)
-
-	f, _ = bV.Mul(bV, bU).Float64()
-	return f
 }

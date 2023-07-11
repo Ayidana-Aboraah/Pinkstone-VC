@@ -34,7 +34,7 @@ const (
 )
 
 func DataInit(remove bool) error {
-	for i, file := 0, ""; i < 6; i++ {
+	for i, file := 0, ""; i < 7; i++ {
 		switch i {
 		case 0:
 			file = "Item_Reference.red"

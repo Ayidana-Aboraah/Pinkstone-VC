@@ -237,9 +237,11 @@ func makeShoppingMenu() fyne.CanvasObject {
 
 	customerEntry := UI.NewSearchBar("Customer Name Here", Database.SearchCustomers)
 
-	return container.New(layout.NewGridLayoutWithRows(3),
-		title,
-		container.NewMax(shoppingList),
+	return container.NewVSplit(
+		container.NewVSplit(
+			title,
+			container.NewMax(shoppingList),
+		),
 		container.NewGridWithColumns(3,
 			widget.NewButton("Buy Cart", func() {
 				customerEntry.SetText("")

@@ -227,7 +227,7 @@ func makeShoppingMenu() fyne.CanvasObject {
 		text.SetText(Database.Items[val.ID].Name + " x" + fmt.Sprint(val.Quantity))
 		text.SetText(fmt.Sprintf("%s ₵%1.2f x%1.2f -> ₵%1.2f", Database.Items[val.ID].Name, val.Price, val.Quantity, val.Price*val.Quantity))
 		btn.OnTapped = func() {
-			shoppingCart = Database.DecreaseFromCart(val, shoppingCart)
+			shoppingCart = Database.DecreaseFromCart(id, shoppingCart)
 			cartData.Set(Database.ConvertCart(shoppingCart))
 			title.SetText(fmt.Sprintf("Cart Total: %1.2f", Database.GetCartTotal(shoppingCart)))
 			text.SetText(Database.Items[val.ID].Name + " x" + fmt.Sprint(val.Quantity))

@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestAddingItemNormal(t *testing.T) {
+func TestProcessingItemNormal(t *testing.T) {
 	s := Database.Sale{Price: 5, Cost: 5, Quantity: 1}
 	err := Database.ProcessNewItemData("", "", "", &s)
 	switch err {
@@ -29,7 +29,7 @@ func TestAddingItemNormal(t *testing.T) {
 	}
 }
 
-func TestAddingItemWithBargin(t *testing.T) {
+func TestProcessingItemWithBargin(t *testing.T) {
 	s := Database.Sale{Price: 5, Cost: 5, Quantity: 1}
 	err := Database.ProcessNewItemData("10", "", "", &s)
 	switch err {
@@ -53,7 +53,7 @@ func TestAddingItemWithBargin(t *testing.T) {
 	}
 }
 
-func TestAddingItemInPieces(t *testing.T) {
+func TestProcessingItemInPieces(t *testing.T) {
 	s := Database.Sale{Price: 5, Cost: 5, Quantity: 1}
 	err := Database.ProcessNewItemData("", "1", "12", &s)
 	switch err {
@@ -77,7 +77,7 @@ func TestAddingItemInPieces(t *testing.T) {
 	}
 }
 
-func TestAddingItemWithQuantityInPieces(t *testing.T) {
+func TestProcessingItemWithQuantityInPieces(t *testing.T) {
 	s := Database.Sale{Price: 5, Cost: 5, Quantity: 1}
 	err := Database.ProcessNewItemData("25", "1", "12", &s)
 	switch err {
@@ -137,6 +137,89 @@ func TestMissingTotal(t *testing.T) {
 	case -1:
 		t.Log(s)
 		t.Error("This Data is invalid and should not pass")
+	}
+}
+
+func TestAddingIndividual(t *testing.T) {
+	s := Database.Sale{Price: 5, Cost: 5, Quantity: 1}
+	cart := []Database.Sale{}
+	cart = Database.AddToCart(s, cart)
+	if len(cart) != 1 {
+		t.Errorf("Error adding item to cart | len: %d, cart: %v", len(cart), cart)
+	}
+
+	for _, v := range cart {
+		if v != s {
+			t.Errorf("Cart and Item are != | item: %v, cart: %v", s, v)
+		}
+	}
+}
+
+func TestAddingToItemInCart(t *testing.T) {
+	s := Database.Sale{Price: 5, Cost: 5, Quantity: 3}
+	cart := []Database.Sale{
+		{Price: 5, Cost: 5, Quantity: 1},
+	}
+	cart = Database.AddToCart(s, cart)
+	s.Quantity = 4 //set this so that we can just compare them directly without having to check each individual stat
+
+	if len(cart) != 1 {
+		t.Errorf("Error adding item to cart | len: %d, cart: %v", len(cart), cart)
+	}
+
+	for _, v := range cart {
+		if v != s {
+			t.Errorf("Cart and Item are != | item: %v, cart: %v", s, v)
+		}
+	}
+}
+
+func TestAddingMoreToCart(t *testing.T) {
+	answer := []Database.Sale{
+		{Price: 5, Cost: 5, Quantity: 1},
+		{Price: 6, Cost: 5, Quantity: 1},
+	}
+	cart := []Database.Sale{
+		{Price: 5, Cost: 5, Quantity: 1},
+	}
+	cart = Database.AddToCart(answer[1], cart)
+
+	if len(cart) != 2 {
+		t.Errorf("Error adding item to cart | len: %d, cart: %v", len(cart), cart)
+	}
+
+	for i := range cart {
+		if cart[i] != answer[i] {
+			t.Errorf("Cart and Item are != | item: %v, cart: %v", answer[i], cart[i])
+		}
+	}
+}
+
+func TestDeductItemFromCart(t *testing.T) {
+	cart := []Database.Sale{
+		{Price: 5, Cost: 5, Quantity: 3},
+	}
+
+	cart = Database.DecreaseFromCart(0, cart)
+
+	if cart[0].Quantity != 2 {
+		t.Errorf("Error reducing quantity from item in cart | have: %f, want: 2.0", cart[0].Quantity)
+	}
+
+	if cart[0].Price != 5 || cart[0].Cost != 5 {
+		t.Errorf("Error occured with price or cost of cart item | have: %v", cart[0])
+	}
+}
+
+func TestItemRemovalFromCart(t *testing.T) {
+	cart := []Database.Sale{
+		{Price: 5, Cost: 5, Quantity: 1},
+	}
+
+	cart = Database.DecreaseFromCart(0, cart)
+
+	if len(cart) != 0 {
+		t.Errorf("An Erorr occured deleting an item from cart | have: %v", len(cart))
 	}
 }
 

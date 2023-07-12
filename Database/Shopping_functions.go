@@ -130,25 +130,20 @@ func BuyCart(ShoppingCart []Sale, customer int) []Sale {
 func AddToCart(item Sale, ShoppingCart []Sale) []Sale {
 	for i, v := range ShoppingCart {
 		if v.ID == item.ID && v.Price == item.Price {
-			ShoppingCart[i].Quantity++
+			ShoppingCart[i].Quantity += item.Quantity
 			return ShoppingCart
 		}
 	}
 	return append(ShoppingCart, item)
 }
 
-func DecreaseFromCart(item Sale, ShoppingCart []Sale) []Sale {
-	for i, v := range ShoppingCart {
-		if v.ID != item.ID || v.Price != item.Price {
-			continue
-		}
+func DecreaseFromCart(item int, ShoppingCart []Sale) []Sale {
 
-		if v.Quantity-1 > 0 {
-			ShoppingCart[i].Quantity -= 1
-		} else {
-			ShoppingCart[i] = ShoppingCart[len(ShoppingCart)-1] // Copy last element to index i.
-			ShoppingCart = ShoppingCart[:len(ShoppingCart)-1]   // Truncate slice.
-		}
+	if ShoppingCart[item].Quantity-1 > 0 {
+		ShoppingCart[item].Quantity -= 1
+	} else {
+		ShoppingCart[item] = ShoppingCart[len(ShoppingCart)-1] // Copy last element to index i.
+		ShoppingCart = ShoppingCart[:len(ShoppingCart)-1]      // Truncate slice.
 	}
 
 	return ShoppingCart

@@ -25,6 +25,30 @@ func SearchCustomers(input string) (Names []string, IDs []uint16) {
 	return
 }
 
+func AddDamages(target uint16, quantityTxt string) int {
+	quantity, err := ProcessQuantity(quantityTxt)
+	if err != -1 {
+		return 0
+	}
+
+	y, month, day := time.Now().Date()
+	year, _ := strconv.Atoi(strconv.Itoa(y)[1:])
+
+	s := Sale{
+		ID:       target,
+		Price:    0,
+		Cost:     Items[target].Cost[0],
+		Quantity: float32(quantity),
+		Usr:      255,
+		Day:      uint8(day),
+		Month:    uint8(month),
+		Year:     uint8(year),
+	}
+
+	BuyCart([]Sale{s}, 0)
+	return -1
+}
+
 func MakeReceipt(cart []Sale, customer string) (out string) {
 	y, m, d := time.Now().Date()
 	hr, min, _ := time.Now().Clock()

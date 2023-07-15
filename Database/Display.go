@@ -5,7 +5,6 @@ import (
 	"BronzeHermes/UI"
 	"fmt"
 	"strconv"
-	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
@@ -130,24 +129,10 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 						if !b {
 							return
 						}
-						quantity, err := strconv.ParseFloat(entry.Text, 32)
-						Debug.HandleError(err)
-
-						y, month, day := time.Now().Date()
-						year, _ := strconv.Atoi(strconv.Itoa(y)[1:])
-
-						s := Sale{
-							ID:       uint16(target),
-							Price:    0,
-							Cost:     Items[uint16(target)].Cost[0],
-							Quantity: float32(quantity),
-							Usr:      255,
-							Day:      uint8(day),
-							Month:    uint8(month),
-							Year:     uint8(year),
+						errID := AddDamages(uint16(target), entry.Text)
+						if Debug.HandleKnownError(0, errID != -1, w) {
+							return
 						}
-
-						BuyCart([]Sale{s}, 0)
 						Debug.HandleError(SaveData())
 						UpdateInventoryDisplay(uint16(target))
 					}, w)

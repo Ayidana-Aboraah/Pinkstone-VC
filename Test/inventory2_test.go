@@ -53,8 +53,7 @@ func TestRemoveSale2(t *testing.T) {
 }
 
 func TestAddingDamages(t *testing.T) {
-	Database.Sales = []Database.Sale{}
-	Database.Items = testItems
+	resetTestItemsAndSales()
 
 	y, month, day := time.Now().Date()
 	year, _ := strconv.Atoi(strconv.Itoa(y)[1:])
@@ -62,7 +61,7 @@ func TestAddingDamages(t *testing.T) {
 	answer := Database.Sale{
 		ID:       6,
 		Price:    0,
-		Cost:     Database.Items[0].Cost[0],
+		Cost:     Database.Items[6].Cost[0],
 		Quantity: 2,
 		Year:     uint8(year),
 		Month:    uint8(month),
@@ -82,5 +81,19 @@ func TestAddingDamages(t *testing.T) {
 
 	if Database.Sales[0] != answer {
 		t.Errorf("Sales do not match up with the expected | have: %v, want: %v", Database.Sales[0], answer)
+	}
+}
+
+func TestFailedAddingDamages(t *testing.T) {
+	resetTestItemsAndSales()
+
+	errID := Database.AddDamages(6, "-12.4.23.")
+	if errID != 0 {
+		t.Errorf("An Error has slipped through | have: %d, want: 0", errID)
+	}
+
+	if len(Database.Sales) != 0 {
+		t.Log(Database.Sales)
+		t.Errorf("Illegal Adding of Damages | have: %d, want: 0", len(Database.Sales))
 	}
 }

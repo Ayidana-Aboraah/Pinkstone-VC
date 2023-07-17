@@ -141,9 +141,13 @@ func TestMissingTotal(t *testing.T) {
 }
 
 func TestAddingIndividual(t *testing.T) {
-	s := Database.Sale{Price: 5, Cost: 5, Quantity: 1}
+	resetTestItemsAndSales()
+	s := Database.Sale{ID: 6, Price: 5, Cost: 5, Quantity: 1}
 	cart := []Database.Sale{}
-	cart = Database.AddToCart(s, cart)
+	cart, errID := Database.AddToCart(s, cart)
+	if errID != -1 {
+		t.Errorf("Unexpected Error occured | have: %d, want: -1", errID)
+	}
 	if len(cart) != 1 {
 		t.Errorf("Error adding item to cart | len: %d, cart: %v", len(cart), cart)
 	}
@@ -156,12 +160,16 @@ func TestAddingIndividual(t *testing.T) {
 }
 
 func TestAddingToItemInCart(t *testing.T) {
-	s := Database.Sale{Price: 5, Cost: 5, Quantity: 3}
+	resetTestItemsAndSales()
+	s := Database.Sale{ID: 6, Price: 5, Cost: 5, Quantity: 1}
 	cart := []Database.Sale{
-		{Price: 5, Cost: 5, Quantity: 1},
+		{ID: 6, Price: 5, Cost: 5, Quantity: 1},
 	}
-	cart = Database.AddToCart(s, cart)
-	s.Quantity = 4 //set this so that we can just compare them directly without having to check each individual stat
+	cart, errID := Database.AddToCart(s, cart)
+	if errID != -1 {
+		t.Errorf("Unexpected Error occured | have: %d, want: -1", errID)
+	}
+	s.Quantity = 2 //set this so that we can just compare them directly without having to check each individual stat
 
 	if len(cart) != 1 {
 		t.Errorf("Error adding item to cart | len: %d, cart: %v", len(cart), cart)
@@ -175,15 +183,18 @@ func TestAddingToItemInCart(t *testing.T) {
 }
 
 func TestAddingMoreToCart(t *testing.T) {
+	resetTestItemsAndSales()
 	answer := []Database.Sale{
-		{Price: 5, Cost: 5, Quantity: 1},
-		{Price: 6, Cost: 5, Quantity: 1},
+		{ID: 6, Price: 5, Cost: 5, Quantity: 1},
+		{ID: 6, Price: 6, Cost: 5, Quantity: 1},
 	}
 	cart := []Database.Sale{
-		{Price: 5, Cost: 5, Quantity: 1},
+		{ID: 6, Price: 5, Cost: 5, Quantity: 1},
 	}
-	cart = Database.AddToCart(answer[1], cart)
-
+	cart, errID := Database.AddToCart(answer[1], cart)
+	if errID != -1 {
+		t.Errorf("Unexpected Error occured | have: %d, want: -1", errID)
+	}
 	if len(cart) != 2 {
 		t.Errorf("Error adding item to cart | len: %d, cart: %v", len(cart), cart)
 	}
@@ -191,6 +202,48 @@ func TestAddingMoreToCart(t *testing.T) {
 	for i := range cart {
 		if cart[i] != answer[i] {
 			t.Errorf("Cart and Item are != | item: %v, cart: %v", answer[i], cart[i])
+		}
+	}
+}
+
+func TestIllegalAdding(t *testing.T) {
+	resetTestItemsAndSales()
+	Database.Items[6].Quantity[0] = 0.0
+	s := Database.Sale{ID: 6, Price: 5, Cost: 5, Quantity: 1}
+	cart := []Database.Sale{}
+	cart, errID := Database.AddToCart(s, cart)
+	if errID != 4 {
+		t.Errorf("An Error has somehow slipped through | have: %d, want: 4", errID)
+	}
+
+	if len(cart) != 1 {
+		t.Errorf("Expect Cart Increase | have: %d, want: 1", len(cart))
+	}
+
+	for _, v := range cart {
+		if v != s {
+			t.Errorf("Cart and Item are != | item: %v, cart: %v", s, v)
+		}
+	}
+}
+
+func TestIllegalAdding2(t *testing.T) {
+	resetTestItemsAndSales()
+	Database.Items[6].Quantity[0] = -100.0
+	s := Database.Sale{ID: 6, Price: 5, Cost: 5, Quantity: 1}
+	cart := []Database.Sale{}
+	cart, errID := Database.AddToCart(s, cart)
+	if errID != 4 {
+		t.Errorf("An Error has somehow slipped through | have: %d, want: 4", errID)
+	}
+
+	if len(cart) != 1 {
+		t.Errorf("Expect Cart Increase | have: %d, want: 1", len(cart))
+	}
+
+	for _, v := range cart {
+		if v != s {
+			t.Errorf("Cart and Item are != | item: %v, cart: %v", s, v)
 		}
 	}
 }

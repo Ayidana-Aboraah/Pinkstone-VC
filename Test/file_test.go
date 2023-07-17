@@ -39,6 +39,7 @@ func resetTestItemsAndSales() {
 		5: {Name: "Villianous", Price: 0, Cost: [3]float32{0, 0, 0}, Quantity: [3]float32{0, 0, 0}},
 		6: {Name: "Carty", Price: 12, Cost: [3]float32{2, 3, 4}, Quantity: [3]float32{3, 4, 7}},
 	}
+	Database.Items = testItems
 
 	Database.Sales = []Database.Sale{}
 }

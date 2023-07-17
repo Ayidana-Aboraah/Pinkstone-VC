@@ -88,14 +88,14 @@ func TestProcessFractionQuantity(t *testing.T) {
 	}
 }
 
-func TestProcessInvalidFraction(t *testing.T) {
+func TestProcessFractionQuantityNoSpace(t *testing.T) {
 	quantity, errID := Database.ProcessQuantity("1/2")
-	if errID != 0 {
+	if errID != -1 {
 		t.Errorf("Some error has occured, have: %d", errID)
 	}
 
-	if quantity != 0 {
-		t.Errorf("Quantity !=, have: %f, want: %f", quantity, 0.0)
+	if quantity != 1.0/2.0 {
+		t.Errorf("Quantity !=, have: %f, want: %f", quantity, 1.0/2.0)
 	}
 }
 
@@ -107,6 +107,39 @@ func TestProcessQuantityWithFraction(t *testing.T) {
 
 	if quantity != 12.0+1.0/2.0 {
 		t.Errorf("Quantity !=, have: %f, want: %f", quantity, 12.0+1.0/2.0)
+	}
+}
+
+func TestProcessInvalidFraction(t *testing.T) {
+	quantity, errID := Database.ProcessQuantity("1/2-1-2-12e314")
+	if errID != 0 {
+		t.Errorf("Some error has occured, have: %d", errID)
+	}
+
+	if quantity != 0 {
+		t.Errorf("Quantity !=, have: %f, want: %f", quantity, 0.0)
+	}
+}
+
+func TestProcessInvalidQuantityMultipleSpaces(t *testing.T) {
+	quantity, errID := Database.ProcessQuantity(" 1/2 ")
+	if errID != 0 {
+		t.Errorf("Some error has occured, have: %d", errID)
+	}
+
+	if quantity != 0 {
+		t.Errorf("Quantity !=, have: %f, want: %f", quantity, 0.0)
+	}
+}
+
+func TestProcessInvalidQuantityMultipleSlashes(t *testing.T) {
+	quantity, errID := Database.ProcessQuantity(" 1/2/3")
+	if errID != 0 {
+		t.Errorf("Some error has occured, have: %d", errID)
+	}
+
+	if quantity != 0 {
+		t.Errorf("Quantity !=, have: %f, want: %f", quantity, 0.0)
 	}
 }
 
@@ -192,7 +225,7 @@ func TestNewItemWithFraction(t *testing.T) {
 
 func TestFailedItemCreation(t *testing.T) {
 	Database.Items = map[uint16]*Database.Entry{}
-	id, errID := Database.CreateItem("Piss", "15", "12", "953/4")
+	id, errID := Database.CreateItem("Piss", "15", "12", "  953/4")
 	if errID != 0 {
 		t.Errorf("An error has slipped through | have: %d, want: 0", errID)
 	}

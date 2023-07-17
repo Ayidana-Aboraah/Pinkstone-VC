@@ -68,7 +68,8 @@ func ConvertItemKeys() (inter []int) {
 
 func ProcessQuantity(n string) (quantity float32, errID int) {
 	raw := strings.SplitN(n, " ", 2)
-	if len(raw) == 2 {
+	a, b, found := strings.Cut(n, "/")
+	if len(raw) == 2 && found {
 		pop := strings.SplitN(raw[1], "/", 2)
 		numerator, denominator, whole, err := ConvertString(pop[0], pop[1], raw[0])
 		if len(pop) != 2 || err != -1 {
@@ -77,6 +78,13 @@ func ProcessQuantity(n string) (quantity float32, errID int) {
 		}
 
 		quantity = whole + (numerator / denominator)
+	} else if len(raw) == 1 && found {
+		num, den, _, err := ConvertString(a, b, "")
+		if err != -1 {
+			errID = 0
+			return
+		}
+		quantity = num / den
 	} else {
 		v, err := strconv.ParseFloat(raw[0], 32)
 		if err != nil {

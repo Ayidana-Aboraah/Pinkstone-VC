@@ -99,9 +99,11 @@ func ShiftQuantity(ID uint16) {
 	Items[ID].Quantity[1] = Items[ID].Quantity[2]
 	Items[ID].Quantity[2] = 0
 
-	Items[ID].Cost[0] = Items[ID].Cost[1]
-	Items[ID].Cost[1] = Items[ID].Cost[2]
-	Items[ID].Cost[2] = 0
+	if Items[ID].Quantity[0] > 0 {
+		Items[ID].Cost[0] = Items[ID].Cost[1]
+		Items[ID].Cost[1] = Items[ID].Cost[2]
+		Items[ID].Cost[2] = 0
+	}
 }
 
 func BuyCart(ShoppingCart []Sale, customer int) []Sale {
@@ -114,15 +116,15 @@ func BuyCart(ShoppingCart []Sale, customer int) []Sale {
 		v.Year = uint8(year)
 		v.Customer = uint8(customer)
 
-		if Items[v.ID].Quantity[0]-v.Quantity <= 0 {
+		if Items[v.ID].Quantity[0]-v.Quantity <= 0 && Items[v.ID].Cost[1] > 0 {
 			newbie := v
 			newbie.Cost = Items[v.ID].Cost[1]
 			newbie.Quantity = (Items[v.ID].Quantity[0] - v.Quantity) * -1
 
-			if newbie.Quantity != 0 {
+			if newbie.Quantity > 0 {
 				v.Quantity -= newbie.Quantity
 
-				if Items[v.ID].Quantity[1]-newbie.Quantity < 0 {
+				if Items[v.ID].Quantity[1]-newbie.Quantity < 0 && Items[v.ID].Cost[2] > 0 {
 					newbie2 := newbie
 					newbie2.Cost = Items[v.ID].Cost[2]
 					newbie2.Quantity = (Items[v.ID].Quantity[1] - newbie.Quantity) * -1
@@ -151,14 +153,23 @@ func BuyCart(ShoppingCart []Sale, customer int) []Sale {
 	return ShoppingCart[:0]
 }
 
-func AddToCart(item Sale, ShoppingCart []Sale) []Sale {
+func AddToCart(item Sale, ShoppingCart []Sale) (out []Sale, errID int) {
+	errID = -1
+
+	if Items[item.ID].Quantity[0] <= 0 {
+		errID = 4
+	}
+
 	for i, v := range ShoppingCart {
 		if v.ID == item.ID && v.Price == item.Price {
 			ShoppingCart[i].Quantity += item.Quantity
-			return ShoppingCart
+			out = ShoppingCart
+			return ShoppingCart, errID
 		}
 	}
-	return append(ShoppingCart, item)
+
+	out = append(ShoppingCart, item)
+	return out, errID
 }
 
 func DecreaseFromCart(item int, ShoppingCart []Sale) []Sale {

@@ -368,7 +368,9 @@ func makeShoppingMenu() fyne.CanvasObject {
 								menu.Show()
 							}
 
-							shoppingCart = Database.AddToCart(s, shoppingCart)
+							shoppingCart, errID := Database.AddToCart(s, shoppingCart)
+							Debug.HandleKnownError(4, errID != -1, w)
+
 							cartData.Set(Database.ConvertCart(shoppingCart))
 							title.SetText(fmt.Sprintf("Cart Total: %1.2f", Database.GetCartTotal(shoppingCart)))
 							shoppingList.Refresh()

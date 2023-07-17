@@ -13,6 +13,7 @@ var knownErrors = []string{
 	"Pieces answered but not total pieces, unable to estimate how many items are being taken out of the given pack\nCheck your input",
 	"Cannot Add more Stock, 3 max cost prices",
 	"Need more info, check your input",
+	"Warning\n This item is out of stock in the database\n You can continue, but be aware of this and the possible need to recount inventory",
 }
 
 func HandleErrorWindow(err error, w fyne.Window) bool {

@@ -577,3 +577,37 @@ func TestFailedAdd4CostsWithFraction(t *testing.T) {
 		t.Errorf("Error occured with cost | have: %f, want: 32.75", val.Quantity[2])
 	}
 }
+
+func TestAddItemToEmpty(t *testing.T) {
+	resetTestItemsAndSales()
+	Item := uint16(0)
+	Database.Items = testItems
+	errID := Database.AddItem(Item, "1", "12", "32 1/2")
+
+	if errID != -1 {
+		t.Errorf("An Error has occured | have: %d, want: -1", errID)
+	}
+
+	val, found := Database.Items[Item]
+	if val == nil || !found {
+		t.Errorf("val: An error occured retrieving the value")
+		t.FailNow()
+	}
+
+	if val.Name != "" {
+		t.Errorf("Error occured with the name | have: %s, want: '' ", val.Name)
+	}
+
+	if val.Price != 1 {
+		t.Errorf("Error occured with price | have: %f, want: 1.0", val.Price)
+	}
+
+	if val.Cost[0] != 12.0 {
+		t.Errorf("Error occured with cost | have: %f, want: 12.0", val.Cost[0])
+	}
+
+	if val.Quantity[0] != 32.5 {
+		t.Errorf("Error occured with cost | have: %f, want: 32.5", val.Quantity[0])
+	}
+
+}

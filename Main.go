@@ -139,88 +139,30 @@ func makeMainMenu(a fyne.App) fyne.CanvasObject {
 			}, w)
 		}),
 		widget.NewButton("Enter Debug", func() {
-			ItemSearch := UI.NewSearchBar("Item Name", Database.SearchInventory)
-			customerSearch := UI.NewSearchBar("Customer Name", Database.SearchCustomers)
-
-			PriceEntry := UI.NewNumEntry("Price It was sold at")
-			costEntry := UI.NewNumEntry("Cost Price")
-			quantityEntry := UI.NewNumEntry("How many were sold?")
-			dateEntry := UI.NewNumEntry("YYYY-MM-DD")
-
-			currentRefundList := Database.Sales
-			refundData := binding.NewUntypedList()
-			refundData.Set(Database.ConvertCart(currentRefundList))
-			refundList := widget.NewListWithData(refundData,
+			loadingKV := map[string]uint16{}
+			invenData := binding.NewIntList()
+			invenData.Set(Database.ConvertItemKeys())
+			invenList := widget.NewListWithData(invenData,
 				func() fyne.CanvasObject {
-					return container.NewBorder(nil, nil, nil, nil, widget.NewLabel(""))
+					return container.NewBorder(nil, nil, nil, widget.NewEntry(), widget.NewLabel(""))
 				},
-				func(di binding.DataItem, co fyne.CanvasObject) {})
+				func(di binding.DataItem, co fyne.CanvasObject) {
+					ID, _ := di.(binding.Int).Get()
+					label := co.(*fyne.Container).Objects[0].(*widget.Label)
+					keyEntry := co.(*fyne.Container).Objects[1].(*widget.Entry)
 
-			refundList.UpdateItem = func(id widget.ListItemID, co fyne.CanvasObject) {
-				label := co.(*fyne.Container).Objects[0].(*widget.Label)
-
-				v, _ := refundData.GetValue(id)
-				val := v.(Database.Sale)
-				label.SetText(fmt.Sprintf("%s x%1.2f for ₵%1.2f [%2d-%2d-20%2d] Customer: %s, Cashier: %s",
-					Database.Items[val.ID].Name, val.Quantity, val.Price*val.Quantity, val.Day, val.Month, val.Year, Database.Customers[val.Customer], Database.Users[val.Usr]))
-			}
-
-			refundList.OnSelected = func(id widget.ListItemID) {
-				dialog.ShowConfirm("Are you sure", "Are you sure you want to refund?", func(b bool) {
-					if !b {
-						return
-					}
-					// Add the data back into the inventory
-					// Delete the Item from the currentLIst
-
-					itemCost := currentRefundList[id].Cost
-					itemID := currentRefundList[id].ID
-
-					for i, v := range Database.Items[itemID].Cost {
-
-						if v == 0 || v == itemCost {
-							Database.Items[itemID].Cost[i] = itemCost
-							Database.Items[itemID].Quantity[i] += currentRefundList[id].Quantity
-							break
-						}
-					}
-
-					currentRefundList[id] = currentRefundList[len(currentRefundList)-1]
-					currentRefundList = currentRefundList[:len(currentRefundList)-1]
-
-					refundData.Set(Database.ConvertCart(currentRefundList))
-					refundList.Refresh()
-				}, w)
-			}
+					label.SetText(Database.Items[uint16(ID)].Name)
+					loadingKV[strings.TrimSpace(keyEntry.Text)] = uint16(ID)
+				})
 
 			dialog.ShowCustom("Debug", "Close", container.NewVBox(
-				widget.NewButton("Operation 1 time refund", func() {
-					dialog.ShowCustom("Pop", "Done                                                                                      .", container.NewMax(refundList), w)
-				}),
-				widget.NewButton("Create Sale", func() {
-					dialog.ShowForm("New Sale", "Done", "Close", []*widget.FormItem{
-						widget.NewFormItem("Item", ItemSearch),         // Item Search
-						widget.NewFormItem("Price", PriceEntry),        // Price Entry
-						widget.NewFormItem("Cost", costEntry),          // Cost Entry
-						widget.NewFormItem("Quantity", quantityEntry),  // Quantity Entry
-						widget.NewFormItem("Customer", customerSearch), // Customer Search
-						widget.NewFormItem("Date", dateEntry),          // Date Entry
-
-					}, func(b bool) {
+				widget.NewButton("Load Sales Txt", func() {
+					dialog.ShowCustomConfirm("Pop", "", "", container.NewVBox(invenList), func(b bool) {
 						if !b {
 							return
 						}
-						ID := ItemSearch.Result()
-						if Debug.HandleKnownError(0, ID == -1, w) {
-							return
-						}
 
-						customer := customerSearch.Result()
-						if Debug.HandleKnownError(0, ID == -1, w) {
-							return
-						}
-
-						Database.CreateSale(uint16(ID), dateEntry.Text, PriceEntry.Text, costEntry.Text, quantityEntry.Text, customer)
+						// Data
 					}, w)
 				}),
 				widget.NewButton("Delete Database", func() {
@@ -368,9 +310,9 @@ func makeShoppingMenu() fyne.CanvasObject {
 								menu.Show()
 							}
 
-							shoppingCart, errID := Database.AddToCart(s, shoppingCart)
+							ShoppingCart, errID := Database.AddToCart(s, shoppingCart)
 							Debug.HandleKnownError(4, errID != -1, w)
-
+							shoppingCart = ShoppingCart
 							cartData.Set(Database.ConvertCart(shoppingCart))
 							title.SetText(fmt.Sprintf("Cart Total: %1.2f", Database.GetCartTotal(shoppingCart)))
 							shoppingList.Refresh()

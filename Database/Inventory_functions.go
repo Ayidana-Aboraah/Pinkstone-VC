@@ -144,7 +144,7 @@ func AddItem(target uint16, priceTxt, costTxt, stockTxt string) (errID int) {
 			Items[target].Quantity[i] += quan
 			break
 		}
-		if Items[target].Quantity[i] == 0 {
+		if Items[target].Quantity[i] <= 0 {
 			Items[target].Quantity[i] = quan
 			Items[target].Cost[i] = cost
 			break

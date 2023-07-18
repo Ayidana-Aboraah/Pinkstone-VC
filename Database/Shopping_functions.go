@@ -99,7 +99,7 @@ func ShiftQuantity(ID uint16) {
 	Items[ID].Quantity[1] = Items[ID].Quantity[2]
 	Items[ID].Quantity[2] = 0
 
-	if Items[ID].Quantity[0] > 0 {
+	if Items[ID].Cost[1] > 0 {
 		Items[ID].Cost[0] = Items[ID].Cost[1]
 		Items[ID].Cost[1] = Items[ID].Cost[2]
 		Items[ID].Cost[2] = 0
@@ -109,6 +109,7 @@ func ShiftQuantity(ID uint16) {
 func BuyCart(ShoppingCart []Sale, customer int) []Sale {
 	y, month, day := time.Now().Date()
 	year, _ := strconv.Atoi(strconv.Itoa(y)[1:])
+
 	for _, v := range ShoppingCart {
 
 		v.Day = uint8(day)
@@ -117,6 +118,7 @@ func BuyCart(ShoppingCart []Sale, customer int) []Sale {
 		v.Customer = uint8(customer)
 
 		if Items[v.ID].Quantity[0]-v.Quantity <= 0 && Items[v.ID].Cost[1] > 0 {
+
 			newbie := v
 			newbie.Cost = Items[v.ID].Cost[1]
 			newbie.Quantity = (Items[v.ID].Quantity[0] - v.Quantity) * -1

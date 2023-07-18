@@ -32,15 +32,27 @@ func ResetTestCartAndQuantities() {
 
 func TestBuyingNormal(t *testing.T) {
 	ResetTestCartAndQuantities()
+	Item := uint16(6)
 	Database.Items = testItems
 	Database.BuyCart([]Database.Sale{testCart[0]}, 0)
 
 	y, month, day := time.Now().Date()
 	year, _ := strconv.Atoi(strconv.Itoa(y)[1:])
-	// Check the stored quantities
-	if Database.Items[6].Quantity[0] != 1 {
-		t.Logf("Quantity[0]: %1.2f", Database.Items[6].Quantity[0])
-		t.Error("Issue subtracting the stock of the testQuantity[6] when buying cart")
+
+	expectedQuantities := [3]float32{1, 4, 7}
+	for i, v := range expectedQuantities {
+		if Database.Items[Item].Quantity[i] != v {
+			t.Logf("Quantity: %v", Database.Items[Item].Quantity)
+			t.Errorf("Current and expected quantites don't match | have: %f, want: %f", Database.Items[Item].Quantity[i], v)
+		}
+	}
+
+	expectedCosts := [3]float32{2, 3, 4}
+	for i, v := range expectedCosts {
+		if Database.Items[Item].Cost[i] != v {
+			t.Logf("Cost: %v", Database.Items[Item].Cost)
+			t.Errorf("Current and expected Cost don't match | have: %f, want: %f", Database.Items[Item].Cost[i], v)
+		}
 	}
 
 	for i, v := range Database.Sales {
@@ -84,6 +96,7 @@ func TestBuyingNormal(t *testing.T) {
 func TestBuyingAllOfQuantity0(t *testing.T) {
 	ResetTestCartAndQuantities()
 
+	Item := uint16(6)
 	Database.Items = testItems
 	t.Log(Database.Sales)
 	Database.BuyCart([]Database.Sale{testCart[1]}, 0)
@@ -91,9 +104,20 @@ func TestBuyingAllOfQuantity0(t *testing.T) {
 	y, month, day := time.Now().Date()
 	year, _ := strconv.Atoi(strconv.Itoa(y)[1:])
 
-	if Database.Items[6].Quantity[0] != 4 {
-		t.Logf("Quantities: %1.2f, %1.2f", Database.Items[6].Quantity[0], Database.Items[6].Quantity[1])
-		t.Error("Issue subtracting the stock of the testQuantity[6] when buying cart")
+	expectedQuantities := [3]float32{4, 7, 0}
+	for i, v := range expectedQuantities {
+		if Database.Items[Item].Quantity[i] != v {
+			t.Logf("Quantity: %v", Database.Items[Item].Quantity)
+			t.Errorf("Current and expected quantites don't match | have: %f, want: %f", Database.Items[Item].Quantity[i], v)
+		}
+	}
+
+	expectedCosts := [3]float32{3, 4, 0}
+	for i, v := range expectedCosts {
+		if Database.Items[Item].Cost[i] != v {
+			t.Logf("Cost: %v", Database.Items[Item].Cost)
+			t.Errorf("Current and expected Cost don't match | have: %f, want: %f", Database.Items[Item].Cost[i], v)
+		}
 	}
 
 	for i, v := range Database.Sales {
@@ -137,16 +161,27 @@ func TestBuyingAllOfQuantity0(t *testing.T) {
 func TestBuying2Quantities(t *testing.T) {
 	ResetTestCartAndQuantities()
 
+	Item := uint16(6)
 	Database.Items = testItems
 	Database.BuyCart([]Database.Sale{testCart[2]}, 0)
 
 	y, month, day := time.Now().Date()
 	year, _ := strconv.Atoi(strconv.Itoa(y)[1:])
 
-	if Database.Items[6].Quantity[0] != 1 {
-		t.Logf("Sale Quantity: %1.2f", testCart[2].Quantity)
-		t.Logf("Quantities: %1.2f, %1.2f", Database.Items[6].Quantity[0], Database.Items[6].Quantity[1])
-		t.Error("Issue subtracting the stock of the testQuantity[6] when buying cart")
+	expectedQuantities := [3]float32{1, 7, 0}
+	for i, v := range expectedQuantities {
+		if Database.Items[Item].Quantity[i] != v {
+			t.Logf("Quantity: %v", Database.Items[Item].Quantity)
+			t.Errorf("Current and expected quantites don't match | have: %f, want: %f", Database.Items[Item].Quantity[i], v)
+		}
+	}
+
+	expectedCosts := [3]float32{3, 4, 0}
+	for i, v := range expectedCosts {
+		if Database.Items[Item].Cost[i] != v {
+			t.Logf("Cost: %v", Database.Items[Item].Cost)
+			t.Errorf("Current and expected Cost don't match | have: %f, want: %f", Database.Items[Item].Cost[i], v)
+		}
 	}
 
 	testAnswers := []Database.Sale{
@@ -195,16 +230,27 @@ func TestBuying2Quantities(t *testing.T) {
 func TestBuyingAllQuantities0n1(t *testing.T) {
 	ResetTestCartAndQuantities()
 
+	Item := uint16(6)
 	Database.Items = testItems
 	Database.BuyCart([]Database.Sale{testCart[3]}, 0)
 
 	y, month, day := time.Now().Date()
 	year, _ := strconv.Atoi(strconv.Itoa(y)[1:])
 
-	if Database.Items[6].Quantity[0] != 7 {
-		t.Logf("Sale Quantity: %1.2f", testCart[3].Quantity)
-		t.Logf("Quantities: %1.2f, %1.2f, %1.2f", Database.Items[6].Quantity[0], Database.Items[6].Quantity[1], Database.Items[6].Quantity[2])
-		t.Error("Issue subtracting the stock of the testQuantity[6] when buying cart")
+	expectedQuantities := [3]float32{7, 0, 0}
+	for i, v := range expectedQuantities {
+		if Database.Items[Item].Quantity[i] != v {
+			t.Logf("Quantity: %v", Database.Items[Item].Quantity)
+			t.Errorf("Current and expected quantites don't match | have: %f, want: %f", Database.Items[Item].Quantity[i], v)
+		}
+	}
+
+	expectedCosts := [3]float32{4, 0, 0}
+	for i, v := range expectedCosts {
+		if Database.Items[Item].Cost[i] != v {
+			t.Logf("Cost: %v", Database.Items[Item].Cost)
+			t.Errorf("Current and expected Cost don't match | have: %f, want: %f", Database.Items[Item].Cost[i], v)
+		}
 	}
 
 	testAnswers := []Database.Sale{
@@ -254,6 +300,7 @@ func TestBuyingAllQuantities0n1(t *testing.T) {
 
 func TestBuyingInto3rdQuantity(t *testing.T) {
 	ResetTestCartAndQuantities()
+	Item := uint16(6)
 
 	Database.Items = testItems
 	Database.BuyCart([]Database.Sale{testCart[4]}, 0)
@@ -261,10 +308,20 @@ func TestBuyingInto3rdQuantity(t *testing.T) {
 	y, month, day := time.Now().Date()
 	year, _ := strconv.Atoi(strconv.Itoa(y)[1:])
 
-	if Database.Items[6].Quantity[0] != 2 {
-		t.Logf("Sale Quantity: %1.2f", testCart[4].Quantity)
-		t.Logf("Quantities: %1.2f, %1.2f, %1.2f", Database.Items[6].Quantity[0], Database.Items[6].Quantity[1], Database.Items[6].Quantity[2])
-		t.Error("Issue subtracting the stock of the testQuantity[6] when buying cart")
+	expectedQuantities := [3]float32{2, 0, 0}
+	for i, v := range expectedQuantities {
+		if Database.Items[Item].Quantity[i] != v {
+			t.Logf("Quantity: %v", Database.Items[Item].Quantity)
+			t.Errorf("Current and expected quantites don't match | have: %f, want: %f", Database.Items[Item].Quantity[i], v)
+		}
+	}
+
+	expectedCosts := [3]float32{4, 0, 0}
+	for i, v := range expectedCosts {
+		if Database.Items[Item].Cost[i] != v {
+			t.Logf("Cost: %v", Database.Items[Item].Cost)
+			t.Errorf("Current and expected Cost don't match | have: %f, want: %f", Database.Items[Item].Cost[i], v)
+		}
 	}
 
 	testAnswers := []Database.Sale{
@@ -316,16 +373,27 @@ func TestBuyingInto3rdQuantity(t *testing.T) {
 func TestBuyingAllQuantities(t *testing.T) {
 	ResetTestCartAndQuantities()
 
+	Item := uint16(6)
 	Database.Items = testItems
 	Database.BuyCart([]Database.Sale{testCart[5]}, 0)
 
 	y, month, day := time.Now().Date()
 	year, _ := strconv.Atoi(strconv.Itoa(y)[1:])
 
-	if Database.Items[6].Quantity[0] != 0 {
-		t.Logf("Sale Quantity: %1.2f", testCart[4].Quantity)
-		t.Logf("Quantities: %1.2f, %1.2f, %1.2f", Database.Items[6].Quantity[0], Database.Items[6].Quantity[1], Database.Items[6].Quantity[2])
-		t.Error("Issue subtracting the stock of the testQuantity[6] when buying cart")
+	expectedQuantities := [3]float32{0, 0, 0}
+	for i, v := range expectedQuantities {
+		if Database.Items[Item].Quantity[i] != v {
+			t.Logf("Quantity: %v", Database.Items[Item].Quantity)
+			t.Errorf("Current and expected quantites don't match | have: %f, want: %f", Database.Items[Item].Quantity[i], v)
+		}
+	}
+
+	expectedCosts := [3]float32{4, 0, 0}
+	for i, v := range expectedCosts {
+		if Database.Items[Item].Cost[i] != v {
+			t.Logf("Cost: %v", Database.Items[Item].Cost)
+			t.Errorf("Current and expected Cost don't match | have: %f, want: %f", Database.Items[Item].Cost[i], v)
+		}
 	}
 
 	testAnswers := []Database.Sale{
@@ -383,10 +451,20 @@ func TestBuyingOverAllQuantities(t *testing.T) {
 	y, month, day := time.Now().Date()
 	year, _ := strconv.Atoi(strconv.Itoa(y)[1:])
 
-	if Database.Items[6].Quantity[0] != -6 {
-		t.Logf("Sale Quantity: %1.2f", testCart[4].Quantity)
-		t.Logf("Quantities: %1.2f, %1.2f, %1.2f", Database.Items[6].Quantity[0], Database.Items[6].Quantity[1], Database.Items[6].Quantity[2])
-		t.Error("Issue subtracting the stock of the testQuantity[6] when buying cart")
+	expectedQuantities := [3]float32{-6, 0, 0}
+	for i, v := range expectedQuantities {
+		if Database.Items[6].Quantity[i] != v {
+			t.Logf("Quantity: %v", Database.Items[6].Quantity)
+			t.Errorf("Current and expected quantites don't match | have: %f, want: %f", Database.Items[6].Quantity[i], v)
+		}
+	}
+
+	expectedCosts := [3]float32{4, 0, 0}
+	for i, v := range expectedCosts {
+		if Database.Items[6].Cost[i] != v {
+			t.Logf("Cost: %v", Database.Items[6].Cost)
+			t.Errorf("Current and expected Cost don't match | have: %f, want: %f", Database.Items[6].Cost[i], v)
+		}
 	}
 
 	testAnswers := []Database.Sale{
@@ -435,7 +513,7 @@ func TestBuyingOverAllQuantities(t *testing.T) {
 	}
 }
 
-func TestOverBuying1Quantity(t *testing.T) {
+func TestOverBuying1QuantityWithOnly1Quantity(t *testing.T) {
 	ResetTestCartAndQuantities()
 
 	Database.Items = testItems
@@ -450,9 +528,20 @@ func TestOverBuying1Quantity(t *testing.T) {
 	y, month, day := time.Now().Date()
 	year, _ := strconv.Atoi(strconv.Itoa(y)[1:])
 
-	if Database.Items[4].Quantity[0] != -4 {
-		t.Logf("Quantities: %1.2f, %1.2f, %1.2f", Database.Items[4].Quantity[0], Database.Items[4].Quantity[1], Database.Items[4].Quantity[2])
-		t.Error("Issue subtracting the stock of the testQuantity[6] when buying cart")
+	expectedQuantities := [3]float32{-4, 0, 0}
+	for i, v := range expectedQuantities {
+		if Database.Items[4].Quantity[i] != v {
+			t.Logf("Quantity: %v", Database.Items[4].Quantity)
+			t.Errorf("Current and expected quantites don't match | have: %f, want: %f", Database.Items[4].Quantity[i], v)
+		}
+	}
+
+	expectedCosts := [3]float32{2, 0, 0}
+	for i, v := range expectedCosts {
+		if Database.Items[4].Cost[i] != v {
+			t.Logf("Cost: %v", Database.Items[4].Cost)
+			t.Errorf("Current and expected Cost don't match | have: %f, want: %f", Database.Items[4].Cost[i], v)
+		}
 	}
 
 	testAnswers := []Database.Sale{
@@ -515,9 +604,20 @@ func TestOverBuyingEmptyQuantity(t *testing.T) {
 	y, month, day := time.Now().Date()
 	year, _ := strconv.Atoi(strconv.Itoa(y)[1:])
 
-	if Database.Items[Item].Quantity[0] != -5 {
-		t.Logf("Quantities: %1.2f, %1.2f, %1.2f", Database.Items[Item].Quantity[0], Database.Items[Item].Quantity[1], Database.Items[Item].Quantity[2])
-		t.Error("Issue subtracting the stock of the testQuantity[6] when buying cart")
+	expectedQuantities := [3]float32{-5, 0, 0}
+	for i, v := range expectedQuantities {
+		if Database.Items[Item].Quantity[i] != v {
+			t.Logf("Quantity: %v", Database.Items[Item].Quantity)
+			t.Errorf("Current and expected quantites don't match | have: %f, want: %f", Database.Items[Item].Quantity[i], v)
+		}
+	}
+
+	expectedCosts := [3]float32{0, 0, 0}
+	for i, v := range expectedCosts {
+		if Database.Items[Item].Cost[i] != v {
+			t.Logf("Cost: %v", Database.Items[Item].Cost)
+			t.Errorf("Current and expected Cost don't match | have: %f, want: %f", Database.Items[Item].Cost[i], v)
+		}
 	}
 
 	testAnswers := []Database.Sale{

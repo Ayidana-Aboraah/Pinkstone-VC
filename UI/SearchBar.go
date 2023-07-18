@@ -32,6 +32,9 @@ func (e *SearchBar) TypedRune(r rune) {
 	e.Entry.TypedRune(r)
 	e.names, e.idxs = e.search(e.Text)
 	e.SetOptions(e.names)
+	e.SelectEntry.ActionItem.(*widget.Button).OnTapped()
+	e.SelectEntry.FocusGained()
+	// e.SelectEntry.
 }
 
 func (e *SearchBar) Result() int {

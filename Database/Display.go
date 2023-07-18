@@ -101,7 +101,7 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 					}
 
 					ID, errID := CreateItem(nameEntry.Text, priceEntry.Text, costEntry.Text, invenEntry.Text)
-					if Debug.HandleKnownError(0, errID != -1, w) {
+					if Debug.HandleKnownError(errID, errID != -1, w) {
 						return
 					}
 					target = int(ID)
@@ -130,7 +130,7 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 							return
 						}
 						errID := AddDamages(uint16(target), entry.Text)
-						if Debug.HandleKnownError(0, errID != -1, w) {
+						if Debug.HandleKnownError(errID, errID != -1, w) {
 							return
 						}
 						Debug.HandleError(SaveData())
@@ -161,7 +161,7 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 					}
 
 					errID := AddItem(uint16(target), priceEntry.Text, costEntry.Text, invenEntry.Text)
-					if Debug.HandleKnownError(0, errID != -1, w) {
+					if Debug.HandleKnownError(errID, errID != -1, w) {
 						return
 					}
 

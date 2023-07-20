@@ -108,6 +108,12 @@ func ShiftQuantity(ID uint16) {
 	}
 }
 
+func AdjustStock(ID uint16) {
+	for Items[ID].Quantity[0] <= 0 && Items[ID].Cost[1] > 0 {
+		ShiftQuantity(ID)
+	}
+}
+
 func BuyCart(ShoppingCart []Sale, customer int) []Sale {
 	y, month, day := time.Now().Date()
 	year, _ := strconv.Atoi(strconv.Itoa(y)[1:])
@@ -119,40 +125,25 @@ func BuyCart(ShoppingCart []Sale, customer int) []Sale {
 		v.Year = uint8(year)
 		v.Customer = uint8(customer)
 
-		if Items[v.ID].Quantity[0]-v.Quantity <= 0 && Items[v.ID].Cost[1] > 0 {
+		for i := range Items[v.ID].Quantity {
+			v.Cost = Items[v.ID].Cost[i]
+			Items[v.ID].Quantity[i] -= v.Quantity
 
-			newbie := v
-			newbie.Cost = Items[v.ID].Cost[1]
-			newbie.Quantity = (Items[v.ID].Quantity[0] - v.Quantity) * -1
-
-			if newbie.Quantity > 0 {
-				v.Quantity -= newbie.Quantity
-
-				if Items[v.ID].Quantity[1]-newbie.Quantity < 0 && Items[v.ID].Cost[2] > 0 {
-					newbie2 := newbie
-					newbie2.Cost = Items[v.ID].Cost[2]
-					newbie2.Quantity = (Items[v.ID].Quantity[1] - newbie.Quantity) * -1
-
-					newbie.Quantity -= newbie2.Quantity
-
-					Items[v.ID].Quantity[2] -= newbie2.Quantity
-
-					Sales = append(Sales, newbie2)
-				}
-				Items[v.ID].Quantity[1] -= newbie.Quantity
-
-				Sales = append(Sales, newbie)
+			if Items[v.ID].Quantity[i] >= 0 || i == 2 || Items[v.ID].Cost[i+1] == 0 {
+				Sales = append(Sales, v)
+				break
 			}
 
-			ShiftQuantity(v.ID)
-			if Items[v.ID].Quantity[0] == 0 {
-				ShiftQuantity(v.ID)
-			}
-		} else {
-			Items[v.ID].Quantity[0] -= v.Quantity
+			diff := Items[v.ID].Quantity[i] * -1
+
+			v.Quantity -= diff
+
+			Sales = append(Sales, v)
+
+			v.Quantity = diff
 		}
 
-		Sales = append(Sales, v)
+		AdjustStock(v.ID)
 	}
 	return ShoppingCart[:0]
 }

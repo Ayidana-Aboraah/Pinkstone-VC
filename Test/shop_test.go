@@ -7,26 +7,18 @@ import (
 	"time"
 )
 
-var testCart = []Database.Sale{ // Use 6 since that's the one that has proper data
-	{ID: 6, Price: 12, Cost: 5, Quantity: 2},
-	{ID: 6, Price: 13, Cost: 6, Quantity: 3},
-	{ID: 6, Price: 14, Cost: 7, Quantity: 6},
-	{ID: 6, Price: 15, Cost: 8, Quantity: 7},
-	{ID: 6, Price: 16, Cost: 9, Quantity: 12},
-	{ID: 6, Price: 16, Cost: 9, Quantity: 14},
-	{ID: 6, Price: 16, Cost: 9, Quantity: 20},
-}
+var testCart []Database.Sale // Use 6 since that's the one that has proper data
 
 func ResetTestCartAndQuantities() {
 	resetTestItemsAndSales()
 	testCart = []Database.Sale{ // Use 6 since that's the one that has proper data
-		{ID: 6, Price: 12, Cost: 5, Quantity: 2},
-		{ID: 6, Price: 13, Cost: 6, Quantity: 3},
-		{ID: 6, Price: 14, Cost: 7, Quantity: 6},
-		{ID: 6, Price: 15, Cost: 8, Quantity: 7},
-		{ID: 6, Price: 16, Cost: 9, Quantity: 12},
-		{ID: 6, Price: 16, Cost: 9, Quantity: 14},
-		{ID: 6, Price: 16, Cost: 9, Quantity: 20},
+		{ID: 6, Price: 12, Cost: 2, Quantity: 2},
+		{ID: 6, Price: 13, Cost: 2, Quantity: 3},
+		{ID: 6, Price: 14, Cost: 2, Quantity: 6},
+		{ID: 6, Price: 15, Cost: 2, Quantity: 7},
+		{ID: 6, Price: 16, Cost: 2, Quantity: 12},
+		{ID: 6, Price: 16, Cost: 2, Quantity: 14},
+		{ID: 6, Price: 16, Cost: 2, Quantity: 20},
 	}
 }
 
@@ -120,6 +112,10 @@ func TestBuyingAllOfQuantity0(t *testing.T) {
 		}
 	}
 
+	if len(Database.Sales) != 1 {
+		t.Errorf("Invalid Size of Sales | have: %d, want: 1", len(Database.Sales))
+	}
+
 	for i, v := range Database.Sales {
 		if v.Year != uint8(year) || v.Month != uint8(month) || v.Day != uint8(day) {
 			t.Logf("Test: %d, %d, %d | DB: %d, %d, %d", day, month, year, v.Day, v.Month, v.Year)
@@ -185,8 +181,8 @@ func TestBuying2Quantities(t *testing.T) {
 	}
 
 	testAnswers := []Database.Sale{
+		{ID: 6, Price: 14, Cost: 2, Quantity: 3},
 		{ID: 6, Price: 14, Cost: 3, Quantity: 3},
-		{ID: 6, Price: 14, Cost: 7, Quantity: 3},
 	}
 
 	for i, v := range Database.Sales {
@@ -254,8 +250,8 @@ func TestBuyingAllQuantities0n1(t *testing.T) {
 	}
 
 	testAnswers := []Database.Sale{
+		{ID: 6, Price: 15, Cost: 2, Quantity: 3},
 		{ID: 6, Price: 15, Cost: 3, Quantity: 4},
-		{ID: 6, Price: 15, Cost: 8, Quantity: 3},
 	}
 
 	t.Log(Database.Sales)
@@ -325,9 +321,9 @@ func TestBuyingInto3rdQuantity(t *testing.T) {
 	}
 
 	testAnswers := []Database.Sale{
-		{ID: 6, Price: 16, Cost: 4, Quantity: 5},
+		{ID: 6, Price: 16, Cost: 2, Quantity: 3},
 		{ID: 6, Price: 16, Cost: 3, Quantity: 4},
-		{ID: 6, Price: 16, Cost: 9, Quantity: 3},
+		{ID: 6, Price: 16, Cost: 4, Quantity: 5},
 	}
 
 	t.Log(len(Database.Sales))
@@ -397,9 +393,9 @@ func TestBuyingAllQuantities(t *testing.T) {
 	}
 
 	testAnswers := []Database.Sale{
-		{ID: 6, Price: 16, Cost: 4, Quantity: 7},
+		{ID: 6, Price: 16, Cost: 2, Quantity: 3},
 		{ID: 6, Price: 16, Cost: 3, Quantity: 4},
-		{ID: 6, Price: 16, Cost: 9, Quantity: 3},
+		{ID: 6, Price: 16, Cost: 4, Quantity: 7},
 	}
 
 	t.Log(len(Database.Sales))
@@ -468,9 +464,9 @@ func TestBuyingOverAllQuantities(t *testing.T) {
 	}
 
 	testAnswers := []Database.Sale{
-		{ID: 6, Price: 16, Cost: 4, Quantity: 13},
+		{ID: 6, Price: 16, Cost: 2, Quantity: 3},
 		{ID: 6, Price: 16, Cost: 3, Quantity: 4},
-		{ID: 6, Price: 16, Cost: 9, Quantity: 3},
+		{ID: 6, Price: 16, Cost: 4, Quantity: 13},
 	}
 
 	t.Log(len(Database.Sales))
@@ -596,7 +592,7 @@ func TestOverBuyingEmptyQuantity(t *testing.T) {
 	s := Database.Sale{
 		ID:       Item,
 		Price:    5,
-		Cost:     2,
+		Cost:     0,
 		Quantity: 5,
 	}
 	Database.BuyCart([]Database.Sale{s}, 0)
@@ -621,10 +617,10 @@ func TestOverBuyingEmptyQuantity(t *testing.T) {
 	}
 
 	testAnswers := []Database.Sale{
-		{ID: Item, Price: 5, Cost: 2, Quantity: 5},
+		{ID: Item, Price: 5, Cost: 0, Quantity: 5},
 	}
 
-	t.Log(len(Database.Sales))
+	t.Log(Database.Sales[0].Cost)
 
 	for i, v := range Database.Sales {
 		if v.Year != uint8(year) || v.Month != uint8(month) || v.Day != uint8(day) {

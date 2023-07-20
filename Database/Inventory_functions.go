@@ -41,6 +41,8 @@ func SearchInventory(input string) (Names []string, IDs []uint16) {
 		return
 	}
 
+	input = strings.TrimSpace(input)
+
 	for id, iv := range Items {
 		if strings.Contains(strings.ToLower(iv.Name), strings.ToLower(input)) && iv.Name[0] != byte(216) {
 			IDs = append(IDs, id)

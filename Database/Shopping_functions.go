@@ -16,6 +16,8 @@ func SearchCustomers(input string) (Names []string, IDs []uint16) {
 		return
 	}
 
+	input = strings.TrimSpace(input)
+
 	for i := 0; i < len(Customers); i++ {
 		if strings.Contains(strings.ToLower(Customers[i]), strings.ToLower(input)) && Customers[i][0] != byte(216) {
 			Names = append(Names, Customers[i])

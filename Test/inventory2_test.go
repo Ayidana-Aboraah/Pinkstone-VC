@@ -97,3 +97,177 @@ func TestFailedAddingDamages(t *testing.T) {
 		t.Errorf("Illegal Adding of Damages | have: %d, want: 0", len(Database.Sales))
 	}
 }
+
+func TestSearchingInventoryEmpty(t *testing.T) {
+	resetTestItemsAndSales()
+	names, IDs := Database.SearchInventory("")
+	if len(names) != len(testItems) {
+		t.Errorf("Search Results !valid | have: %d, want: %d", len(names), len(testItems))
+	}
+
+	if len(names) != len(IDs) {
+		t.Errorf("Len of IDs & Names != | names: %d, IDs: %d", len(names), len(IDs))
+	}
+	for k, v := range testItems {
+		found := false
+		for i, name := range names {
+			if v.Name == name && k == IDs[i] {
+				found = true
+			} else if k == IDs[i] {
+				t.Errorf("ID and Name don't share the same ID | have: %d & %s, want: %d & %s", IDs[i], name, k, v.Name)
+			} else if v.Name == name {
+				t.Errorf("ID and Name don't share the same ID | have: %d & %s, want: %d & %s", IDs[i], name, k, v.Name)
+			}
+		}
+		if !found {
+			t.Errorf("KV ! found | have: %s: %d", v.Name, k)
+		}
+	}
+}
+
+func TestSearchingInventory(t *testing.T) {
+	resetTestItemsAndSales()
+	names, IDs := Database.SearchInventory("V")
+	if len(names) != 3 {
+		t.Errorf("Search Results !valid | have: %d, want: 3", len(names))
+	}
+
+	if len(names) != len(IDs) {
+		t.Errorf("Len of IDs & Names != | names: %d, IDs: %d", len(names), len(IDs))
+	}
+
+	expecrtedIDs := [3]uint16{1, 2, 5}
+	expectedNames := [3]string{
+		"Viva",
+		"Val",
+		"Villianous",
+	}
+
+	for i, ID := range expecrtedIDs {
+		found := false
+
+		for nI, name := range names {
+			if expectedNames[i] == name && ID == IDs[nI] {
+				found = true
+			} else if expectedNames[i] == name {
+				t.Errorf("ID and Name don't share the same ID | have: %d & %s, want: %d & %s", IDs[i], name, ID, expectedNames[i])
+			} else if ID == IDs[nI] {
+				t.Errorf("ID and Name don't share the same ID | have: %d & %s, want: %d & %s", IDs[i], name, ID, expectedNames[i])
+			}
+
+		}
+
+		if !found {
+			t.Errorf("KV ! found | have: %s: %d", expectedNames[i], ID)
+		}
+	}
+}
+
+func TestFailedSearchingInventory(t *testing.T) {
+	resetTestItemsAndSales()
+	names, IDs := Database.SearchInventory("PEEEPEE")
+	if len(names) != 0 {
+		t.Errorf("Search Results !valid | have: %d, want: 0", len(names))
+	}
+
+	if len(names) != len(IDs) {
+		t.Errorf("Len of IDs & Names != | names: %d, IDs: %d", len(names), len(IDs))
+	}
+
+}
+
+func TestSearchingInventoryWithTrailingSpace(t *testing.T) {
+	resetTestItemsAndSales()
+	names, IDs := Database.SearchInventory("V  ")
+	if len(names) != 3 {
+		t.Errorf("Search Results !valid | have: %d, want: 3", len(names))
+	}
+
+	if len(names) != len(IDs) {
+		t.Errorf("Len of IDs & Names != | names: %d, IDs: %d", len(names), len(IDs))
+	}
+
+	expecrtedIDs := [3]uint16{1, 2, 5}
+	expectedNames := [3]string{
+		"Viva",
+		"Val",
+		"Villianous",
+	}
+
+	for i, ID := range expecrtedIDs {
+		found := false
+
+		for nI, name := range names {
+			if expectedNames[i] == name && ID == IDs[nI] {
+				found = true
+			} else if expectedNames[i] == name {
+				t.Errorf("ID and Name don't share the same ID | have: %d & %s, want: %d & %s", IDs[i], name, ID, expectedNames[i])
+			} else if ID == IDs[nI] {
+				t.Errorf("ID and Name don't share the same ID | have: %d & %s, want: %d & %s", IDs[i], name, ID, expectedNames[i])
+			}
+
+		}
+
+		if !found {
+			t.Errorf("KV ! found | have: %s: %d", expectedNames[i], ID)
+		}
+	}
+}
+
+func TestSearchingInventoryWithLeadingSpace(t *testing.T) {
+	resetTestItemsAndSales()
+	names, IDs := Database.SearchInventory("   V")
+	if len(names) != 3 {
+		t.Errorf("Search Results !valid | have: %d, want: 3", len(names))
+	}
+
+	if len(names) != len(IDs) {
+		t.Errorf("Len of IDs & Names != | names: %d, IDs: %d", len(names), len(IDs))
+	}
+
+	expecrtedIDs := [3]uint16{1, 2, 5}
+	expectedNames := [3]string{
+		"Viva",
+		"Val",
+		"Villianous",
+	}
+
+	for i, ID := range expecrtedIDs {
+		found := false
+
+		for nI, name := range names {
+			if expectedNames[i] == name && ID == IDs[nI] {
+				found = true
+			} else if expectedNames[i] == name {
+				t.Errorf("ID and Name don't share the same ID | have: %d & %s, want: %d & %s", IDs[i], name, ID, expectedNames[i])
+			} else if ID == IDs[nI] {
+				t.Errorf("ID and Name don't share the same ID | have: %d & %s, want: %d & %s", IDs[i], name, ID, expectedNames[i])
+			}
+
+		}
+
+		if !found {
+			t.Errorf("KV ! found | have: %s: %d", expectedNames[i], ID)
+		}
+	}
+}
+
+func TestSearchingInventoryWithSpace(t *testing.T) {
+	resetTestItemsAndSales()
+	names, IDs := Database.SearchInventory("Pop D")
+	if len(names) != 1 {
+		t.Errorf("Search Results !valid | have: %d, want: 1", len(names))
+	}
+
+	if len(names) != len(IDs) {
+		t.Errorf("Len of IDs & Names != | names: %d, IDs: %d", len(names), len(IDs))
+	}
+
+	if names[0] != "Pop Daddy" {
+		t.Errorf("Name is not equal to it's expected value | have: %s, want: Pop Daddy", names[0])
+	}
+
+	if IDs[0] != 7 {
+		t.Errorf("ID is not equal to it's expected value | have: %d, want: 7", IDs[0])
+	}
+}

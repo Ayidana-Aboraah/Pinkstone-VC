@@ -659,3 +659,80 @@ func TestOverBuyingEmptyQuantity(t *testing.T) {
 		}
 	}
 }
+
+func TestOverBuying2QuantityWith1Empty(t *testing.T) {
+	ResetTestCartAndQuantities()
+	Item := uint16(5)
+
+	Database.Items = testItems
+	s := Database.Sale{
+		ID:       Item,
+		Price:    5,
+		Cost:     0,
+		Quantity: 7,
+	}
+	Database.BuyCart([]Database.Sale{s}, 0)
+
+	y, month, day := time.Now().Date()
+	year, _ := strconv.Atoi(strconv.Itoa(y)[1:])
+
+	expectedQuantities := [3]float32{-2, 0, 0}
+	for i, v := range expectedQuantities {
+		if Database.Items[Item].Quantity[i] != v {
+			t.Logf("Quantity: %v", Database.Items[Item].Quantity)
+			t.Errorf("Current and expected quantites don't match | have: %f, want: %f", Database.Items[Item].Quantity[i], v)
+		}
+	}
+
+	expectedCosts := [3]float32{2, 0, 0}
+	for i, v := range expectedCosts {
+		if Database.Items[Item].Cost[i] != v {
+			t.Logf("Cost: %v", Database.Items[Item].Cost)
+			t.Errorf("Current and expected Cost don't match | have: %f, want: %f", Database.Items[Item].Cost[i], v)
+		}
+	}
+
+	testAnswers := []Database.Sale{
+		{ID: Item, Price: 5, Cost: 1, Quantity: 2},
+		{ID: Item, Price: 5, Cost: 2, Quantity: 5},
+	}
+
+	t.Log(len(Database.Sales))
+
+	for i, v := range Database.Sales {
+		if v.Year != uint8(year) || v.Month != uint8(month) || v.Day != uint8(day) {
+			t.Logf("Test: %d, %d, %d | DB: %d, %d, %d", day, month, year, v.Day, v.Month, v.Year)
+			t.Error("Dates are not matching for:", i)
+		}
+
+		if v.Usr != 0 {
+			t.Logf("Test: %d, DB: %d", 0, v.Usr)
+			t.Error("Wrong Usr Set for:", i)
+		}
+
+		if v.Customer != 0 {
+			t.Logf("Test: %d, DB: %d", 0, v.Customer)
+			t.Error("Wrong Customer for:", i)
+		}
+
+		if v.ID != testAnswers[i].ID {
+			t.Logf("Test: %d, DB: %d", testAnswers[i].ID, v.ID)
+			t.Error("Unequal IDs for:", i)
+		}
+
+		if v.Price != testAnswers[i].Price {
+			t.Logf("Test: %f, DB: %f", testAnswers[i].Price, v.Price)
+			t.Error("Unequal Price for:", i)
+		}
+
+		if v.Cost != testAnswers[i].Cost {
+			t.Logf("Test: %f, DB: %f", testAnswers[i].Cost, v.Cost)
+			t.Error("Unequal Cost for:", i)
+		}
+
+		if v.Quantity != testAnswers[i].Quantity {
+			t.Logf("Test: %f, DB: %f", testAnswers[i].Quantity, v.Quantity)
+			t.Error("Unequal Quantities for:", i)
+		}
+	}
+}

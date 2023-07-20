@@ -271,3 +271,23 @@ func TestSearchingInventoryWithSpace(t *testing.T) {
 		t.Errorf("ID is not equal to it's expected value | have: %d, want: 7", IDs[0])
 	}
 }
+
+func TestRemoveItem(t *testing.T) {
+	resetTestItemsAndSales()
+	Database.RemoveItem(6)
+	Database.CleanUpDeadItems()
+	list := Database.ConvertItemKeys()
+	if len(Database.Items) != 6 || len(list) != 6 {
+		t.Errorf("Item not Removed | Items Len: %d, List of Keys: %d", len(Database.Items), len(list))
+	}
+}
+
+func TestFailedRemove(t *testing.T) {
+	resetTestItemsAndSales()
+	Database.RemoveItem(6)
+	Database.AddDamages(6, "12")
+	Database.CleanUpDeadItems()
+	if len(Database.Items) != 7 {
+		t.Errorf("Item may have been removed | have: %d, want: 7", len(Database.Items))
+	}
+}

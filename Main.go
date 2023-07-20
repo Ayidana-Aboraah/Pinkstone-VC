@@ -70,14 +70,13 @@ func CreateWindow(a fyne.App) {
 func makeMainMenu(a fyne.App) fyne.CanvasObject {
 	var SignInStartUp dialog.Dialog
 	var CreateUser dialog.Dialog
-
 	usrData := binding.NewStringList()
-	usrData.Set(Database.FilterUsers())
+
 	titleText := widget.NewLabelWithStyle("Welcome", fyne.TextAlignCenter, fyne.TextStyle{Bold: true})
 	return container.NewVBox(
 		titleText,
 		widget.NewButton("Sign-In", func() {
-
+			usrData.Set(Database.FilterUsers())
 			nameEntry := widget.NewEntry()
 			usrList := widget.NewListWithData(usrData, func() fyne.CanvasObject {
 				return container.NewBorder(nil, nil, nil, widget.NewButton("x", nil), widget.NewLabel(""))
@@ -90,6 +89,7 @@ func makeMainMenu(a fyne.App) fyne.CanvasObject {
 					for i := 0; i < len(Database.Users); i++ {
 						if Database.Users[i] == s {
 							Database.Users[i] = string([]byte{216}) + Database.Users[i]
+							usrData.Set(Database.FilterUsers())
 							break
 						}
 					}

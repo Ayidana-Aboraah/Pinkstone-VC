@@ -21,25 +21,21 @@ var testSales = []Database.Sale{
 	{ID: 0, Price: 3, Cost: -12, Quantity: 0, Customer: 0, Usr: 0},
 }
 
-var testItems = map[uint16]*Database.Entry{
-	0: {Name: "", Price: 0, Cost: [3]float32{0, 0, 0}, Quantity: [3]float32{0, 0, 0}},
-	1: {Name: "Viva", Price: -1, Cost: [3]float32{0, 0, 0}, Quantity: [3]float32{0, 0, 0}},
-	2: {Name: "Val", Price: 1, Cost: [3]float32{0, 0, 0}, Quantity: [3]float32{0, 0, 0}},
-	4: {Name: "Pop", Price: 1, Cost: [3]float32{2, 0, 0}, Quantity: [3]float32{1, 0, 0}},
-	5: {Name: "Villianous", Price: 0, Cost: [3]float32{0, 0, 0}, Quantity: [3]float32{0, 0, 0}},
-	6: {Name: "Carty", Price: 12, Cost: [3]float32{2, 3, 4}, Quantity: [3]float32{3, 4, 7}},
-}
+var testItems map[uint16]*Database.Entry
 
 func resetTestItemsAndSales() {
 	testItems = map[uint16]*Database.Entry{
-		0: {Name: "", Price: 0, Cost: [3]float32{0, 0, 0}, Quantity: [3]float32{0, 0, 0}},
+		0: {Name: " ", Price: 0, Cost: [3]float32{0, 0, 0}, Quantity: [3]float32{0, 0, 0}},
 		1: {Name: "Viva", Price: -1, Cost: [3]float32{0, 0, 0}, Quantity: [3]float32{0, 0, 0}},
 		2: {Name: "Val", Price: 1, Cost: [3]float32{0, 0, 0}, Quantity: [3]float32{0, 0, 0}},
+
 		4: {Name: "Pop", Price: 1, Cost: [3]float32{2, 0, 0}, Quantity: [3]float32{1, 0, 0}},
-		5: {Name: "Villianous", Price: 0, Cost: [3]float32{0, 0, 0}, Quantity: [3]float32{0, 0, 0}},
+		5: {Name: "Villianous", Price: 0, Cost: [3]float32{1, 2, 0}, Quantity: [3]float32{2, 3, 0}},
 		6: {Name: "Carty", Price: 12, Cost: [3]float32{2, 3, 4}, Quantity: [3]float32{3, 4, 7}},
+
 		7: {Name: "Pop Daddy", Price: 12, Cost: [3]float32{2, 3, 4}, Quantity: [3]float32{3, 4, 7}},
 	}
+
 	Database.Items = testItems
 
 	Database.Sales = []Database.Sale{}

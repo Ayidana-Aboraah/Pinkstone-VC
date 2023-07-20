@@ -176,7 +176,7 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 						return
 					}
 
-					Items[uint16(target)].Name = string([]byte{216}) + Items[uint16(target)].Name
+					RemoveItem(uint16(target))
 
 					InventoryData.Set(ConvertItemKeys())
 					inventoryList.Refresh()

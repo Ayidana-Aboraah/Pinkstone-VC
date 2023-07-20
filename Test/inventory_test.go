@@ -253,7 +253,7 @@ func TestAddItem(t *testing.T) {
 		t.FailNow()
 	}
 
-	if val.Name != "" {
+	if val.Name != " " {
 		t.Errorf("Error occured with the name | have: %s, want: '' ", val.Name)
 	}
 
@@ -272,7 +272,6 @@ func TestAddItem(t *testing.T) {
 
 func TestAddWithFraction(t *testing.T) {
 	resetTestItemsAndSales()
-	Database.Items = testItems
 	errID := Database.AddItem(0, "1", "12", "32 1/2")
 	if errID != -1 {
 		t.Errorf("An Error has occured | have: %d, want: -1", errID)
@@ -284,7 +283,7 @@ func TestAddWithFraction(t *testing.T) {
 		t.FailNow()
 	}
 
-	if val.Name != "" {
+	if val.Name != " " {
 		t.Errorf("Error occured with the name | have: %s, want: '' ", val.Name)
 	}
 
@@ -303,7 +302,6 @@ func TestAddWithFraction(t *testing.T) {
 
 func TestFailedAdd(t *testing.T) {
 	resetTestItemsAndSales()
-	Database.Items = testItems
 	errID := Database.AddItem(0, "3", "12", "--32 -1-/-0.9-")
 	if errID != 0 {
 		t.Errorf("An Error has slipped through | have: %d, want: 0", errID)
@@ -315,7 +313,7 @@ func TestFailedAdd(t *testing.T) {
 		t.FailNow()
 	}
 
-	if val.Name != "" {
+	if val.Name != " " {
 		t.Errorf("Error occured with the name | have: %s, want: '' ", val.Name)
 	}
 
@@ -334,7 +332,6 @@ func TestFailedAdd(t *testing.T) {
 
 func TestAdd2Costs(t *testing.T) {
 	resetTestItemsAndSales()
-	Database.Items = testItems
 	errID := Database.AddItem(4, "1", "12", "32")
 	if errID != -1 {
 		t.Errorf("An Error has occured | have: %d, want: -1", errID)
@@ -373,7 +370,6 @@ func TestAdd2Costs(t *testing.T) {
 
 func TestAdd2CostsWithFraction(t *testing.T) {
 	resetTestItemsAndSales()
-	Database.Items = testItems
 	errID := Database.AddItem(4, "1", "12", "32 1/2")
 	if errID != -1 {
 		t.Errorf("An Error has occured | have: %d, want: -1", errID)
@@ -412,7 +408,6 @@ func TestAdd2CostsWithFraction(t *testing.T) {
 
 func TestAdd3Costs(t *testing.T) {
 	resetTestItemsAndSales()
-	Database.Items = testItems
 	errID := Database.AddItem(4, "1", "12", "32")
 
 	if errID != -1 {
@@ -466,7 +461,6 @@ func TestAdd3Costs(t *testing.T) {
 
 func TestAdd3CostsWithFraction(t *testing.T) {
 	resetTestItemsAndSales()
-	Database.Items = testItems
 	errID := Database.AddItem(4, "1", "12", "32 1/2")
 
 	if errID != -1 {
@@ -520,7 +514,6 @@ func TestAdd3CostsWithFraction(t *testing.T) {
 
 func TestFailedAdd4CostsWithFraction(t *testing.T) {
 	resetTestItemsAndSales()
-	Database.Items = testItems
 	errID := Database.AddItem(4, "1", "12", "32 1/2")
 
 	if errID != -1 {
@@ -581,7 +574,6 @@ func TestFailedAdd4CostsWithFraction(t *testing.T) {
 func TestAddItemToEmpty(t *testing.T) {
 	resetTestItemsAndSales()
 	Item := uint16(0)
-	Database.Items = testItems
 	errID := Database.AddItem(Item, "1", "12", "32 1/2")
 
 	if errID != -1 {
@@ -594,7 +586,7 @@ func TestAddItemToEmpty(t *testing.T) {
 		t.FailNow()
 	}
 
-	if val.Name != "" {
+	if val.Name != " " {
 		t.Errorf("Error occured with the name | have: %s, want: '' ", val.Name)
 	}
 
@@ -609,5 +601,58 @@ func TestAddItemToEmpty(t *testing.T) {
 	if val.Quantity[0] != 32.5 {
 		t.Errorf("Error occured with cost | have: %f, want: 32.5", val.Quantity[0])
 	}
+}
 
+func TestAndThenSub(t *testing.T) {
+	resetTestItemsAndSales()
+	Item := uint16(0)
+
+	errID := Database.AddItem(Item, "1", "12", "32 1/2")
+	if errID != -1 {
+		t.Errorf("Unexpected error | have: %d, want: -1", errID)
+	}
+
+	errID = Database.AddDamages(Item, "35 1/2")
+	if errID != -1 {
+		t.Errorf("Unexpected error | have: %d, want: -1", errID)
+	}
+
+	if Database.Items[Item].Price != 1 {
+		t.Errorf("Unexpected Price | have: %f, want: 1", Database.Items[Item].Price)
+	}
+
+	if Database.Items[Item].Cost[0] != 12 {
+		t.Errorf("Unexpected Cost | have: %f, want: 12", Database.Items[Item].Cost[0])
+	}
+
+	if Database.Items[Item].Quantity[0] != -3 {
+		t.Errorf("Unexpected Cost | have: %f, want: -3", Database.Items[Item].Quantity[0])
+	}
+}
+
+func TestSubThenReplace(t *testing.T) {
+	resetTestItemsAndSales()
+	Item := uint16(0)
+
+	errID := Database.AddDamages(Item, "35 1/2")
+	if errID != -1 {
+		t.Errorf("Unexpected error | have: %d, want: -1", errID)
+	}
+
+	errID = Database.AddItem(Item, "1", "12", "32 1/2")
+	if errID != -1 {
+		t.Errorf("Unexpected error | have: %d, want: -1", errID)
+	}
+
+	if Database.Items[Item].Price != 1 {
+		t.Errorf("Unexpected Price | have: %f, want: 1", Database.Items[Item].Price)
+	}
+
+	if Database.Items[Item].Cost[0] != 12 {
+		t.Errorf("Unexpected Cost | have: %f, want: 12", Database.Items[Item].Cost[0])
+	}
+
+	if Database.Items[Item].Quantity[0] != 32.5 {
+		t.Errorf("Unexpected Cost | have: %f, want: 32.5", Database.Items[Item].Quantity[0])
+	}
 }

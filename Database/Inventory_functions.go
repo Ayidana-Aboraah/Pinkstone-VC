@@ -160,3 +160,7 @@ func AddItem(target uint16, priceTxt, costTxt, stockTxt string) (errID int) {
 
 	return -1
 }
+
+func RemoveItem(ID uint16) {
+	Items[ID].Name = string([]byte{216}) + Items[ID].Name
+}

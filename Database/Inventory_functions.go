@@ -1,7 +1,7 @@
 package Database
 
 import (
-	"fmt"
+	"BronzeHermes/Debug"
 	"strconv"
 	"strings"
 )
@@ -23,10 +23,10 @@ func CleanUpDeadItems() {
 	}
 }
 
-func FilterUsers() (out []string) {
-	for _, s := range Users {
+func FilterUsers() (out []int) {
+	for i, s := range Users {
 		if s[0] != byte(216) {
-			out = append(out, s)
+			out = append(out, i)
 		}
 	}
 	return
@@ -49,6 +49,7 @@ func SearchInventory(input string) (Names []string, IDs []uint16) {
 			Names = append(Names, iv.Name)
 		}
 	}
+
 	return
 }
 
@@ -59,55 +60,73 @@ func ConvertItemKeys() (inter []int) {
 			inter = append(inter, int(k))
 		}
 	}
-	// for inv := len(pop); inv > 0; inv-- {
-	// 	for i := 0; i < len(pop); i++ { // || I > val[i]
 
-	// 	}
-	// }
+	return orderItemKeys(inter)
+}
 
+func orderItemKeys(list []int) (out []int) {
+	for _, v := range list {
+		init_out_len := len(out)
+
+		for i, o := range out {
+			if v > o {
+				// insert into array
+				out = append(out[:i+1], out[i:]...)
+				out[i] = v
+				break
+			}
+		}
+
+		if init_out_len == len(out) {
+			out = append(out, v)
+		}
+	}
 	return
 }
 
 func ProcessQuantity(n string) (quantity float32, errID int) {
+
 	raw := strings.SplitN(n, " ", 2)
-	a, b, found := strings.Cut(n, "/")
+	a, b, found := strings.Cut(raw[len(raw)-1], "/")
+
 	if len(raw) == 2 && found {
-		pop := strings.SplitN(raw[1], "/", 2)
-		numerator, denominator, whole, err := ConvertString(pop[0], pop[1], raw[0])
-		if len(pop) != 2 || err != -1 {
-			errID = 0
+		numerator, denominator, whole, err := ConvertString(a, b, raw[0])
+		if err != Debug.Success {
+			errID = Debug.Invalid_Input
 			return
 		}
 
 		quantity = whole + (numerator / denominator)
 	} else if len(raw) == 1 && found {
 		num, den, _, err := ConvertString(a, b, "")
-		if err != -1 {
-			errID = 0
+		if err != Debug.Success {
+			errID = Debug.Invalid_Input
+
 			return
 		}
 		quantity = num / den
 	} else {
 		v, err := strconv.ParseFloat(raw[0], 32)
 		if err != nil {
-			errID = 0
+			errID = Debug.Invalid_Input
+
 			return
 		}
 		quantity = float32(v)
 	}
-	return quantity, -1
+	return quantity, Debug.Success
 }
 
 func CreateItem(name, priceTxt, costTxt, stockTxt string) (ID uint16, errID int) {
 	quantity, err := ProcessQuantity(stockTxt)
-	if err != -1 {
+	if err != Debug.Success {
 		errID = err
 		return
 	}
 
 	price, cost, _, err := ConvertString(priceTxt, costTxt, "")
-	if err != -1 {
-		return 0, err
+	if err != Debug.Success {
+		return 0, Debug.Invalid_Input
 	}
 
 	// Check for an open slot
@@ -123,25 +142,25 @@ func CreateItem(name, priceTxt, costTxt, stockTxt string) (ID uint16, errID int)
 	}
 
 	Items[ID] = &Entry{Price: price, Name: name, Quantity: [3]float32{quantity, 0, 0}, Cost: [3]float32{cost, 0, 0}}
-	fmt.Println("!Found, Adding: ", Items[ID])
-	return ID, -1
+	// fmt.Println("!Found, Adding: ", Items[ID]) // LOG
+	return ID, Debug.Success
 }
 
 func AddItem(target uint16, priceTxt, costTxt, stockTxt string) (errID int) {
 	quan, err := ProcessQuantity(stockTxt)
-	if err != -1 {
+	if err != Debug.Success {
 		return err
 	}
 
 	price, cost, _, err := ConvertString(priceTxt, costTxt, "")
-	if err != -1 {
+	if err != Debug.Success {
 		return err
 	}
 
 	Items[target].Price = price
 
-	rejections := 0
-	for i := 0; i < 3; i++ {
+	i := 0
+	for ; i < 3; i++ {
 		if Items[target].Cost[i] == cost {
 			Items[target].Quantity[i] += quan
 			break
@@ -151,16 +170,11 @@ func AddItem(target uint16, priceTxt, costTxt, stockTxt string) (errID int) {
 			Items[target].Cost[i] = cost
 			break
 		}
-		rejections += 1
 	}
 
-	if rejections == 3 {
-		return 2
+	if i == 3 {
+		return Debug.Maxed_Out_Stocks
 	}
 
-	return -1
-}
-
-func RemoveItem(ID uint16) {
-	Items[ID].Name = string([]byte{216}) + Items[ID].Name
+	return Debug.Success
 }

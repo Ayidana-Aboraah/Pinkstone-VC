@@ -2,6 +2,7 @@ package Test
 
 import (
 	"BronzeHermes/Database"
+	unknown "BronzeHermes/Unknown"
 	"strconv"
 	"testing"
 	"time"
@@ -27,6 +28,30 @@ func TestRemoveSale(t *testing.T) {
 
 	if Database.Items[6].Quantity[1] != 4 || Database.Items[6].Quantity[2] != 7 {
 		t.Errorf("Error occured with other quantiites | want [1]: 4 & want [2]: 7, have: %v", Database.Items[6].Quantity)
+	}
+}
+
+func TestRemoveSale3(t *testing.T) {
+	resetTestItemsAndSales()
+	Item := uint16(8)
+	Database.Items = testItems
+	Database.Sales = []Database.Sale{
+		{ID: Item, Cost: 2, Quantity: 15},
+	}
+
+	Database.RemoveFromSales(0)
+
+	// check the length of sales
+	if len(Database.Sales) != 0 {
+		t.Errorf("Item not removed | len: %d", len(Database.Sales))
+	}
+	// Check if item[6]'s quantity has increase for cost 2
+	if Database.Items[Item].Quantity[0] != 15 {
+		t.Errorf("Error occured with Item's quantity[0] | have: %f", Database.Items[Item].Quantity[0])
+	}
+
+	if Database.Items[Item].Cost[0] != 2 {
+		t.Errorf("Error occured with Item's Cost[0] | have: %f, want: 2.0", Database.Items[Item].Cost[0])
 	}
 }
 
@@ -274,20 +299,47 @@ func TestSearchingInventoryWithSpace(t *testing.T) {
 
 func TestRemoveItem(t *testing.T) {
 	resetTestItemsAndSales()
-	Database.RemoveItem(6)
-	Database.CleanUpDeadItems()
+	expectedLen := len(testItems) - 1
+	unknown.RemoveAndUpdate(&Database.Items[6].Name, Database.CleanUpDeadItems)
 	list := Database.ConvertItemKeys()
-	if len(Database.Items) != 6 || len(list) != 6 {
-		t.Errorf("Item not Removed | Items Len: %d, List of Keys: %d", len(Database.Items), len(list))
+	if len(Database.Items) != expectedLen || len(list) != expectedLen {
+		t.Errorf("Item not Removed | Items Len: %d, List of Keys: %d, Expected Length: %d", len(Database.Items), len(list), expectedLen)
 	}
 }
 
 func TestFailedRemove(t *testing.T) {
 	resetTestItemsAndSales()
-	Database.RemoveItem(6)
-	Database.AddDamages(6, "12")
-	Database.CleanUpDeadItems()
-	if len(Database.Items) != 7 {
+	unknown.RemoveAndUpdate(&Database.Items[6].Name, func() {
+		Database.AddDamages(6, "12")
+		Database.CleanUpDeadItems()
+	})
+
+	if len(Database.Items) != len(testItems) {
 		t.Errorf("Item may have been removed | have: %d, want: 7", len(Database.Items))
 	}
+}
+
+func TestOrderItemKeys(t *testing.T) {
+	resetTestItemsAndSales()
+	list := Database.ConvertItemKeys()
+
+	if len(list) != len(Database.Items) {
+		t.Errorf("Item IDs were not copied | have: %d, want: %d", len(list), len(Database.Items))
+	}
+
+	previous := 999999
+	for _, v := range list {
+		val, found := Database.Items[uint16(v)]
+		if !found || val == nil {
+			t.Errorf("It seems the stored ID isn't real | have: %d", v)
+		}
+
+		if previous <= v {
+			t.Log(list)
+			t.Errorf("Item Keys are not ordered properly | have: %d, should be less than: %d", v, previous)
+		}
+
+		previous = v
+	}
+	t.Log(list)
 }

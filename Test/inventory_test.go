@@ -2,6 +2,7 @@ package Test
 
 import (
 	"BronzeHermes/Database"
+	"BronzeHermes/Debug"
 	"strings"
 	"testing"
 )
@@ -57,7 +58,7 @@ func TestCustomerSearchEmpty(t *testing.T) {
 
 func TestProcessQuantity(t *testing.T) {
 	quantity, errID := Database.ProcessQuantity("15")
-	if errID != -1 {
+	if errID != Debug.Success {
 		t.Errorf("Some error has occured, have: %d", errID)
 	}
 
@@ -68,7 +69,7 @@ func TestProcessQuantity(t *testing.T) {
 
 func TestProcessQuantityWithError(t *testing.T) {
 	quantity, errID := Database.ProcessQuantity("-12-42-321")
-	if errID != 0 {
+	if errID != Debug.Invalid_Input {
 		t.Errorf("err not caught or wrong error passed, have: %d", errID)
 	}
 
@@ -79,7 +80,7 @@ func TestProcessQuantityWithError(t *testing.T) {
 
 func TestProcessFractionQuantity(t *testing.T) {
 	quantity, errID := Database.ProcessQuantity(" 1/2")
-	if errID != -1 {
+	if errID != Debug.Success {
 		t.Errorf("Some error has occured, have: %d", errID)
 	}
 
@@ -90,7 +91,7 @@ func TestProcessFractionQuantity(t *testing.T) {
 
 func TestProcessFractionQuantityNoSpace(t *testing.T) {
 	quantity, errID := Database.ProcessQuantity("1/2")
-	if errID != -1 {
+	if errID != Debug.Success {
 		t.Errorf("Some error has occured, have: %d", errID)
 	}
 
@@ -516,20 +517,20 @@ func TestFailedAdd4CostsWithFraction(t *testing.T) {
 	resetTestItemsAndSales()
 	errID := Database.AddItem(4, "1", "12", "32 1/2")
 
-	if errID != -1 {
+	if errID != Debug.Success {
 		t.Errorf("An Error has occured | have: %d, want: -1", errID)
 	}
 
 	errID = Database.AddItem(4, "1", "13", "32 3/4")
 
-	if errID != -1 {
+	if errID != Debug.Success {
 		t.Errorf("An Error has occured | have: %d, want: -1", errID)
 	}
 
 	errID = Database.AddItem(4, "1", "15", "3")
 
-	if errID != 2 {
-		t.Errorf("An Error has occured | have: %d, want: -1", errID)
+	if errID != Debug.Maxed_Out_Stocks {
+		t.Errorf("An Error has occured | have: %d, want: %d", errID, Debug.Maxed_Out_Stocks)
 	}
 
 	val, found := Database.Items[4]

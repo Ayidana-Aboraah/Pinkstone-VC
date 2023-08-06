@@ -33,42 +33,38 @@ const (
 	YEARLY
 )
 
-func DataInit(remove bool) error {
-	for i, file := 0, ""; i < 7; i++ {
-		switch i {
-		case 0:
-			file = "Item_Reference.red"
-		case 1:
-			file = "Report_Data.red"
-		case 2:
-			file = "Customers.red"
-		case 3:
-			file = "Usrs.red"
-		case 4:
-			file = "BackUp_Map.red"
-		case 5:
-			file = "BackUp_Sales.red"
-		case 6:
-			file = "BackUp.red"
-		}
+var file_names = [...]string{
+	"Item_Reference.red",
+	"Report_Data.red",
+	"Customers.red",
+	"Usrs.red",
+	"BackUp_Map.red",
+	"BackUp_Sales.red",
+	"BackUp.red",
+}
 
-		if !remove {
-			save, err := fyne.CurrentApp().Storage().Create(file)
-			if err == nil {
-				save.Close()
-			}
-		} else {
-			err := fyne.CurrentApp().Storage().Remove(file)
-			if err != nil {
-				return err
-			}
+const (
+	item_ref = iota
+	report
+	customers
+	users
+	backMap
+	backSales
+	backup
+)
+
+func DataInit() error {
+	for i := 0; i < 7; i++ {
+		save, err := fyne.CurrentApp().Storage().Create(file_names[i])
+		if err == nil {
+			save.Close()
 		}
 	}
 	return nil
 }
 
 func SaveData() error {
-	db, err := fyne.CurrentApp().Storage().Save("Item_Reference.red")
+	db, err := fyne.CurrentApp().Storage().Save(file_names[item_ref])
 	if err != nil {
 		return err
 	}
@@ -79,7 +75,7 @@ func SaveData() error {
 		return err
 	}
 
-	save, err := fyne.CurrentApp().Storage().Save("Report_Data.red")
+	save, err := fyne.CurrentApp().Storage().Save(file_names[report])
 	if err != nil {
 		return err
 	}
@@ -90,7 +86,7 @@ func SaveData() error {
 		return err
 	}
 
-	customerFile, err := fyne.CurrentApp().Storage().Save("Customers.red")
+	customerFile, err := fyne.CurrentApp().Storage().Save(file_names[customers])
 	if err != nil && err != io.EOF {
 		return err
 	}
@@ -101,7 +97,7 @@ func SaveData() error {
 		return err
 	}
 
-	usrFile, err := fyne.CurrentApp().Storage().Save("Usrs.red")
+	usrFile, err := fyne.CurrentApp().Storage().Save(file_names[users])
 	if err != nil && err != io.EOF {
 		return err
 	}
@@ -112,11 +108,11 @@ func SaveData() error {
 		return err
 	}
 
-	return err
+	return nil
 }
 
 func LoadData() error {
-	f, err := fyne.CurrentApp().Storage().Open("Item_Reference.red")
+	f, err := fyne.CurrentApp().Storage().Open(file_names[item_ref])
 	if err != nil {
 		return err
 	}
@@ -129,7 +125,7 @@ func LoadData() error {
 
 	load_kv(buf)
 
-	reportFile, err := fyne.CurrentApp().Storage().Open("Report_Data.red")
+	reportFile, err := fyne.CurrentApp().Storage().Open(file_names[report])
 	if err != nil {
 		return err
 	}
@@ -142,7 +138,7 @@ func LoadData() error {
 
 	load_sales(buf)
 
-	customerFile, err := fyne.CurrentApp().Storage().Open("Customers.red")
+	customerFile, err := fyne.CurrentApp().Storage().Open(file_names[customers])
 	if err != nil && err != io.EOF {
 		return err
 	}
@@ -155,7 +151,7 @@ func LoadData() error {
 
 	load_customers(custmBuf)
 
-	usrFile, err := fyne.CurrentApp().Storage().Open("Usrs.red")
+	usrFile, err := fyne.CurrentApp().Storage().Open(file_names[users])
 	if err != nil && err != io.EOF {
 		return err
 	}
@@ -172,7 +168,7 @@ func LoadData() error {
 }
 
 func SaveBackUp() error {
-	save, err := fyne.CurrentApp().Storage().Save("BackUp.red")
+	save, err := fyne.CurrentApp().Storage().Save(file_names[backup])
 	if err != nil {
 		return err
 	}
@@ -183,7 +179,7 @@ func SaveBackUp() error {
 	}
 	save.Close()
 
-	save, err = fyne.CurrentApp().Storage().Save("BackUp_Sales.red")
+	save, err = fyne.CurrentApp().Storage().Save(file_names[backSales])
 	if err != nil {
 		return err
 	}
@@ -194,7 +190,7 @@ func SaveBackUp() error {
 	}
 	save.Close()
 
-	names, err := fyne.CurrentApp().Storage().Save("BackUp_Map.red")
+	names, err := fyne.CurrentApp().Storage().Save(file_names[backMap])
 	if err != nil {
 		return err
 	}
@@ -205,7 +201,7 @@ func SaveBackUp() error {
 }
 
 func LoadBackUp() error {
-	file, err := fyne.CurrentApp().Storage().Open("BackUp.red")
+	file, err := fyne.CurrentApp().Storage().Open(file_names[backup])
 	if err != nil {
 		return err
 	}
@@ -219,7 +215,7 @@ func LoadBackUp() error {
 
 	load_kv(buf)
 
-	file, err = fyne.CurrentApp().Storage().Open("BackUp_Sales.red")
+	file, err = fyne.CurrentApp().Storage().Open(file_names[backSales])
 	if err != nil {
 		return err
 	}
@@ -233,7 +229,7 @@ func LoadBackUp() error {
 
 	load_sales(buf)
 
-	names, err := fyne.CurrentApp().Storage().Open("BackUp_Map.red")
+	names, err := fyne.CurrentApp().Storage().Open(file_names[backMap])
 	if err != nil {
 		return err
 	}

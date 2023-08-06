@@ -2,6 +2,7 @@ package Test
 
 import (
 	"BronzeHermes/Database"
+	"BronzeHermes/Debug"
 	"testing"
 )
 
@@ -13,7 +14,7 @@ func TestCreatingSale(t *testing.T) {
 
 	errID := Database.CreateSale(1, "2023-06-02", "12", "20", "30", 3) // push to Database.Sales
 
-	if errID != -1 {
+	if errID != Debug.Success {
 		t.Errorf("An error with ID: %d has occured", errID)
 	}
 
@@ -75,7 +76,7 @@ func TestCreatingSaleFraction(t *testing.T) {
 
 	errID := Database.CreateSale(1, "2023-06-02", "12", "20", "30 7/8", 3) // push to Database.Sales
 
-	if errID != -1 {
+	if errID != Debug.Success {
 		t.Errorf("An error with ID: %d has occured", errID)
 	}
 

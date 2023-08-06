@@ -2,12 +2,13 @@ package Test
 
 import (
 	"BronzeHermes/Database"
+	"BronzeHermes/Debug"
 	"testing"
 )
 
 func TestProcessingItemNormal(t *testing.T) {
 	s := Database.Sale{Price: 5, Cost: 5, Quantity: 1}
-	err := Database.ProcessNewItemData("", "", "", &s)
+	err := Database.ProcessNewItemData("", "", &s)
 	switch err {
 	case 0:
 		t.Error("Invalid Input passed into ProcessNewItemData")
@@ -31,13 +32,11 @@ func TestProcessingItemNormal(t *testing.T) {
 
 func TestProcessingItemWithBargin(t *testing.T) {
 	s := Database.Sale{Price: 5, Cost: 5, Quantity: 1}
-	err := Database.ProcessNewItemData("10", "", "", &s)
+	err := Database.ProcessNewItemData("10", "", &s)
 	switch err {
-	case 0:
+	case Debug.Invalid_Input:
 		t.Error("Invalid Input passed into ProcessNewItemData")
-	case 1:
-		t.Error("No input sent to the piece || total")
-	case -1:
+	case Debug.Success:
 		// Check that teh proper transformation
 		if s.Quantity != 1 {
 			t.Errorf("Illegal Quantity Modification, want: 1, have: %f", s.Quantity)
@@ -55,12 +54,10 @@ func TestProcessingItemWithBargin(t *testing.T) {
 
 func TestProcessingItemInPieces(t *testing.T) {
 	s := Database.Sale{Price: 5, Cost: 5, Quantity: 1}
-	err := Database.ProcessNewItemData("", "1", "12", &s)
+	err := Database.ProcessNewItemData("", "1/12", &s)
 	switch err {
 	case 0:
 		t.Error("Invalid Input passed into ProcessNewItemData")
-	case 1:
-		t.Error("No input sent to the piece || total")
 	case -1:
 		// Check that teh proper transformation
 		if s.Quantity != 1.0/12.0 {
@@ -79,7 +76,7 @@ func TestProcessingItemInPieces(t *testing.T) {
 
 func TestProcessingItemWithQuantityInPieces(t *testing.T) {
 	s := Database.Sale{Price: 5, Cost: 5, Quantity: 1}
-	err := Database.ProcessNewItemData("25", "1", "12", &s)
+	err := Database.ProcessNewItemData("25", "1/12", &s)
 	switch err {
 	case 0:
 		t.Error("Invalid Input passed into ProcessNewItemData")
@@ -103,7 +100,7 @@ func TestProcessingItemWithQuantityInPieces(t *testing.T) {
 
 func TestInvalidBargin(t *testing.T) {
 	s := Database.Sale{Price: 5, Cost: 5, Quantity: 1}
-	err := Database.ProcessNewItemData("-122-123-2", "", "", &s)
+	err := Database.ProcessNewItemData("-122-123-2", "", &s)
 	switch err {
 	case 0:
 	case 1:
@@ -116,27 +113,17 @@ func TestInvalidBargin(t *testing.T) {
 
 func TestMissingPiece(t *testing.T) {
 	s := Database.Sale{Price: 5, Cost: 5, Quantity: 1}
-	err := Database.ProcessNewItemData("", "", "12", &s)
-	switch err {
-	case 0:
-		t.Error("Invalid Input passed into ProcessNewItemData")
-	case 1:
-	case -1:
-		t.Log(s)
-		t.Error("This Data is invalid and should not pass")
+	err := Database.ProcessNewItemData("", "/12", &s)
+	if err != 0 {
+		t.Errorf("This Data is invalid and should not pass | have: %d, want: 0", err)
 	}
 }
 
 func TestMissingTotal(t *testing.T) {
 	s := Database.Sale{Price: 5, Cost: 5, Quantity: 1}
-	err := Database.ProcessNewItemData("", "1", "", &s)
-	switch err {
-	case 0:
-		t.Error("Invalid Input passed into ProcessNewItemData")
-	case 1:
-	case -1:
-		t.Log(s)
-		t.Error("This Data is invalid and should not pass")
+	err := Database.ProcessNewItemData("", "1/", &s)
+	if err != 0 {
+		t.Errorf("This Data is invalid and should not pass | have: %d, want: 0", err)
 	}
 }
 
@@ -212,8 +199,8 @@ func TestIllegalAdding(t *testing.T) {
 	s := Database.Sale{ID: 6, Price: 5, Cost: 5, Quantity: 1}
 	cart := []Database.Sale{}
 	cart, errID := Database.AddToCart(s, cart)
-	if errID != 4 {
-		t.Errorf("An Error has somehow slipped through | have: %d, want: 4", errID)
+	if errID != Debug.Empty_Quantity_Warning {
+		t.Errorf("An Error has somehow slipped through | have: %d, want: %d", errID, Debug.Empty_Quantity_Warning)
 	}
 
 	if len(cart) != 1 {
@@ -233,8 +220,8 @@ func TestIllegalAdding2(t *testing.T) {
 	s := Database.Sale{ID: 6, Price: 5, Cost: 5, Quantity: 1}
 	cart := []Database.Sale{}
 	cart, errID := Database.AddToCart(s, cart)
-	if errID != 4 {
-		t.Errorf("An Error has somehow slipped through | have: %d, want: 4", errID)
+	if errID != Debug.Empty_Quantity_Warning {
+		t.Errorf("An Error has somehow slipped through | have: %d, want: %d", errID, Debug.Empty_Quantity_Warning)
 	}
 
 	if len(cart) != 1 {

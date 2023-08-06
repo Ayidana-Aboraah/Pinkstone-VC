@@ -32,9 +32,6 @@ func (e *SearchBar) TypedRune(r rune) {
 	e.Entry.TypedRune(r)
 	e.names, e.idxs = e.search(e.Text)
 	e.SetOptions(e.names)
-	// e.SelectEntry.ActionItem.(*widget.Button).OnTapped()
-	// e.SelectEntry.FocusGained()
-	// e.SelectEntry.
 }
 
 func (e *SearchBar) Result() int {
@@ -44,4 +41,14 @@ func (e *SearchBar) Result() int {
 		}
 	}
 	return -1
+}
+
+// Warning, is only usable on arrays especially if the array doesn't have remved items
+func (e *SearchBar) ResultOrCreate(create func()) int {
+	x := e.Result()
+	if x == -1 {
+		x = len(e.names)
+		create()
+	}
+	return x
 }

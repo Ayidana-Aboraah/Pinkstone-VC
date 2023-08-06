@@ -1,6 +1,7 @@
 package Database
 
 import (
+	"BronzeHermes/Debug"
 	"fmt"
 	"strconv"
 	"strings"
@@ -29,8 +30,8 @@ func SearchCustomers(input string) (Names []string, IDs []uint16) {
 
 func AddDamages(target uint16, quantityTxt string) int {
 	quantity, err := ProcessQuantity(quantityTxt)
-	if err != -1 {
-		return 0
+	if err != Debug.Success {
+		return Debug.Invalid_Input
 	}
 
 	y, month, day := time.Now().Date()
@@ -48,52 +49,44 @@ func AddDamages(target uint16, quantityTxt string) int {
 	}
 
 	BuyCart([]Sale{s}, 0)
-	return -1
+	return Debug.Success
 }
 
 func MakeReceipt(cart []Sale, customer string) (out string) {
 	y, m, d := time.Now().Date()
 	hr, min, _ := time.Now().Clock()
+
 	out = fmt.Sprintf("%d/%d/%d , %d:%2d\n", y, m, d, hr, min)
 	out += "Loc: Santasi\nTel/Vodacash: 0506695927\nTel/MOMO: 0558324302\nMerchant ID: 868954\nCustomer: " + customer + "\n"
 
 	for _, v := range cart {
 		out += fmt.Sprintf("\n%s x%1.2f for ₵%1.2f\n", Items[v.ID].Name, v.Quantity, v.Price)
 	}
+
 	out += fmt.Sprintf("Total: %1.1f\n\n Cashier: %s\n", GetCartTotal(cart), Users[Current_User])
 	out += "ALL SALES ARE FINAL\nThank you, please do come again\nSoftware Developed By Ayidana Aboraah\nTEL: +1 571-697-9347\nredstonegameraa@gmail.com\n"
+
 	return
 }
 
-func ProcessNewItemData(bargin, pieceTxt, totalTxt string, s *Sale) int {
-	if pieceTxt != "" || totalTxt != "" {
-		if pieceTxt == "" || totalTxt == "" {
-			return 1
-		} else {
-			piece, err := strconv.ParseFloat(pieceTxt, 32)
-
-			if err != nil || piece < 0 {
-				return 0
-			}
-
-			total, err := strconv.ParseFloat(totalTxt, 32)
-			if err != nil || total < 0 {
-				return 0
-			}
-
-			s.Quantity = float32(piece / total)
+func ProcessNewItemData(bargin, stockTxt string, s *Sale) int {
+	if stockTxt != "" {
+		quantity, errID := ProcessQuantity(stockTxt)
+		if errID != Debug.Success {
+			return errID
 		}
+		s.Quantity = quantity
 	}
 
 	if bargin != "" {
 		f, err := strconv.ParseFloat(bargin, 32)
 		if err != nil {
-			return 0
+			return Debug.Invalid_Input
 		}
 		s.Price = float32(f) / s.Quantity
 	}
 
-	return -1
+	return Debug.Success
 }
 
 func ShiftQuantity(ID uint16) {
@@ -126,6 +119,7 @@ func BuyCart(ShoppingCart []Sale, customer int) []Sale {
 		v.Customer = uint8(customer)
 
 		for i := range Items[v.ID].Quantity {
+
 			v.Cost = Items[v.ID].Cost[i]
 			Items[v.ID].Quantity[i] -= v.Quantity
 
@@ -149,22 +143,20 @@ func BuyCart(ShoppingCart []Sale, customer int) []Sale {
 }
 
 func AddToCart(item Sale, ShoppingCart []Sale) (out []Sale, errID int) {
-	errID = -1
+	errID = Debug.Success
 
 	if Items[item.ID].Quantity[0] <= 0 {
-		errID = 4
+		errID = Debug.Empty_Quantity_Warning
 	}
 
 	for i, v := range ShoppingCart {
 		if v.ID == item.ID && v.Price == item.Price {
 			ShoppingCart[i].Quantity += item.Quantity
-			out = ShoppingCart
 			return ShoppingCart, errID
 		}
 	}
 
-	out = append(ShoppingCart, item)
-	return out, errID
+	return append(ShoppingCart, item), errID
 }
 
 func DecreaseFromCart(item int, ShoppingCart []Sale) []Sale {
@@ -188,21 +180,21 @@ func GetCartTotal(ShoppingCart []Sale) (total float32) {
 
 func ConvertCart(shoppingCart []Sale) (intercart []interface{}) {
 	for i := range shoppingCart {
-		if shoppingCart[i].Usr != 255 {
-			intercart = append(intercart, shoppingCart[i])
-		}
+		intercart = append(intercart, shoppingCart[i])
 	}
 	return
 }
 
-func ConvertString(Price, Cost, Quantity string) (float32, float32, float32, int) {
-	newPrice, errA := strconv.ParseFloat(Price, 32)
-	newCost, errB := strconv.ParseFloat(Cost, 32)
-	newQuantity, errC := strconv.ParseFloat(Quantity, 32)
+func ConvertString(Price, Cost, Quantity string) (price float32, cost float32, quantity float32, errID int) {
+	p, errA := strconv.ParseFloat(Price, 32)
+	c, errB := strconv.ParseFloat(Cost, 32)
+	q, errC := strconv.ParseFloat(Quantity, 32)
+	errID = Debug.Success
+
 	if errA != nil || errB != nil || (errC != nil && Quantity != "") {
-		return 0.0, 0.0, 0.0, 0
+		errID = Debug.Invalid_Input
 	}
-	return float32(newPrice), float32(newCost), float32(newQuantity), -1
+	return float32(p), float32(c), float32(q), errID
 }
 
 func NewItem(id uint16) (result Sale) {

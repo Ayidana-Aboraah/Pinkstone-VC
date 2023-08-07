@@ -3,9 +3,11 @@ package main
 import (
 	"BronzeHermes/Database"
 	"BronzeHermes/Debug"
+	"BronzeHermes/Graph"
 	"BronzeHermes/UI"
 	unknown "BronzeHermes/Unknown"
 	"fmt"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -20,7 +22,7 @@ import (
 
 func main() {
 	a := app.NewWithID("PINKSTONE")
-	// go Graph.StartServer()
+	go Graph.StartServer()
 
 	Database.DataInit()
 
@@ -36,7 +38,7 @@ func CreateWindow(a fyne.App) {
 	w = a.NewWindow("Pinkstone")
 	w.SetOnClosed(
 		func() {
-			// Graph.StopSever()
+			Graph.StopSever()
 			Database.CleanUpDeadItems()
 			Database.SaveData()
 			Database.SaveBackUp()
@@ -49,13 +51,16 @@ func CreateWindow(a fyne.App) {
 		container.NewTabItem("Main", makeMainMenu(a)),
 		container.NewTabItem("Shop", makeShoppingMenu()),
 		container.NewTabItem("Inventory", Database.MakeInfoMenu(w)),
-		container.NewTabItem("Statistics", makeStatsMenu()),
+		container.NewTabItem("Report", makeReportMenu()),
+		container.NewTabItem("Stats", makeStatsMenu()),
 	)))
 
 	// Start Sign In Menu
 	w.Content().(*fyne.Container).Objects[0].(*container.AppTabs).Items[0].Content.(*fyne.Container).Objects[1].(*widget.Button).OnTapped()
 	w.Content().(*fyne.Container).Objects[0].(*container.AppTabs).OnSelected = func(ti *container.TabItem) {
 		updateReport()
+		updateStatsGraphs()
+
 	}
 
 	w.ShowAndRun()
@@ -269,7 +274,7 @@ func makeShoppingMenu() fyne.CanvasObject {
 
 var updateReport func()
 
-func makeStatsMenu() fyne.CanvasObject {
+func makeReportMenu() fyne.CanvasObject {
 
 	reportDisplay := widget.NewLabel("")
 	financeEntry := UI.NewNumEntry("YYYY-MM-DD")
@@ -403,4 +408,72 @@ func makeStatsMenu() fyne.CanvasObject {
 		container.NewMax(reportList),
 	)
 	return content
+}
+
+var updateStatsGraphs func()
+
+func makeStatsMenu() fyne.CanvasObject {
+	dateEntry := UI.NewNumEntry("YYYY-MM-DD")
+	userSearch := UI.NewSearchBar("User Name Here...", Database.SearchInventory)
+	customerSearch := UI.NewSearchBar("Customer Name Here...", Database.SearchCustomers)
+
+	currentGraphType := 0
+	graphSelect := widget.NewSelect([]string{"Over Time", " Current Total"}, func(s string) {
+		switch s { // TODO: Set the Links or update the site
+		case "Over Time":
+			currentGraphType = 0
+		case "Current Total":
+			currentGraphType = 1
+		}
+		updateStatsGraphs()
+	})
+
+	dataType := 0
+	dataTypeSelect := widget.NewSelect([]string{"Profit", "Cost", "Revenue"}, func(s string) {
+		switch s {
+		case "Profit":
+			dataType = 0
+		case "Cost":
+			dataType = 1
+		case "Revenue":
+			dataType = 2
+		}
+		updateStatsGraphs()
+	})
+	dateEntry.OnChanged = func(s string) {
+		updateStatsGraphs()
+	}
+	customerSearch.OnChanged = func(s string) {
+		updateStatsGraphs()
+	}
+	userSearch.OnChanged = func(s string) {
+		updateStatsGraphs()
+	}
+
+	updateStatsGraphs = func() {
+		switch currentGraphType {
+		case 0:
+			Graph.Labels, Graph.LineInputs = Database.GetLine(dateEntry.Text, dataType, userSearch.Result(), customerSearch.Result())
+		case 1:
+			Graph.Labels, Graph.Inputs = Database.GetPie(dateEntry.Text, dataType, userSearch.Result(), customerSearch.Result())
+		}
+	}
+
+	lineURL, _ := url.ParseRequestURI("localhost:8081/line")
+	pieURL, _ := url.ParseRequestURI("localhost:8081/pie")
+
+	lineLink := widget.NewHyperlinkWithStyle("Line Graph", lineURL, fyne.TextAlignCenter, fyne.TextStyle{})
+	pieLink := widget.NewHyperlinkWithStyle("Pie Graph", pieURL, fyne.TextAlignCenter, fyne.TextStyle{})
+
+	return container.NewVBox(
+		widget.NewCard("Item Sales", "", container.NewVBox(
+			graphSelect,
+			dataTypeSelect,
+			dateEntry,
+			userSearch,
+			customerSearch,
+			lineLink,
+			pieLink,
+		)),
+	)
 }

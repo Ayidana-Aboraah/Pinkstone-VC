@@ -1,8 +1,11 @@
 package Database
 
 import (
+	"BronzeHermes/Debug"
+	unknown "BronzeHermes/Unknown"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -68,99 +71,121 @@ func RemoveFromSales(index int) {
 	Sales = Sales[:len(Sales)-1]
 }
 
-// func GetLine(selection string, dataType int) ([]string, [][]float32) {
-// 	if selection == "" {
-// 		return nil, nil
-// 	}
+func GetLine(selection string, dataType, usrFilter, customerFilter int) ([]string, [][]float32) {
+	if selection == "" {
+		return nil, nil
+	}
 
-// 	raw := strings.Split(selection, "-")
+	raw := strings.Split(selection, "-")
 
-// 	if len(raw) < 2 {
-// 		return nil, nil
-// 	}
+	if len(raw) < 2 {
+		return nil, nil
+	}
 
-// 	year, err := strconv.Atoi(raw[0][1:])
-// 	if err != nil {
-// 		return nil, nil
-// 	}
+	year, err := strconv.Atoi(raw[0][1:])
+	if err != nil {
+		return nil, nil
+	}
 
-// 	month, err := strconv.Atoi(raw[1])
-// 	if err != nil {
-// 		return nil, nil
-// 	}
+	month, err := strconv.Atoi(raw[1])
+	if err != nil {
+		return nil, nil
+	}
 
-// 	date := []uint8{
-// 		uint8(year),
-// 		uint8(month),
-// 	}
+	date := []uint8{
+		uint8(year),
+		uint8(month),
+	}
 
-// 	//Change the error handling for this to show that you can't convert
-// 	var sales [][]float32
-// 	var names []string
+	//Change the error handling for this to show that you can't convert
+	var sales [][]float32
+	var names []string
 
-// 	for id, x := range Items {
-// 		var totals []float32
+	for id, x := range Items {
+		var totals []float32
 
-// 		for i := uint8(1); i < 32; i++ {
-// 			var total float32
+		for i := uint8(1); i < 32; i++ {
+			var total float32
 
-// 			for v := len(Sales) - 1; v >= 0; v-- {
-// 				if Sales[v].ID != id || Sales[v].Day != i || Sales[v].Month != date[1] || Sales[v].Year != date[0] {
-// 					continue
-// 				}
-// 				switch dataType {
-// 				case 0:
-// 					total += Sales[v].Price
-// 				case 1:
-// 					total += float32(Sales[v].Quantity)
-// 				}
-// 			}
+			for v := len(Sales) - 1; v >= 0; v-- {
+				if Sales[v].ID != id || Sales[v].Day != i || Sales[v].Month != date[1] || Sales[v].Year != date[0] {
+					continue
+				}
 
-// 			totals = append(totals, total)
-// 		}
+				if usrFilter != -1 && Sales[v].Usr != uint8(usrFilter) {
+					continue
+				}
 
-// 		if totals != nil {
-// 			names = append(names, x.Name)
-// 			sales = append(sales, totals)
-// 		}
-// 	}
+				if customerFilter != -1 && Sales[v].Customer != uint8(customerFilter) {
+					continue
+				}
 
-// 	return names, sales
-// }
+				switch dataType {
+				case 0:
+					total += Sales[v].Price
+				case 1:
+					total += Sales[v].Cost
+				case 2:
+					total += Sales[v].Quantity
+				}
+			}
 
-// func GetPie(selection string, dataType int) ([]string, []float32) {
-// 	if selection == "" {
-// 		return nil, nil
-// 	}
+			totals = append(totals, total)
+		}
 
-// 	date, errID := unknown.ProcessDate(selection)
-// 	if errID != Debug.Success {
-// 		return nil, nil
-// 	}
+		if totals != nil {
+			names = append(names, x.Name)
+			sales = append(sales, totals)
+		}
+	}
 
-// 	var sales []float32
-// 	var names []string
+	return names, sales
+}
 
-// 	for id, val := range Items {
-// 		var total float32
+func GetPie(selection string, dataType, usrFilter, customerFilter int) ([]string, []float32) {
+	if selection == "" {
+		return nil, nil
+	}
 
-// 		for i := len(Sales) - 1; i >= 0; i-- {
-// 			if Sales[i].ID != id || Sales[i].Day != date[2] || Sales[i].Month != date[1] || Sales[i].Year != date[0] {
-// 				continue
-// 			}
-// 			switch dataType {
-// 			case 0:
-// 				total += Sales[i].Price
-// 			case 1:
-// 				total += Sales[i].Quantity
-// 			}
-// 		}
+	date, errID := unknown.ProcessDate(selection)
+	if errID != Debug.Success {
+		return nil, nil
+	}
 
-// 		if total != 0 {
-// 			names = append(names, val.Name)
-// 			sales = append(sales, total)
-// 		}
-// 	}
+	var sales []float32
+	var names []string
 
-// 	return names, sales
-// }
+	for id, val := range Items {
+		var total float32
+
+		for i := len(Sales) - 1; i >= 0; i-- {
+			if Sales[i].ID != id || Sales[i].Day != date[2] || Sales[i].Month != date[1] || Sales[i].Year != date[0] {
+				continue
+			}
+
+			if usrFilter != -1 && Sales[i].Usr != uint8(usrFilter) {
+				continue
+			}
+
+			if customerFilter != -1 && Sales[i].Customer != uint8(customerFilter) {
+				continue
+			}
+
+			switch dataType {
+			case 0:
+				total += Sales[i].Price
+			case 1:
+				total += Sales[i].Cost
+			case 2:
+				total += Sales[i].Quantity
+			}
+		}
+
+		if total != 0 {
+			names = append(names, val.Name)
+			sales = append(sales, total)
+		}
+	}
+
+	return names, sales
+}

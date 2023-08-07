@@ -35,14 +35,43 @@ func ProcessDate(in string) (out [3]uint8, errID int) {
 	}
 	out[1] = uint8(month)
 
-	// if len(pop[0]) > 4 {
-	// 	return out, 0 // TODO: Check if we'll add a custom error for incorrect dates, or just use normal invalid input
-	// }
 	day, err := strconv.Atoi(pop[2])
 	if err != nil {
 		return out, Debug.Invalid_Input
 	}
 	out[0] = uint8(day)
+
+	return out, Debug.Success
+}
+
+func ProcessDate2(in string) (out [3]uint8, errID int) {
+	pop := strings.SplitN(in, "-", 3)
+
+	if len(pop) == 0 {
+		return out, Debug.Invalid_Input
+	}
+
+	year, err := strconv.Atoi(pop[0][1:])
+	if err != nil {
+		return out, Debug.Invalid_Input
+	}
+	out[0] = uint8(year)
+
+	if len(pop) > 1 {
+		month, err := strconv.Atoi(pop[1])
+		if err != nil {
+			return out, Debug.Invalid_Input
+		}
+		out[1] = uint8(month)
+	}
+
+	if len(pop) > 2 {
+		day, err := strconv.Atoi(pop[2])
+		if err != nil {
+			return out, Debug.Invalid_Input
+		}
+		out[2] = uint8(day)
+	}
 
 	return out, Debug.Success
 }

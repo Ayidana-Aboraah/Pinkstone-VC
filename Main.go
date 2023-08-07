@@ -186,7 +186,7 @@ func makeShoppingMenu() fyne.CanvasObject {
 				customerEntry.SetText("")
 				dialog.ShowForm("Do you want to buy all items in the Cart?", "Yes", "No",
 					[]*widget.FormItem{widget.NewFormItem("Customer", customerEntry)}, func(b bool) {
-						if !b || len(shoppingCart) == 0 || customerEntry.Text == "" {
+						if !b || len(shoppingCart) == 0 {
 							return
 						}
 
@@ -414,12 +414,12 @@ var updateStatsGraphs func()
 
 func makeStatsMenu() fyne.CanvasObject {
 	dateEntry := UI.NewNumEntry("YYYY-MM-DD")
-	userSearch := UI.NewSearchBar("User Name Here...", Database.SearchInventory)
+	itemSearch := UI.NewSearchBar("Item Name Here...", Database.SearchInventory)
 	customerSearch := UI.NewSearchBar("Customer Name Here...", Database.SearchCustomers)
 
 	currentGraphType := 0
 	graphSelect := widget.NewSelect([]string{"Over Time", " Current Total"}, func(s string) {
-		switch s { // TODO: Set the Links or update the site
+		switch s {
 		case "Over Time":
 			currentGraphType = 0
 		case "Current Total":
@@ -446,16 +446,24 @@ func makeStatsMenu() fyne.CanvasObject {
 	customerSearch.OnChanged = func(s string) {
 		updateStatsGraphs()
 	}
-	userSearch.OnChanged = func(s string) {
+	itemSearch.OnChanged = func(s string) {
 		updateStatsGraphs()
 	}
 
 	updateStatsGraphs = func() {
+		// errID := -1
+
 		switch currentGraphType {
 		case 0:
-			Graph.Labels, Graph.LineInputs = Database.GetLine(dateEntry.Text, dataType, userSearch.Result(), customerSearch.Result())
+			Graph.Labels, Graph.LineInputs, _ = Database.GetLine(dateEntry.Text, dataType, itemSearch.Result(), customerSearch.Result())
+			// if Debug.HandleKnownError(errID, errID != Debug.Success, w) {
+			// 	return
+			// }
 		case 1:
-			Graph.Labels, Graph.Inputs = Database.GetPie(dateEntry.Text, dataType, userSearch.Result(), customerSearch.Result())
+			Graph.Labels, Graph.Inputs, _ = Database.GetPie(dateEntry.Text, dataType, itemSearch.Result(), customerSearch.Result())
+			// if Debug.HandleKnownError(errID, errID != Debug.Success, w) {
+			// 	return
+			// }
 		}
 	}
 
@@ -470,7 +478,7 @@ func makeStatsMenu() fyne.CanvasObject {
 			graphSelect,
 			dataTypeSelect,
 			dateEntry,
-			userSearch,
+			itemSearch,
 			customerSearch,
 			lineLink,
 			pieLink,

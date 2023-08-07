@@ -71,25 +71,25 @@ func RemoveFromSales(index int) {
 	Sales = Sales[:len(Sales)-1]
 }
 
-func GetLine(selection string, dataType, usrFilter, customerFilter int) ([]string, [][]float32) {
+func GetLine(selection string, dataType, itemFilter, customerFilter int) ([]string, [][]float32, int) {
 	if selection == "" {
-		return nil, nil
+		return nil, nil, Debug.Need_More_Info
 	}
 
 	raw := strings.Split(selection, "-")
 
 	if len(raw) < 2 {
-		return nil, nil
+		return nil, nil, Debug.Need_More_Info
 	}
 
 	year, err := strconv.Atoi(raw[0][1:])
 	if err != nil {
-		return nil, nil
+		return nil, nil, Debug.Invalid_Input
 	}
 
 	month, err := strconv.Atoi(raw[1])
 	if err != nil {
-		return nil, nil
+		return nil, nil, Debug.Invalid_Input
 	}
 
 	date := []uint8{
@@ -97,7 +97,6 @@ func GetLine(selection string, dataType, usrFilter, customerFilter int) ([]strin
 		uint8(month),
 	}
 
-	//Change the error handling for this to show that you can't convert
 	var sales [][]float32
 	var names []string
 
@@ -112,7 +111,7 @@ func GetLine(selection string, dataType, usrFilter, customerFilter int) ([]strin
 					continue
 				}
 
-				if usrFilter != -1 && Sales[v].Usr != uint8(usrFilter) {
+				if itemFilter != -1 && Sales[v].ID != uint16(itemFilter) {
 					continue
 				}
 
@@ -138,18 +137,20 @@ func GetLine(selection string, dataType, usrFilter, customerFilter int) ([]strin
 			sales = append(sales, totals)
 		}
 	}
+	fmt.Println("Line: ", names, sales)
 
-	return names, sales
+	return names, sales, Debug.Success
 }
 
-func GetPie(selection string, dataType, usrFilter, customerFilter int) ([]string, []float32) {
+func GetPie(selection string, dataType, itemFilter, customerFilter int) ([]string, []float32, int) {
+
 	if selection == "" {
-		return nil, nil
+		return nil, nil, Debug.Need_More_Info
 	}
 
-	date, errID := unknown.ProcessDate(selection)
+	date, errID := unknown.ProcessDate2(selection)
 	if errID != Debug.Success {
-		return nil, nil
+		return nil, nil, errID
 	}
 
 	var sales []float32
@@ -159,11 +160,11 @@ func GetPie(selection string, dataType, usrFilter, customerFilter int) ([]string
 		var total float32
 
 		for i := len(Sales) - 1; i >= 0; i-- {
-			if Sales[i].ID != id || Sales[i].Day != date[2] || Sales[i].Month != date[1] || Sales[i].Year != date[0] {
+			if Sales[i].ID != id || Sales[i].Month != date[1] || Sales[i].Year != date[0] || (Sales[i].Month != date[1] && Sales[i].Month != 0) || (Sales[i].Day != date[2] && Sales[i].Day != 0) {
 				continue
 			}
 
-			if usrFilter != -1 && Sales[i].Usr != uint8(usrFilter) {
+			if itemFilter != -1 && Sales[i].ID != uint16(itemFilter) {
 				continue
 			}
 
@@ -186,6 +187,6 @@ func GetPie(selection string, dataType, usrFilter, customerFilter int) ([]string
 			sales = append(sales, total)
 		}
 	}
-
-	return names, sales
+	fmt.Println("Pie: ", names, sales)
+	return names, sales, Debug.Success
 }

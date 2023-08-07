@@ -28,9 +28,9 @@ func CreateSale(ID uint16, dateStr, priceTxt, costTxt, stockTxt string, customer
 		Quantity: quan,
 		Customer: uint8(customer),
 		Usr:      Current_User,
-		Day:      date[0],
+		Day:      date[2],
 		Month:    date[1],
-		Year:     date[2],
+		Year:     date[0],
 	})
 
 	return Debug.Success

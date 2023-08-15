@@ -29,8 +29,10 @@ func HandleKnownError(id int, condition bool, w fyne.Window) bool {
 	return false
 }
 
-func ShowError(state string, err error, w fyne.Window) {
+func ShowError(state string, err error, w fyne.Window) bool {
 	if err != nil {
 		dialog.ShowInformation("Oops", "Error while"+state+"\nError: "+err.Error(), w)
+		return true
 	}
+	return false
 }

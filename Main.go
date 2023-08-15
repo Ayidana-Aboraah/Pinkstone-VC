@@ -4,6 +4,7 @@ import (
 	"BronzeHermes/Database"
 	"BronzeHermes/Debug"
 	"BronzeHermes/Graph"
+	"BronzeHermes/Printer"
 	"BronzeHermes/UI"
 	unknown "BronzeHermes/Unknown"
 	"fmt"
@@ -19,6 +20,8 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
 )
+
+var printer Printer.Printer
 
 func main() {
 	a := app.NewWithID("PINKSTONE")
@@ -42,13 +45,16 @@ func CreateWindow(a fyne.App) {
 			Database.CleanUpDeadItems()
 			Database.SaveData()
 			Database.SaveBackUp()
+			if printer.Active {
+				printer.Close()
+			}
 		},
 	)
 
 	Debug.ShowError("Loading Data", Database.LoadData(), w)
 
 	w.SetContent(container.NewVBox(container.NewAppTabs(
-		container.NewTabItem("Main", makeMainMenu(a)),
+		container.NewTabItem("Main", makeMainMenu()),
 		container.NewTabItem("Shop", makeShoppingMenu()),
 		container.NewTabItem("Inventory", Database.MakeInfoMenu(w)),
 		container.NewTabItem("Report", makeReportMenu()),
@@ -66,7 +72,7 @@ func CreateWindow(a fyne.App) {
 	w.ShowAndRun()
 }
 
-func makeMainMenu(a fyne.App) fyne.CanvasObject {
+func makeMainMenu() fyne.CanvasObject {
 	var SignInStartUp dialog.Dialog
 	var CreateUser dialog.Dialog
 	usrData := binding.NewIntList()
@@ -128,6 +134,7 @@ func makeMainMenu(a fyne.App) fyne.CanvasObject {
 		widget.NewButton("Save Backup Data", func() {
 			go Debug.ShowError("Backing up Data", Database.SaveBackUp(), w)
 		}),
+
 		widget.NewButton("Load Backup Data", func() {
 			dialog.ShowConfirm("Are you Sure?", "Are you sure you want to load the backup data?", func(b bool) {
 				if !b {
@@ -136,6 +143,64 @@ func makeMainMenu(a fyne.App) fyne.CanvasObject {
 				Debug.ShowError("Loading Backup Data", Database.LoadBackUp(), w)
 				dialog.ShowInformation("Loaded", "Back Up Loaded", w)
 			}, w)
+		}),
+
+		widget.NewButton("Connect Printer", func() {
+			devices, idxes, err := Printer.FindUSBDevices()
+			Debug.ShowError("Looking for USB Devices", err, w)
+
+			devListData := binding.NewIntList()
+			devListData.Set(idxes)
+			devList := widget.NewListWithData(devListData,
+				func() fyne.CanvasObject {
+					return container.NewBorder(nil, nil, nil, nil, widget.NewLabel(""))
+				},
+				func(di binding.DataItem, co fyne.CanvasObject) {
+					idx, _ := di.(binding.Int).Get()
+					co.(*fyne.Container).Objects[0].(*widget.Label).SetText(devices[idx].Product)
+				})
+
+			devList.OnSelected = func(id widget.ListItemID) {
+				dialog.ShowCustomConfirm(devices[id].Product, "Select", "Close",
+					widget.NewLabel(fmt.Sprintf("ID: %d\nProduct: %s\nVender ID: %d\nManufacturer: %s\nSerial: %s\nPath: %s",
+						devices[id].ProductID, devices[id].Product, devices[id].VendorID, devices[id].Manufacturer, devices[id].Serial, devices[id].Path)), func(b bool) {
+
+						if !b {
+							return
+						}
+
+						p, e := Printer.Init(devices[id])
+
+						if Debug.ShowError("Selecting "+devices[id].Product, e, w) {
+							return
+						}
+
+						if printer.Active {
+							printer.Close()
+						}
+
+						printer = p
+					}, w)
+				devList.Unselect(id)
+			}
+
+			dialog.ShowCustom("Devices", "Close", container.NewVBox(devList), w)
+		}),
+
+		widget.NewButton("Test Printing", func() {
+			if printer.Active {
+				entry := widget.NewEntry()
+				dialog.ShowForm("", "Send", "Close", []*widget.FormItem{
+					widget.NewFormItem("Message", entry),
+				}, func(b bool) {
+					if !b {
+						return
+					}
+					printer.Print(Printer.ConvertForPrinter(entry.Text))
+				}, w)
+			} else {
+				dialog.ShowInformation("", "No Printer Connected", w)
+			}
 		}),
 	)
 }
@@ -206,8 +271,8 @@ func makeShoppingMenu() fyne.CanvasObject {
 							widget.NewLabelWithStyle("PINKSTONE TRADING", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
 							widget.NewLabelWithStyle(receipt, fyne.TextAlignCenter, fyne.TextStyle{}),
 						), func(printing bool) {
-							if printing {
-								// TODO: Send print msg to Printer & the receipt,
+							if printing && printer.Active {
+								printer.Print(Printer.ConvertForPrinter(receipt))
 							}
 						}, w)
 					}, w)

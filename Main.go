@@ -66,7 +66,6 @@ func CreateWindow(a fyne.App) {
 	w.Content().(*fyne.Container).Objects[0].(*container.AppTabs).OnSelected = func(ti *container.TabItem) {
 		updateReport()
 		updateStatsGraphs()
-
 	}
 
 	w.ShowAndRun()

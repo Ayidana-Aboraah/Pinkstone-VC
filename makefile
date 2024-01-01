@@ -1,4 +1,4 @@
-all: test win_build clean
+all: test win clean
 
 compile:
 	go run Main.go

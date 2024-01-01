@@ -2,6 +2,8 @@ package Database
 
 import (
 	"BronzeHermes/Debug"
+	"cmp"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -61,28 +63,32 @@ func ConvertItemKeys() (inter []int) {
 		}
 	}
 
-	return orderItemKeys(inter)
-}
+	slices.SortStableFunc(inter, func(a, b int) int {
+		return cmp.Compare(strings.ToLower(Items[uint16(a)].Name), strings.ToLower(Items[uint16(b)].Name))
+	})
 
-func orderItemKeys(list []int) (out []int) {
-	for _, v := range list {
-		init_out_len := len(out)
-
-		for i, o := range out {
-			if v > o {
-				// insert into array
-				out = append(out[:i+1], out[i:]...)
-				out[i] = v
-				break
-			}
-		}
-
-		if init_out_len == len(out) {
-			out = append(out, v)
-		}
-	}
 	return
 }
+
+// func orderItemKeys(list []int) (out []int) {
+// 	for _, v := range list {
+// 		init_out_len := len(out)
+
+// 		for i, o := range out {
+// 			if v > o {
+// 				// insert into array
+// 				out = append(out[:i+1], out[i:]...)
+// 				out[i] = v
+// 				break
+// 			}
+// 		}
+
+// 		if init_out_len == len(out) {
+// 			out = append(out, v)
+// 		}
+// 	}
+// 	return
+// }
 
 func ProcessQuantity(n string) (quantity float32, errID int) {
 

@@ -25,6 +25,8 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 	priceLabel := widget.NewLabel("Price")
 	costLabel := widget.NewLabel("Cost")
 	stockLabel := widget.NewLabel("Stock")
+	totalRev := widget.NewLabel("Total Possible Revenue")
+	totalCost := widget.NewLabel("Total Cost")
 
 	InventoryData = binding.NewIntList()
 	InventoryData.Set(ConvertItemKeys())
@@ -48,10 +50,12 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 			inventoryList.Unselect(x)
 		}
 
+		stock := Items[uint16(id)].Quantity[0] + Items[uint16(id)].Quantity[1] + Items[uint16(id)].Quantity[2]
 		idLabel.SetText("ID: " + strconv.Itoa(id))
 		nameLabel.SetText("Name: " + Items[uint16(id)].Name)
 		priceLabel.SetText(fmt.Sprintf("Price: %1.2f", Items[uint16(id)].Price))
-		stockLabel.SetText(fmt.Sprintf("Stock: %1.2f\n", Items[uint16(id)].Quantity[0]+Items[uint16(id)].Quantity[1]+Items[uint16(id)].Quantity[2]))
+		stockLabel.SetText(fmt.Sprintf("Stock: %1.2f\n", stock))
+		totalRev.SetText(fmt.Sprintf("Total Possible Revenue: %1.2f", Items[uint16(id)].Price*stock))
 
 		txt := "Cost: "
 
@@ -64,6 +68,14 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 		}
 
 		costLabel.SetText(txt[:len(txt)-1])
+
+		var costs float32
+		for i, v := range Items[uint16(id)].Cost {
+			costs += v * Items[uint16(id)].Quantity[i]
+		}
+
+		totalCost.SetText(fmt.Sprintf("Total Cost: %1.2f", costs))
+
 		target = id
 	}
 
@@ -79,6 +91,8 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 			priceLabel,
 			costLabel,
 			stockLabel,
+			totalRev,
+			totalCost,
 
 			widget.NewButton("New Item", func() {
 				nameEntry := widget.NewEntry()

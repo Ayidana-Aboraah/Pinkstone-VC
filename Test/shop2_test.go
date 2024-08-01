@@ -75,7 +75,7 @@ func TestProcessingItemInPieces(t *testing.T) {
 }
 
 func TestProcessingItemWithQuantityInPieces(t *testing.T) {
-	s := Database.Sale{Price: 5, Cost: 5, Quantity: 1}
+	s := Database.Sale{Price: 5, Cost: 6, Quantity: 1}
 	err := Database.ProcessNewItemData("25", "1/12", &s)
 	switch err {
 	case 0:
@@ -85,15 +85,15 @@ func TestProcessingItemWithQuantityInPieces(t *testing.T) {
 	case -1:
 		// Check that teh proper transformation
 		if s.Quantity != 1.0/12.0 {
-			t.Errorf("Illegal Quantity Modification, want: 1/12, have: %f", s.Quantity)
+			t.Errorf("Illegal Quantity Modification, want: %f, have: %f", 1.0/12.0, s.Quantity)
 		}
 
 		if s.Price != 25.0*12.0 {
-			t.Errorf("Illegal Price Modificaiton, want: 5, have: %f", s.Price)
+			t.Errorf("Illegal Price Modificaiton, want: %f, have: %f", 25.0*12.0, s.Price)
 		}
 
-		if s.Cost != 5 {
-			t.Errorf("Illegal Cost Modificaiton, want: 5, have: %f", s.Cost)
+		if s.Cost != 6*(1.0/12.0) {
+			t.Errorf("Illegal Cost Modificaiton, want: %f, have: %f", (5 * (1.0 / 12.0)), s.Cost)
 		}
 	}
 }

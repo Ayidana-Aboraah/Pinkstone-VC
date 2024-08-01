@@ -25,7 +25,7 @@ var printer Printer.Printer
 
 func main() {
 	a := app.NewWithID("PINKSTONE")
-	go Graph.StartServer()
+	// go Graph.StartServer()
 
 	Database.DataInit()
 
@@ -119,7 +119,7 @@ func makeMainMenu() fyne.CanvasObject {
 				Database.SaveData()
 			}, w)
 
-			SignInStartUp = dialog.NewCustomConfirm("Sign In", "Login", "Create New", container.NewMax(usrList), func(b bool) {
+			SignInStartUp = dialog.NewCustomConfirm("Sign In", "Login", "Create New", container.NewStack(usrList), func(b bool) {
 				if b && len(Database.Users) > 0 {
 					titleText.SetText("Welcome " + Database.Users[Database.Current_User])
 				} else {
@@ -243,7 +243,7 @@ func makeShoppingMenu() fyne.CanvasObject {
 	return container.NewVSplit(
 		container.NewVSplit(
 			title,
-			container.NewMax(shoppingList),
+			container.NewStack(shoppingList),
 		),
 		container.NewGridWithColumns(3,
 			widget.NewButton("Buy Cart", func() {
@@ -469,7 +469,7 @@ func makeReportMenu() fyne.CanvasObject {
 				reportList.Refresh()
 			}),
 		)),
-		container.NewMax(reportList),
+		container.NewStack(reportList),
 	)
 	return content
 }

@@ -84,6 +84,7 @@ func ProcessNewItemData(bargin, stockTxt string, s *Sale) int {
 			return Debug.Invalid_Input
 		}
 		s.Price = float32(f) / s.Quantity
+		s.Cost *= s.Quantity
 	}
 
 	return Debug.Success

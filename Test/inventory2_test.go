@@ -322,24 +322,32 @@ func TestFailedRemove(t *testing.T) {
 func TestOrderItemKeys(t *testing.T) {
 	resetTestItemsAndSales()
 	list := Database.ConvertItemKeys()
+	checkList := []string{
+		" ",
+		"Bila",
+		"Carty",
+		"Pop",
+		"Pop Daddy",
+		"Val",
+		"Villianous",
+		"Viva",
+	}
 
 	if len(list) != len(Database.Items) {
 		t.Errorf("Item IDs were not copied | have: %d, want: %d", len(list), len(Database.Items))
 	}
 
-	previous := 999999
-	for _, v := range list {
+	for i, v := range list {
 		val, found := Database.Items[uint16(v)]
 		if !found || val == nil {
 			t.Errorf("It seems the stored ID isn't real | have: %d", v)
 		}
 
-		if previous <= v {
+		if checkList[i] != val.Name {
 			t.Log(list)
-			t.Errorf("Item Keys are not ordered properly | have: %d, should be less than: %d", v, previous)
+			t.Errorf("Item Keys are not ordered properly | have: %s, should be: %s", val.Name, checkList[i])
 		}
 
-		previous = v
 	}
 	t.Log(list)
 }

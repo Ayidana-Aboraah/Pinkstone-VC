@@ -36,18 +36,18 @@ func CreateLineGraph(w http.ResponseWriter) {
 			Title:    "Line Chart",
 			Subtitle: "The line labeled Series is the total of everything on the chart.",
 		}),
-		charts.WithTooltipOpts(opts.Tooltip{Show: true}),
+		charts.WithTooltipOpts(opts.Tooltip{Show: opts.Bool(true)}),
 		charts.WithToolboxOpts(opts.Toolbox{
-			Show:  true,
+			Show:  opts.Bool(true),
 			Right: "20%",
 			Feature: &opts.ToolBoxFeature{
 				DataView: &opts.ToolBoxFeatureDataView{
-					Show:  true,
+					Show:  opts.Bool(true),
 					Title: "DataView",
 					Lang:  []string{"Number view", "turn off", "refresh"},
 				}},
 		}),
-		charts.WithLegendOpts(opts.Legend{Bottom: "0%", Show: true, SelectedMode: "multiple", Orient: "horizontal"}),
+		charts.WithLegendOpts(opts.Legend{Bottom: "0%", Show: opts.Bool(true), SelectedMode: "multiple", Orient: "horizontal"}),
 	)
 
 	line.SetXAxis([]string{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14",
@@ -56,14 +56,14 @@ func CreateLineGraph(w http.ResponseWriter) {
 
 	for i, v := range LineInputs {
 		line.AddSeries(Labels[i], generateLineItems(Labels[i], v)).SetSeriesOptions(
-			charts.WithLineChartOpts(opts.LineChart{Smooth: true}),
+			charts.WithLineChartOpts(opts.LineChart{Smooth: opts.Bool(true)}),
 			charts.WithMarkPointNameTypeItemOpts(
 				opts.MarkPointNameTypeItem{Name: "Maximum", Type: "max"},
 				opts.MarkPointNameTypeItem{Name: "Average", Type: "average"},
 				opts.MarkPointNameTypeItem{Name: "Minimum", Type: "min"},
 			),
 			charts.WithMarkPointStyleOpts(
-				opts.MarkPointStyle{Label: &opts.Label{Show: true}}),
+				opts.MarkPointStyle{Label: &opts.Label{Show: opts.Bool(true)}}),
 		)
 	}
 
@@ -86,7 +86,7 @@ func CreatePieGraph(w http.ResponseWriter) {
 	pie.AddSeries("Pie Chart", generatePieItems(Labels, Inputs)).
 		SetSeriesOptions(charts.WithLabelOpts(
 			opts.Label{
-				Show:      true,
+				Show:      opts.Bool(true),
 				Formatter: "{b}: {c}",
 			}),
 		)

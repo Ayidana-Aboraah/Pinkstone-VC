@@ -34,18 +34,12 @@ func AddDamages(target uint16, quantityTxt string) int {
 		return Debug.Invalid_Input
 	}
 
-	y, month, day := time.Now().Date()
-	year, _ := strconv.Atoi(strconv.Itoa(y)[1:])
-
 	s := Sale{
-		ID:       target,
-		Price:    0,
-		Cost:     Items[target].Cost[0],
-		Quantity: float32(quantity),
-		Usr:      255,
-		Day:      uint8(day),
-		Month:    uint8(month),
-		Year:     uint8(year),
+		ID:        target,
+		Price:     0,
+		Cost:      Items[target].Cost[0],
+		Quantity:  float32(quantity),
+		Timestamp: time.Now().Local().Unix(),
 	}
 
 	BuyCart([]Sale{s}, 0)
@@ -53,18 +47,16 @@ func AddDamages(target uint16, quantityTxt string) int {
 }
 
 func MakeReceipt(cart []Sale, customer string) (out string) {
-	y, m, d := time.Now().Date()
-	hr, min, _ := time.Now().Clock()
 
-	out = fmt.Sprintf("%d/%d/%d , %d:%2d\n", y, m, d, hr, min)
+	out = time.Now().Local().String()
 	out += "Loc: Santasi\nTel/Vodacash: 0506695927\nTel/MOMO: 0558324302\nMerchant ID: 868954\nCustomer: " + customer + "\n"
-
+	// TODO: Maybe save the Voda & MOMO, along with the merchant ID as variable to be accessed by the controller
 	for _, v := range cart {
 		out += fmt.Sprintf("\n%s x%1.2f for ₵%1.2f\n", Items[v.ID].Name, v.Quantity, v.Price)
 	}
 
-	out += fmt.Sprintf("Total: %1.1f\n\n Cashier: %s\n", GetCartTotal(cart), Users[Current_User])
-	out += "ALL SALES ARE FINAL\nThank you, please do come again\nSoftware Developed By Ayidana Aboraah\nTEL: +1 571-697-9347\nredstonegameraa@gmail.com\n"
+	out += fmt.Sprintf("Total: %1.1f\n", GetCartTotal(cart))
+	out += "ALL SALES ARE FINAL\nThank you, please do come again\nSoftware Developed By Ayidana Aboraah\nTEL: +1 571-697-9347\aboraahayidana@gmail.com\n"
 
 	return
 }
@@ -108,16 +100,11 @@ func AdjustStock(ID uint16) {
 	}
 }
 
-func BuyCart(ShoppingCart []Sale, customer int) []Sale {
-	y, month, day := time.Now().Date()
-	year, _ := strconv.Atoi(strconv.Itoa(y)[1:])
-
+func BuyCart(ShoppingCart []Sale, customer uint16) []Sale {
 	for _, v := range ShoppingCart {
 
-		v.Day = uint8(day)
-		v.Month = uint8(month)
-		v.Year = uint8(year)
-		v.Customer = uint8(customer)
+		v.Timestamp = time.Now().Local().Unix()
+		v.Customer = customer
 
 		for i := range Items[v.ID].Quantity {
 
@@ -205,6 +192,5 @@ func NewItem(id uint16) (result Sale) {
 	result.Price = vals.Price
 	result.Cost = vals.Cost[0]
 	result.Quantity = 1
-	result.Usr = uint8(Current_User)
 	return
 }

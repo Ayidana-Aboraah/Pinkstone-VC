@@ -15,17 +15,16 @@ type Entry struct {
 }
 
 type Sale struct {
-	Year, Month, Day, Usr, Customer uint8
-	ID                              uint16
-	Price, Cost, Quantity           float32
+	Customer              uint16 // 0 is reserved for Damages
+	ID                    uint16
+	Price, Cost, Quantity float32
+	Timestamp             int64
 }
 
 var Items = map[uint16]*Entry{}
 var Sales []Sale
 
 var Customers = []string{}
-var Users = []string{}
-var Current_User uint8
 
 const (
 	ONCE uint8 = iota
@@ -97,17 +96,6 @@ func SaveData() error {
 		return err
 	}
 
-	usrFile, err := fyne.CurrentApp().Storage().Save(file_names[users])
-	if err != nil && err != io.EOF {
-		return err
-	}
-
-	_, err = usrFile.Write(save_users())
-	usrFile.Close()
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -150,19 +138,6 @@ func LoadData() error {
 	}
 
 	load_customers(custmBuf)
-
-	usrFile, err := fyne.CurrentApp().Storage().Open(file_names[users])
-	if err != nil && err != io.EOF {
-		return err
-	}
-
-	usrBytes, err := io.ReadAll(usrFile)
-	usrFile.Close()
-	if err != nil && err != io.EOF {
-		return err
-	}
-
-	load_users(usrBytes)
 
 	return nil
 }

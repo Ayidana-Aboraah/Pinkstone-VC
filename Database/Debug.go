@@ -2,14 +2,10 @@ package Database
 
 import (
 	"BronzeHermes/Debug"
-	unknown "BronzeHermes/Unknown"
+	"time"
 )
 
-func CreateSale(ID uint16, dateStr, priceTxt, costTxt, stockTxt string, customer int) int {
-	date, err := unknown.ProcessDate(dateStr)
-	if err != Debug.Success {
-		return err
-	}
+func CreateSale(ID uint16, priceTxt, costTxt, stockTxt string, customer int) int {
 
 	quan, err := ProcessQuantity(stockTxt)
 	if err != Debug.Success {
@@ -22,15 +18,12 @@ func CreateSale(ID uint16, dateStr, priceTxt, costTxt, stockTxt string, customer
 	}
 
 	Sales = append(Sales, Sale{
-		ID:       ID,
-		Price:    price,
-		Cost:     cost,
-		Quantity: quan,
-		Customer: uint8(customer),
-		Usr:      Current_User,
-		Day:      date[0],
-		Month:    date[1],
-		Year:     date[2],
+		ID:        ID,
+		Price:     price,
+		Cost:      cost,
+		Quantity:  quan,
+		Customer:  uint16(customer),
+		Timestamp: time.Now().Local().Unix(),
 	})
 
 	return Debug.Success
@@ -39,7 +32,5 @@ func CreateSale(ID uint16, dateStr, priceTxt, costTxt, stockTxt string, customer
 func DeleteEverything() {
 	Items = map[uint16]*Entry{}
 	Sales = []Sale{}
-	Current_User = 0
-	Users = []string{}
 	Customers = []string{}
 }

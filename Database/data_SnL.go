@@ -6,31 +6,18 @@ import (
 	"strings"
 )
 
-func save_users() (result []byte) {
-	for _, v := range Users {
-		result = append(result, v+"\n"...)
-	}
-	return
-}
-
-func load_users(buf []byte) {
-	Users = strings.Split(string(buf), "\n")
-	Users = Users[:len(Users)-1]
-}
-
-func SaveNLoadUsers() {
-	load_users(save_users())
-}
-
 func save_customers() (result []byte) {
-	for _, v := range Customers {
-		result = append(result, v+"\n"...)
+	if len(Customers) > 1 {
+		for _, v := range Customers[1:] {
+			result = append(result, v+"\n"...)
+		}
 	}
 	return
 }
 
 func load_customers(buf []byte) {
-	Customers = strings.Split(string(buf), "\n")
+	Customers = []string{""}
+	Customers = append(Customers, strings.Split(string(buf), "\n")...)
 	Customers = Customers[:len(Customers)-1]
 }
 
@@ -39,42 +26,34 @@ func SaveNLoadCustomers() {
 }
 
 func save_sales() (result []byte) {
-	order := binary.BigEndian
-	result = make([]byte, 19*len(Sales))
+	result = make([]byte, binary.Size(Sales[0])*len(Sales))
 	for i, x := range Sales {
-		c := (19 * i)
+		c := (binary.Size(Sales[0]) * i)
 
-		result[c] = x.Year
-		result[c+1] = x.Month
-		result[c+2] = x.Day
-		result[c+3] = x.Usr
-		result[c+4] = x.Customer
+		order.PutUint64(result[c:c+8], uint64(x.Timestamp))
+		order.PutUint16(result[c+8:c+10], x.Customer)
 
-		order.PutUint16(result[c+5:c+7], x.ID)
-		order.PutUint32(result[c+7:c+11], math.Float32bits(x.Price))
-		order.PutUint32(result[c+11:c+15], math.Float32bits(x.Cost))
-		order.PutUint32(result[c+15:c+19], math.Float32bits(x.Quantity))
+		order.PutUint16(result[c+10:c+12], x.ID)
+		order.PutUint32(result[c+12:c+16], math.Float32bits(x.Price))
+		order.PutUint32(result[c+16:c+20], math.Float32bits(x.Cost))
+		order.PutUint32(result[c+20:c+24], math.Float32bits(x.Quantity))
 	}
 
 	return
 }
 
 func load_sales(buf []byte) {
-	order := binary.BigEndian
-	sales := make([]Sale, len(buf)/19)
+	sales := make([]Sale, len(buf)/binary.Size(Sale{}))
 	for i := range sales {
-		c := 19 * i
+		c := binary.Size(Sale{}) * i
 
-		sales[i].Year = uint8(buf[c])
-		sales[i].Month = uint8(buf[c+1])
-		sales[i].Day = uint8(buf[c+2])
-		sales[i].Usr = uint8(buf[c+3])
-		sales[i].Customer = uint8(buf[c+4])
+		sales[i].Timestamp = int64(order.Uint64(buf[c : c+8]))
+		sales[i].Customer = uint16(order.Uint16(buf[c+8 : c+10]))
 
-		sales[i].ID = order.Uint16(buf[c+5 : c+7])
-		sales[i].Price = math.Float32frombits(order.Uint32(buf[c+7 : c+11]))
-		sales[i].Cost = math.Float32frombits(order.Uint32(buf[c+11 : c+15]))
-		sales[i].Quantity = math.Float32frombits(order.Uint32(buf[c+15 : c+19]))
+		sales[i].ID = order.Uint16(buf[c+10 : c+12])
+		sales[i].Price = math.Float32frombits(order.Uint32(buf[c+12 : c+16]))
+		sales[i].Cost = math.Float32frombits(order.Uint32(buf[c+16 : c+20]))
+		sales[i].Quantity = math.Float32frombits(order.Uint32(buf[c+20 : c+24]))
 	}
 	Sales = sales
 }
@@ -85,8 +64,9 @@ func SaveNLoadSales() {
 
 const kvSize = 30
 
+var order = binary.BigEndian
+
 func save_kv() (result []byte) {
-	order := binary.BigEndian
 	sect := make([]byte, len(Items)*kvSize)
 	names := ""
 	var i int32
@@ -143,18 +123,12 @@ func SaveNLoadKV() {
 }
 
 func saveBackupMap() (buf []byte) {
-	buf = append(save_users(), "\n\n"...)
 	buf = append(buf, save_customers()...)
 	return
 }
 
 func loadBackUpMap(buf []byte) {
-	usrs, customers, _ := strings.Cut(string(buf), "\n\n")
-	customers = customers[1:]
-	usrs += "\n"
-
-	load_users([]byte(usrs)) // NOTE: Watch for odd activity | [2:] works the same as [], so may be something ups
-	load_customers([]byte(customers))
+	load_customers(buf)
 }
 
 func SaveNLoadBackUp() {

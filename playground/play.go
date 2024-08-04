@@ -5,6 +5,13 @@ import (
 	"time"
 )
 
+type Sale struct {
+	Customer              uint8
+	ID                    uint16
+	Price, Cost, Quantity float32
+	timestamp             int64
+}
+
 func main() {
-	fmt.Println(time.Unix(time.Now().Local().Unix(), 0))
+	fmt.Println(time.Now().Local().String())
 }

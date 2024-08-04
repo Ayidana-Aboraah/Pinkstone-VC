@@ -6,11 +6,10 @@ import (
 	"BronzeHermes/Graph"
 	"BronzeHermes/Printer"
 	"BronzeHermes/UI"
-	unknown "BronzeHermes/Unknown"
 	"fmt"
-	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -58,78 +57,21 @@ func CreateWindow(a fyne.App) {
 		container.NewTabItem("Shop", makeShoppingMenu()),
 		container.NewTabItem("Inventory", Database.MakeInfoMenu(w)),
 		container.NewTabItem("Report", makeReportMenu()),
-		container.NewTabItem("Stats", makeStatsMenu()),
+		// container.NewTabItem("Stats", makeStatsMenu()),
 	)))
 
-	// Start Sign In Menu
-	w.Content().(*fyne.Container).Objects[0].(*container.AppTabs).Items[0].Content.(*fyne.Container).Objects[1].(*widget.Button).OnTapped()
-	w.Content().(*fyne.Container).Objects[0].(*container.AppTabs).OnSelected = func(ti *container.TabItem) {
-		updateReport()
-		updateStatsGraphs()
-	}
+	// w.Content().(*fyne.Container).Objects[0].(*container.AppTabs).OnSelected = func(ti *container.TabItem) {
+	// 	updateReport()
+	// 	updateStatsGraphs()
+	// }
 
 	w.ShowAndRun()
 }
 
 func makeMainMenu() fyne.CanvasObject {
-	var SignInStartUp dialog.Dialog
-	var CreateUser dialog.Dialog
-	usrData := binding.NewIntList()
-
 	titleText := widget.NewLabelWithStyle("Welcome", fyne.TextAlignCenter, fyne.TextStyle{Bold: true})
 	return container.NewVBox(
 		titleText,
-		widget.NewButton("Sign-In", func() {
-			usrData.Set(Database.FilterUsers())
-			nameEntry := widget.NewEntry()
-			var usrList *widget.List
-			usrList = widget.NewListWithData(usrData, func() fyne.CanvasObject {
-				return container.NewBorder(nil, nil, nil, widget.NewButton("x", nil), widget.NewLabel(""))
-			}, func(di binding.DataItem, co fyne.CanvasObject) {
-				i, _ := di.(binding.Int).Get()
-
-				co.(*fyne.Container).Objects[0].(*widget.Label).SetText(Database.Users[i])
-				co.(*fyne.Container).Objects[1].(*widget.Button).OnTapped = func() {
-					// TODO: LOG
-					unknown.RemoveAndUpdate(&Database.Users[i], func() {
-						usrData.Set(Database.FilterUsers())
-						usrList.Refresh()
-					})
-				}
-
-			})
-
-			usrList.OnSelected = func(id widget.ListItemID) {
-				Database.Current_User = uint8(id)
-			}
-
-			CreateUser = dialog.NewForm("New", "Create", "Back", []*widget.FormItem{
-				widget.NewFormItem("Username", nameEntry),
-			}, func(b bool) {
-				if !b || nameEntry.Text == "" {
-					SignInStartUp.Show()
-					return
-				}
-
-				// TODO: Logging
-				Database.Users, Database.Current_User = unknown.AddToNames(Database.Users, nameEntry.Text)
-
-				titleText.SetText("Welcome " + nameEntry.Text)
-				usrData.Set(Database.FilterUsers())
-				Database.SaveData()
-			}, w)
-
-			SignInStartUp = dialog.NewCustomConfirm("Sign In", "Login", "Create New", container.NewStack(usrList), func(b bool) {
-				if b && len(Database.Users) > 0 {
-					titleText.SetText("Welcome " + Database.Users[Database.Current_User])
-				} else {
-					CreateUser.Show()
-				}
-			}, w)
-
-			SignInStartUp.Show()
-		}),
-
 		widget.NewButton("Save Backup Data", func() {
 			go Debug.ShowError("Backing up Data", Database.SaveBackUp(), w)
 		}),
@@ -259,7 +201,7 @@ func makeShoppingMenu() fyne.CanvasObject {
 						})
 
 						receipt := Database.MakeReceipt(shoppingCart, customerEntry.Text)
-						shoppingCart = Database.BuyCart(shoppingCart, i)
+						shoppingCart = Database.BuyCart(shoppingCart, uint16(i))
 						cartData.Set(Database.ConvertCart(shoppingCart))
 
 						title.SetText("Cart Total: 0.00")
@@ -345,7 +287,7 @@ func makeReportMenu() fyne.CanvasObject {
 	financeEntry.Hidden = true
 
 	var variant uint8
-	date := []uint8{}
+	date := []int{}
 
 	updateReport = func() {
 		str, _ := Database.CompileReport(variant, date)
@@ -363,25 +305,27 @@ func makeReportMenu() fyne.CanvasObject {
 		v, _ := di.(binding.Untyped).Get()
 		val := v.(Database.Sale)
 		display := co.(*fyne.Container).Objects[0].(*widget.Label)
-		if val.Usr == 255 {
-			display.SetText(fmt.Sprintf("[DAMAGED] %s x%1.2f for ₵%1.2f [%2d-%2d-20%2d]",
-				Database.Items[val.ID].Name, val.Quantity, val.Price*val.Quantity, val.Day, val.Month, val.Year))
-		} else {
-			display.SetText(fmt.Sprintf("%s x%1.2f for ₵%1.2f [%2d-%2d-20%2d] Customer: %s, Cashier: %s",
-				Database.Items[val.ID].Name, val.Quantity, val.Price*val.Quantity, val.Day, val.Month, val.Year, Database.Customers[val.Customer], Database.Users[val.Usr]))
+		out := fmt.Sprintf("%s x%1.2f for ₵%1.2f Customer: %s, [%s]",
+			Database.Items[val.ID].Name, val.Quantity, val.Price*val.Quantity, Database.Customers[val.Customer], time.Unix(val.Timestamp, 0).Local().String())
+
+		if val.Customer == 0 {
+			out = "[DAMAGED] " + out
 		}
+
+		display.SetText(out)
+
 	})
 
 	reportList.OnSelected = func(id widget.ListItemID) {
 		v, _ := reportData.GetValue(id) // Maybe Log
 		val := v.(Database.Sale)
 		var infoText string
-		if val.Usr == 255 {
-			infoText = fmt.Sprintf("[DAMAGED]\nName: %s\nPrice: %1.2f\nCost: %1.2f\nQuantity: %1.2f\nTotal Revenue: %1.2f\nTotal Profit: %1.2f",
-				Database.Items[val.ID].Name, val.Price, val.Cost, val.Quantity, val.Price*val.Quantity, (val.Price-val.Cost)*val.Quantity)
-		} else {
-			infoText = fmt.Sprintf("Name: %s\nPrice: %1.2f\nCost: %1.2f\nQuantity: %1.2f\nTotal Revenue: %1.2f\nTotal Profit: %1.2f\nCustomer: %s\nCashier:%s",
-				Database.Items[val.ID].Name, val.Price, val.Cost, val.Quantity, val.Price*val.Quantity, (val.Price-val.Cost)*val.Quantity, Database.Customers[val.Customer], Database.Users[val.Usr])
+
+		infoText = fmt.Sprintf("Name: %s\nPrice: %1.2f\nCost: %1.2f\nQuantity: %1.2f\nTotal Revenue: %1.2f\nTotal Profit: %1.2f\nCustomer: %s",
+			Database.Items[val.ID].Name, val.Price, val.Cost, val.Quantity, val.Price*val.Quantity, (val.Price-val.Cost)*val.Quantity, Database.Customers[val.Customer])
+
+		if val.Customer == 0 {
+			infoText = "[DAMAGED] " + infoText
 		}
 
 		dialog.ShowCustomConfirm("Info", "Refund", "Close", widget.NewLabel(infoText), func(b bool) {
@@ -421,7 +365,7 @@ func makeReportMenu() fyne.CanvasObject {
 
 					raw := strings.SplitN(financeEntry.Text, "-", 3)
 
-					year, err := strconv.Atoi(raw[0][1:])
+					year, err := strconv.Atoi(raw[0])
 					if err != nil {
 						return
 					}
@@ -441,7 +385,7 @@ func makeReportMenu() fyne.CanvasObject {
 						variant = Database.ONCE
 					}
 
-					date = []uint8{uint8(day), uint8(month), uint8(year)}
+					date = []int{day, month, year}
 				}
 
 				updateReport()
@@ -459,7 +403,7 @@ func makeReportMenu() fyne.CanvasObject {
 					found = Database.Sales
 				} else {
 					for _, v := range Database.Sales {
-						if v.Customer == uint8(customerIdx) {
+						if v.Customer == uint16(customerIdx) {
 							found = append(found, v)
 						}
 					}
@@ -476,76 +420,76 @@ func makeReportMenu() fyne.CanvasObject {
 
 var updateStatsGraphs func()
 
-func makeStatsMenu() fyne.CanvasObject {
-	dateEntry := UI.NewNumEntry("YYYY-MM-DD")
-	itemSearch := UI.NewSearchBar("Item Name Here...", Database.SearchInventory)
-	customerSearch := UI.NewSearchBar("Customer Name Here...", Database.SearchCustomers)
+// func makeStatsMenu() fyne.CanvasObject {
+// 	dateEntry := UI.NewNumEntry("YYYY-MM-DD")
+// 	itemSearch := UI.NewSearchBar("Item Name Here...", Database.SearchInventory)
+// 	customerSearch := UI.NewSearchBar("Customer Name Here...", Database.SearchCustomers)
 
-	currentGraphType := 0
-	graphSelect := widget.NewSelect([]string{"Over Time", " Current Total"}, func(s string) {
-		switch s {
-		case "Over Time":
-			currentGraphType = 0
-		case "Current Total":
-			currentGraphType = 1
-		}
-		updateStatsGraphs()
-	})
+// 	currentGraphType := 0
+// 	graphSelect := widget.NewSelect([]string{"Over Time", " Current Total"}, func(s string) {
+// 		switch s {
+// 		case "Over Time":
+// 			currentGraphType = 0
+// 		case "Current Total":
+// 			currentGraphType = 1
+// 		}
+// 		updateStatsGraphs()
+// 	})
 
-	dataType := 0
-	dataTypeSelect := widget.NewSelect([]string{"Profit", "Cost", "Revenue"}, func(s string) {
-		switch s {
-		case "Profit":
-			dataType = 0
-		case "Cost":
-			dataType = 1
-		case "Revenue":
-			dataType = 2
-		}
-		updateStatsGraphs()
-	})
-	dateEntry.OnChanged = func(s string) {
-		updateStatsGraphs()
-	}
-	customerSearch.OnChanged = func(s string) {
-		updateStatsGraphs()
-	}
-	itemSearch.OnChanged = func(s string) {
-		updateStatsGraphs()
-	}
+// 	dataType := 0
+// 	dataTypeSelect := widget.NewSelect([]string{"Profit", "Cost", "Revenue"}, func(s string) {
+// 		switch s {
+// 		case "Profit":
+// 			dataType = 0
+// 		case "Cost":
+// 			dataType = 1
+// 		case "Revenue":
+// 			dataType = 2
+// 		}
+// 		updateStatsGraphs()
+// 	})
+// 	dateEntry.OnChanged = func(s string) {
+// 		updateStatsGraphs()
+// 	}
+// 	customerSearch.OnChanged = func(s string) {
+// 		updateStatsGraphs()
+// 	}
+// 	itemSearch.OnChanged = func(s string) {
+// 		updateStatsGraphs()
+// 	}
 
-	updateStatsGraphs = func() {
-		// errID := -1
+// 	updateStatsGraphs = func() {
+// 		// errID := -1
 
-		switch currentGraphType {
-		case 0:
-			Graph.Labels, Graph.LineInputs, _ = Database.GetLine(dateEntry.Text, dataType, itemSearch.Result(), customerSearch.Result())
-			// if Debug.HandleKnownError(errID, errID != Debug.Success, w) {
-			// 	return
-			// }
-		case 1:
-			Graph.Labels, Graph.Inputs, _ = Database.GetPie(dateEntry.Text, dataType, itemSearch.Result(), customerSearch.Result())
-			// if Debug.HandleKnownError(errID, errID != Debug.Success, w) {
-			// 	return
-			// }
-		}
-	}
+// 		switch currentGraphType {
+// 		case 0:
+// 			Graph.Labels, Graph.LineInputs, _ = Database.GetLine(dateEntry.Text, dataType, itemSearch.Result(), customerSearch.Result())
+// 			// if Debug.HandleKnownError(errID, errID != Debug.Success, w) {
+// 			// 	return
+// 			// }
+// 		case 1:
+// 			Graph.Labels, Graph.Inputs, _ = Database.GetPie(dateEntry.Text, dataType, itemSearch.Result(), customerSearch.Result())
+// 			// if Debug.HandleKnownError(errID, errID != Debug.Success, w) {
+// 			// 	return
+// 			// }
+// 		}
+// 	}
 
-	lineURL, _ := url.ParseRequestURI("localhost:8081/line")
-	pieURL, _ := url.ParseRequestURI("localhost:8081/pie")
+// 	lineURL, _ := url.ParseRequestURI("localhost:8081/line")
+// 	pieURL, _ := url.ParseRequestURI("localhost:8081/pie")
 
-	lineLink := widget.NewHyperlinkWithStyle("Line Graph", lineURL, fyne.TextAlignCenter, fyne.TextStyle{})
-	pieLink := widget.NewHyperlinkWithStyle("Pie Graph", pieURL, fyne.TextAlignCenter, fyne.TextStyle{})
+// 	lineLink := widget.NewHyperlinkWithStyle("Line Graph", lineURL, fyne.TextAlignCenter, fyne.TextStyle{})
+// 	pieLink := widget.NewHyperlinkWithStyle("Pie Graph", pieURL, fyne.TextAlignCenter, fyne.TextStyle{})
 
-	return container.NewVBox(
-		widget.NewCard("Item Sales", "", container.NewVBox(
-			graphSelect,
-			dataTypeSelect,
-			dateEntry,
-			itemSearch,
-			customerSearch,
-			lineLink,
-			pieLink,
-		)),
-	)
-}
+// 	return container.NewVBox(
+// 		widget.NewCard("Item Sales", "", container.NewVBox(
+// 			graphSelect,
+// 			dataTypeSelect,
+// 			dateEntry,
+// 			itemSearch,
+// 			customerSearch,
+// 			lineLink,
+// 			pieLink,
+// 		)),
+// 	)
+// }

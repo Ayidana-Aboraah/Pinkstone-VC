@@ -3,7 +3,6 @@ package Test
 import (
 	"BronzeHermes/Database"
 	unknown "BronzeHermes/Unknown"
-	"strconv"
 	"testing"
 	"time"
 )
@@ -80,18 +79,12 @@ func TestRemoveSale2(t *testing.T) {
 func TestAddingDamages(t *testing.T) {
 	resetTestItemsAndSales()
 
-	y, month, day := time.Now().Date()
-	year, _ := strconv.Atoi(strconv.Itoa(y)[1:])
-
 	answer := Database.Sale{
-		ID:       6,
-		Price:    0,
-		Cost:     Database.Items[6].Cost[0],
-		Quantity: 2,
-		Year:     uint8(year),
-		Month:    uint8(month),
-		Day:      uint8(day),
-		Usr:      255,
+		ID:        6,
+		Price:     0,
+		Cost:      Database.Items[6].Cost[0],
+		Quantity:  2,
+		Timestamp: time.Now().Unix(),
 	}
 
 	errID := Database.AddDamages(6, "2")

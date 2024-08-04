@@ -2,7 +2,6 @@ package Test
 
 import (
 	"BronzeHermes/Database"
-	"strconv"
 	"testing"
 	"time"
 )
@@ -28,8 +27,7 @@ func TestBuyingNormal(t *testing.T) {
 	Database.Items = testItems
 	Database.BuyCart([]Database.Sale{testCart[0]}, 0)
 
-	y, month, day := time.Now().Date()
-	year, _ := strconv.Atoi(strconv.Itoa(y)[1:])
+	test_time := time.Now().Unix()
 
 	expectedQuantities := [3]float32{1, 4, 7}
 	for i, v := range expectedQuantities {
@@ -48,14 +46,9 @@ func TestBuyingNormal(t *testing.T) {
 	}
 
 	for i, v := range Database.Sales {
-		if v.Year != uint8(year) || v.Month != uint8(month) || v.Day != uint8(day) {
-			t.Logf("Test: %d, %d, %d | DB: %d, %d, %d", day, month, year, v.Day, v.Month, v.Year)
+		if test_time != v.Timestamp {
+			t.Logf("Test: %d | DB: %d\n", test_time, v.Timestamp)
 			t.Error("Dates are not matching for:", i)
-		}
-
-		if v.Usr != 0 {
-			t.Logf("Test: %d, DB: %d", 0, v.Usr)
-			t.Error("Wrong Usr Set for:", i)
 		}
 
 		if v.Customer != 0 {
@@ -93,8 +86,7 @@ func TestBuyingAllOfQuantity0(t *testing.T) {
 	t.Log(Database.Sales)
 	Database.BuyCart([]Database.Sale{testCart[1]}, 0)
 
-	y, month, day := time.Now().Date()
-	year, _ := strconv.Atoi(strconv.Itoa(y)[1:])
+	test_time := time.Now().Unix()
 
 	expectedQuantities := [3]float32{4, 7, 0}
 	for i, v := range expectedQuantities {
@@ -117,14 +109,10 @@ func TestBuyingAllOfQuantity0(t *testing.T) {
 	}
 
 	for i, v := range Database.Sales {
-		if v.Year != uint8(year) || v.Month != uint8(month) || v.Day != uint8(day) {
-			t.Logf("Test: %d, %d, %d | DB: %d, %d, %d", day, month, year, v.Day, v.Month, v.Year)
-			t.Error("Dates are not matching for:", i)
-		}
+		if test_time != v.Timestamp {
+			t.Logf("Test: %d | DB: %d\n", test_time, v.Timestamp)
 
-		if v.Usr != 0 {
-			t.Logf("Test: %d, DB: %d", 0, v.Usr)
-			t.Error("Wrong Usr Set for:", i)
+			t.Error("Dates are not matching for:", i)
 		}
 
 		if v.Customer != 0 {
@@ -161,8 +149,7 @@ func TestBuying2Quantities(t *testing.T) {
 	Database.Items = testItems
 	Database.BuyCart([]Database.Sale{testCart[2]}, 0)
 
-	y, month, day := time.Now().Date()
-	year, _ := strconv.Atoi(strconv.Itoa(y)[1:])
+	test_time := time.Now().Unix()
 
 	expectedQuantities := [3]float32{1, 7, 0}
 	for i, v := range expectedQuantities {
@@ -186,14 +173,10 @@ func TestBuying2Quantities(t *testing.T) {
 	}
 
 	for i, v := range Database.Sales {
-		if v.Year != uint8(year) || v.Month != uint8(month) || v.Day != uint8(day) {
-			t.Logf("Test: %d, %d, %d | DB: %d, %d, %d", day, month, year, v.Day, v.Month, v.Year)
-			t.Error("Dates are not matching for:", i)
-		}
+		if test_time != v.Timestamp {
+			t.Logf("Test: %d | DB: %d\n", test_time, v.Timestamp)
 
-		if v.Usr != 0 {
-			t.Logf("Test: %d, DB: %d", 0, v.Usr)
-			t.Error("Wrong Usr Set for:", i)
+			t.Error("Dates are not matching for:", i)
 		}
 
 		if v.Customer != 0 {
@@ -230,8 +213,7 @@ func TestBuyingAllQuantities0n1(t *testing.T) {
 	Database.Items = testItems
 	Database.BuyCart([]Database.Sale{testCart[3]}, 0)
 
-	y, month, day := time.Now().Date()
-	year, _ := strconv.Atoi(strconv.Itoa(y)[1:])
+	test_time := time.Now().Unix()
 
 	expectedQuantities := [3]float32{7, 0, 0}
 	for i, v := range expectedQuantities {
@@ -257,14 +239,10 @@ func TestBuyingAllQuantities0n1(t *testing.T) {
 	t.Log(Database.Sales)
 
 	for i, v := range Database.Sales {
-		if v.Year != uint8(year) || v.Month != uint8(month) || v.Day != uint8(day) {
-			t.Logf("Test: %d, %d, %d | DB: %d, %d, %d", day, month, year, v.Day, v.Month, v.Year)
-			t.Error("Dates are not matching for:", i)
-		}
+		if test_time != v.Timestamp {
+			t.Logf("Test: %d | DB: %d\n", test_time, v.Timestamp)
 
-		if v.Usr != 0 {
-			t.Logf("Test: %d, DB: %d", 0, v.Usr)
-			t.Error("Wrong Usr Set for:", i)
+			t.Error("Dates are not matching for:", i)
 		}
 
 		if v.Customer != 0 {
@@ -301,8 +279,7 @@ func TestBuyingInto3rdQuantity(t *testing.T) {
 	Database.Items = testItems
 	Database.BuyCart([]Database.Sale{testCart[4]}, 0)
 
-	y, month, day := time.Now().Date()
-	year, _ := strconv.Atoi(strconv.Itoa(y)[1:])
+	test_time := time.Now().Unix()
 
 	expectedQuantities := [3]float32{2, 0, 0}
 	for i, v := range expectedQuantities {
@@ -329,14 +306,10 @@ func TestBuyingInto3rdQuantity(t *testing.T) {
 	t.Log(len(Database.Sales))
 
 	for i, v := range Database.Sales {
-		if v.Year != uint8(year) || v.Month != uint8(month) || v.Day != uint8(day) {
-			t.Logf("Test: %d, %d, %d | DB: %d, %d, %d", day, month, year, v.Day, v.Month, v.Year)
-			t.Error("Dates are not matching for:", i)
-		}
+		if test_time != v.Timestamp {
+			t.Logf("Test: %d | DB: %d\n", test_time, v.Timestamp)
 
-		if v.Usr != 0 {
-			t.Logf("Test: %d, DB: %d", 0, v.Usr)
-			t.Error("Wrong Usr Set for:", i)
+			t.Error("Dates are not matching for:", i)
 		}
 
 		if v.Customer != 0 {
@@ -373,8 +346,7 @@ func TestBuyingAllQuantities(t *testing.T) {
 	Database.Items = testItems
 	Database.BuyCart([]Database.Sale{testCart[5]}, 0)
 
-	y, month, day := time.Now().Date()
-	year, _ := strconv.Atoi(strconv.Itoa(y)[1:])
+	test_time := time.Now().Unix()
 
 	expectedQuantities := [3]float32{0, 0, 0}
 	for i, v := range expectedQuantities {
@@ -401,14 +373,10 @@ func TestBuyingAllQuantities(t *testing.T) {
 	t.Log(len(Database.Sales))
 
 	for i, v := range Database.Sales {
-		if v.Year != uint8(year) || v.Month != uint8(month) || v.Day != uint8(day) {
-			t.Logf("Test: %d, %d, %d | DB: %d, %d, %d", day, month, year, v.Day, v.Month, v.Year)
-			t.Error("Dates are not matching for:", i)
-		}
+		if test_time != v.Timestamp {
+			t.Logf("Test: %d | DB: %d\n", test_time, v.Timestamp)
 
-		if v.Usr != 0 {
-			t.Logf("Test: %d, DB: %d", 0, v.Usr)
-			t.Error("Wrong Usr Set for:", i)
+			t.Error("Dates are not matching for:", i)
 		}
 
 		if v.Customer != 0 {
@@ -444,8 +412,7 @@ func TestBuyingOverAllQuantities(t *testing.T) {
 	Database.Items = testItems
 	Database.BuyCart([]Database.Sale{testCart[6]}, 0)
 
-	y, month, day := time.Now().Date()
-	year, _ := strconv.Atoi(strconv.Itoa(y)[1:])
+	test_time := time.Now().Unix()
 
 	expectedQuantities := [3]float32{-6, 0, 0}
 	for i, v := range expectedQuantities {
@@ -472,14 +439,10 @@ func TestBuyingOverAllQuantities(t *testing.T) {
 	t.Log(len(Database.Sales))
 
 	for i, v := range Database.Sales {
-		if v.Year != uint8(year) || v.Month != uint8(month) || v.Day != uint8(day) {
-			t.Logf("Test: %d, %d, %d | DB: %d, %d, %d", day, month, year, v.Day, v.Month, v.Year)
-			t.Error("Dates are not matching for:", i)
-		}
+		if test_time != v.Timestamp {
+			t.Logf("Test: %d | DB: %d\n", test_time, v.Timestamp)
 
-		if v.Usr != 0 {
-			t.Logf("Test: %d, DB: %d", 0, v.Usr)
-			t.Error("Wrong Usr Set for:", i)
+			t.Error("Dates are not matching for:", i)
 		}
 
 		if v.Customer != 0 {
@@ -521,8 +484,7 @@ func TestOverBuying1QuantityWithOnly1Quantity(t *testing.T) {
 	}
 	Database.BuyCart([]Database.Sale{s}, 0)
 
-	y, month, day := time.Now().Date()
-	year, _ := strconv.Atoi(strconv.Itoa(y)[1:])
+	test_time := time.Now().Unix()
 
 	expectedQuantities := [3]float32{-4, 0, 0}
 	for i, v := range expectedQuantities {
@@ -547,14 +509,10 @@ func TestOverBuying1QuantityWithOnly1Quantity(t *testing.T) {
 	t.Log(len(Database.Sales))
 
 	for i, v := range Database.Sales {
-		if v.Year != uint8(year) || v.Month != uint8(month) || v.Day != uint8(day) {
-			t.Logf("Test: %d, %d, %d | DB: %d, %d, %d", day, month, year, v.Day, v.Month, v.Year)
-			t.Error("Dates are not matching for:", i)
-		}
+		if test_time != v.Timestamp {
+			t.Logf("Test: %d | DB: %d\n", test_time, v.Timestamp)
 
-		if v.Usr != 0 {
-			t.Logf("Test: %d, DB: %d", 0, v.Usr)
-			t.Error("Wrong Usr Set for:", i)
+			t.Error("Dates are not matching for:", i)
 		}
 
 		if v.Customer != 0 {
@@ -597,9 +555,6 @@ func TestOverBuyingEmptyQuantity(t *testing.T) {
 	}
 	Database.BuyCart([]Database.Sale{s}, 0)
 
-	y, month, day := time.Now().Date()
-	year, _ := strconv.Atoi(strconv.Itoa(y)[1:])
-
 	expectedQuantities := [3]float32{-5, 0, 0}
 	for i, v := range expectedQuantities {
 		if Database.Items[Item].Quantity[i] != v {
@@ -620,17 +575,15 @@ func TestOverBuyingEmptyQuantity(t *testing.T) {
 		{ID: Item, Price: 5, Cost: 0, Quantity: 5},
 	}
 
+	test_time := time.Now().Unix()
+
 	t.Log(Database.Sales[0].Cost)
 
 	for i, v := range Database.Sales {
-		if v.Year != uint8(year) || v.Month != uint8(month) || v.Day != uint8(day) {
-			t.Logf("Test: %d, %d, %d | DB: %d, %d, %d", day, month, year, v.Day, v.Month, v.Year)
-			t.Error("Dates are not matching for:", i)
-		}
+		if test_time != v.Timestamp {
+			t.Logf("Test: %d | DB: %d\n", test_time, v.Timestamp)
 
-		if v.Usr != 0 {
-			t.Logf("Test: %d, DB: %d", 0, v.Usr)
-			t.Error("Wrong Usr Set for:", i)
+			t.Error("Dates are not matching for:", i)
 		}
 
 		if v.Customer != 0 {
@@ -673,8 +626,7 @@ func TestOverBuying2QuantityWith1Empty(t *testing.T) {
 	}
 	Database.BuyCart([]Database.Sale{s}, 0)
 
-	y, month, day := time.Now().Date()
-	year, _ := strconv.Atoi(strconv.Itoa(y)[1:])
+	test_time := time.Now().Unix()
 
 	expectedQuantities := [3]float32{-2, 0, 0}
 	for i, v := range expectedQuantities {
@@ -700,14 +652,10 @@ func TestOverBuying2QuantityWith1Empty(t *testing.T) {
 	t.Log(len(Database.Sales))
 
 	for i, v := range Database.Sales {
-		if v.Year != uint8(year) || v.Month != uint8(month) || v.Day != uint8(day) {
-			t.Logf("Test: %d, %d, %d | DB: %d, %d, %d", day, month, year, v.Day, v.Month, v.Year)
-			t.Error("Dates are not matching for:", i)
-		}
+		if test_time != v.Timestamp {
+			t.Logf("Test: %d | DB: %d\n", test_time, v.Timestamp)
 
-		if v.Usr != 0 {
-			t.Logf("Test: %d, DB: %d", 0, v.Usr)
-			t.Error("Wrong Usr Set for:", i)
+			t.Error("Dates are not matching for:", i)
 		}
 
 		if v.Customer != 0 {

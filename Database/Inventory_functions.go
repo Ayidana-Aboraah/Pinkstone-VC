@@ -25,15 +25,6 @@ func CleanUpDeadItems() {
 	}
 }
 
-func FilterUsers() (out []int) {
-	for i, s := range Users {
-		if s[0] != byte(216) {
-			out = append(out, i)
-		}
-	}
-	return
-}
-
 func SearchInventory(input string) (Names []string, IDs []uint16) {
 	if input == "" {
 		for i, v := range Items {

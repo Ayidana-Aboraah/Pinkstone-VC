@@ -49,14 +49,14 @@ func AddDamages(target uint16, quantityTxt string) int {
 func MakeReceipt(cart []Sale, customer string) (out string) {
 
 	out = time.Now().Local().String()
-	out += "Loc: Santasi\nTel/Vodacash: 0506695927\nTel/MOMO: 0558324302\nMerchant ID: 868954\nCustomer: " + customer + "\n"
+	out += "\nLoc: Santasi\nTel/Vodacash: 0506695927\nTel/MOMO: 0558324302\nMerchant ID: 868954\nCustomer: " + customer + "\n"
 	// TODO: Maybe save the Voda & MOMO, along with the merchant ID as variable to be accessed by the controller
 	for _, v := range cart {
 		out += fmt.Sprintf("\n%s x%1.2f for ₵%1.2f\n", Items[v.ID].Name, v.Quantity, v.Price)
 	}
 
 	out += fmt.Sprintf("Total: %1.1f\n", GetCartTotal(cart))
-	out += "ALL SALES ARE FINAL\nThank you, please do come again\nSoftware Developed By Ayidana Aboraah\nTEL: +1 571-697-9347\aboraahayidana@gmail.com\n"
+	out += "ALL SALES ARE FINAL\nThank you, please do come again\nSoftware Developed By Ayidana Aboraah\naboraahayidana@gmail.com\n"
 
 	return
 }

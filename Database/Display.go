@@ -19,7 +19,9 @@ var InventoryData binding.IntList
 
 var updateInventoryDisplay func(id any)
 
-func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
+var RefreshInventory func()
+
+func ItemsMenu(w fyne.Window) fyne.CanvasObject {
 	idLabel := widget.NewLabel("ID")
 	nameLabel := widget.NewLabel("Name")
 	priceLabel := widget.NewLabel("Price")
@@ -35,8 +37,13 @@ func MakeInfoMenu(w fyne.Window) fyne.CanvasObject {
 		return container.NewBorder(nil, nil, nil, nil, widget.NewLabel("N"))
 	}, func(item binding.DataItem, obj fyne.CanvasObject) {
 		val, _ := item.(binding.Int).Get()
-		obj.(*fyne.Container).Objects[0].(*widget.Label).SetText(Items[uint16(val)].Name)
+		i, ok := Items[uint16(val)]
+		if ok {
+			obj.(*fyne.Container).Objects[0].(*widget.Label).SetText(i.Name)
+		}
 	})
+
+	RefreshInventory = func() { InventoryData.Set(ConvertItemKeys()) }
 
 	target := -1
 

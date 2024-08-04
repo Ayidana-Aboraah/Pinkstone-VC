@@ -26,9 +26,9 @@ func SaveNLoadCustomers() {
 }
 
 func save_sales() (result []byte) {
-	result = make([]byte, binary.Size(Sales[0])*len(Sales))
+	result = make([]byte, binary.Size(Sale{})*len(Sales))
 	for i, x := range Sales {
-		c := (binary.Size(Sales[0]) * i)
+		c := (binary.Size(Sale{}) * i)
 
 		order.PutUint64(result[c:c+8], uint64(x.Timestamp))
 		order.PutUint16(result[c+8:c+10], x.Customer)

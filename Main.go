@@ -53,25 +53,46 @@ func CreateWindow(a fyne.App) {
 	Debug.ShowError("Loading Data", Database.LoadData(), w)
 
 	w.SetContent(container.NewVBox(container.NewAppTabs(
-		container.NewTabItem("Main", makeMainMenu()),
-		container.NewTabItem("Shop", makeShoppingMenu()),
-		container.NewTabItem("Inventory", Database.MakeInfoMenu(w)),
-		container.NewTabItem("Report", makeReportMenu()),
+		container.NewTabItem("Main", mainMenu()),
+		container.NewTabItem("Shop", shoppingMenu()),
+		container.NewTabItem("Inventory", Database.ItemsMenu(w)),
+		container.NewTabItem("Report", reportMenu()),
 		// container.NewTabItem("Stats", makeStatsMenu()),
 	)))
 
-	// w.Content().(*fyne.Container).Objects[0].(*container.AppTabs).OnSelected = func(ti *container.TabItem) {
-	// 	updateReport()
-	// 	updateStatsGraphs()
-	// }
+	w.Content().(*fyne.Container).Objects[0].(*container.AppTabs).OnSelected = func(ti *container.TabItem) {
+		Database.RefreshInventory()
+		RefreshReport()
+		updateReport()
+		// updateStatsGraphs()
+	}
 
 	w.ShowAndRun()
 }
 
-func makeMainMenu() fyne.CanvasObject {
-	titleText := widget.NewLabelWithStyle("Welcome", fyne.TextAlignCenter, fyne.TextStyle{Bold: true})
+func mainMenu() fyne.CanvasObject {
 	return container.NewVBox(
-		titleText,
+		widget.NewLabelWithStyle("Welcome", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
+		widget.NewButton("System", func() {
+			dialog.ShowCustom("System", "Done", container.NewVBox(
+				widget.NewButton("Reset Sales", func() {
+					dialog.ShowConfirm("Are You Sure", "Are You Sure you want to DELETE ALL THE SALES?", func(b bool) {
+						if !b {
+							return
+						}
+						Database.Sales = []Database.Sale{}
+					}, w)
+				}),
+				widget.NewButton("Reset Items", func() {
+					dialog.ShowConfirm("Are You Sure", "Are You Sure you want to DELETE ALL THE Items?", func(b bool) {
+						if !b {
+							return
+						}
+						Database.Items = map[uint16]*Database.Entry{}
+					}, w)
+				}),
+			), w)
+		}),
 		widget.NewButton("Save Backup Data", func() {
 			go Debug.ShowError("Backing up Data", Database.SaveBackUp(), w)
 		}),
@@ -148,7 +169,7 @@ func makeMainMenu() fyne.CanvasObject {
 
 var shoppingCart []Database.Sale
 
-func makeShoppingMenu() fyne.CanvasObject {
+func shoppingMenu() fyne.CanvasObject {
 
 	title := widget.NewLabelWithStyle("Cart Total: 0.00", fyne.TextAlignCenter, fyne.TextStyle{})
 
@@ -280,7 +301,9 @@ func makeShoppingMenu() fyne.CanvasObject {
 
 var updateReport func()
 
-func makeReportMenu() fyne.CanvasObject {
+var RefreshReport func()
+
+func reportMenu() fyne.CanvasObject {
 
 	reportDisplay := widget.NewLabel("")
 	financeEntry := UI.NewNumEntry("YYYY-MM-DD")
@@ -298,6 +321,10 @@ func makeReportMenu() fyne.CanvasObject {
 
 	reportData := binding.NewUntypedList()
 	reportData.Set(Database.ConvertCart(Database.Sales))
+
+	RefreshReport = func() {
+		reportData.Set(Database.ConvertCart(Database.Sales))
+	}
 
 	reportList := widget.NewListWithData(reportData, func() fyne.CanvasObject {
 		return container.NewBorder(nil, nil, nil, nil, widget.NewLabel(""))

@@ -84,11 +84,22 @@ func mainMenu() fyne.CanvasObject {
 					}, w)
 				}),
 				widget.NewButton("Reset Items", func() {
-					dialog.ShowConfirm("Are You Sure", "Are You Sure you want to DELETE ALL THE Items?", func(b bool) {
+					dialog.ShowConfirm("Are You Sure", "Are You Sure you want to DELETE ALL THE ITEMS?", func(b bool) {
 						if !b {
 							return
 						}
 						Database.Items = map[uint16]*Database.Entry{}
+					}, w)
+
+				}),
+				widget.NewButton("Clear All Data", func() {
+					dialog.ShowConfirm("Are You Sure", "Are You Sure you want to DELETE ALL THE DATA?", func(b bool) {
+						if !b {
+							return
+						}
+						Database.Sales = []Database.Sale{}
+						Database.Items = map[uint16]*Database.Entry{}
+						Database.Customers = []string{}
 					}, w)
 				}),
 			), w)

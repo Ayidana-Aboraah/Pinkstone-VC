@@ -37,10 +37,11 @@ func ItemsMenu(w fyne.Window) fyne.CanvasObject {
 		return container.NewBorder(nil, nil, nil, nil, widget.NewLabel("N"))
 	}, func(item binding.DataItem, obj fyne.CanvasObject) {
 		val, _ := item.(binding.Int).Get()
-		i, ok := Items[uint16(val)]
-		if ok {
-			obj.(*fyne.Container).Objects[0].(*widget.Label).SetText(i.Name)
-		}
+
+		// if val > len(Items) {
+		// 	// Log Erorr & Print it
+		// }
+		obj.(*fyne.Container).Objects[0].(*widget.Label).SetText(Items[val].Name)
 	})
 
 	RefreshInventory = func() { InventoryData.Set(ConvertItemKeys()) }

@@ -7,7 +7,7 @@ import (
 	"fyne.io/fyne/v2"
 )
 
-type Entry struct {
+type Item struct {
 	Price    float32
 	Cost     [3]float32
 	Quantity [3]float32
@@ -21,7 +21,7 @@ type Sale struct {
 	Timestamp             int64
 }
 
-var Items = map[uint16]*Entry{}
+var Items = []Item{}
 var Sales []Sale
 
 var Customers = []string{}

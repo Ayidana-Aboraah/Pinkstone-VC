@@ -13,13 +13,13 @@ func CleanUpDeadItems() {
 		if Items[k].Name[0] == byte(216) {
 			found := false
 			for _, x := range Sales {
-				if x.ID == k {
+				if x.ID == uint16(k) {
 					found = true
 					break
 				}
 			}
 			if !found {
-				delete(Items, k)
+				Items[k].Name = strings.Replace(Items[k].Name, string([]byte{216}), string([]byte{171}), -1)
 			}
 		}
 	}
@@ -28,7 +28,7 @@ func CleanUpDeadItems() {
 func SearchInventory(input string) (Names []string, IDs []uint16) {
 	if input == "" {
 		for i, v := range Items {
-			IDs = append(IDs, i)
+			IDs = append(IDs, uint16(i))
 			Names = append(Names, v.Name)
 		}
 		return
@@ -38,7 +38,7 @@ func SearchInventory(input string) (Names []string, IDs []uint16) {
 
 	for id, iv := range Items {
 		if strings.Contains(strings.ToLower(iv.Name), strings.ToLower(input)) && iv.Name[0] != byte(216) {
-			IDs = append(IDs, id)
+			IDs = append(IDs, uint16(id))
 			Names = append(Names, iv.Name)
 		}
 	}
@@ -126,19 +126,22 @@ func CreateItem(name, priceTxt, costTxt, stockTxt string) (ID uint16, errID int)
 		return 0, Debug.Invalid_Input
 	}
 
-	// Check for an open slot
-	ID = uint16(len(Items))
-	v, found := Items[ID]
+	// TODO: Maybe Check If we're creating a new itemthat  already exists
 
-	for found && v != nil {
-		v, found = Items[ID]
-		if !found || v == nil {
-			break
+	replace := -1
+
+	for i := 0; i < len(Items) && replace == -1; i++ {
+		if Items[i].Name[0] == byte(171) {
+			replace = i
 		}
-		ID += 1
 	}
 
-	Items[ID] = &Entry{Price: price, Name: name, Quantity: [3]float32{quantity, 0, 0}, Cost: [3]float32{cost, 0, 0}}
+	if replace == -1 {
+		Items = append(Items, Item{Price: price, Name: name, Quantity: [3]float32{quantity, 0, 0}, Cost: [3]float32{cost, 0, 0}})
+	} else {
+		Items[replace] = Item{Price: price, Name: name, Quantity: [3]float32{quantity, 0, 0}, Cost: [3]float32{cost, 0, 0}}
+	}
+
 	// fmt.Println("!Found, Adding: ", Items[ID]) // LOG
 	return ID, Debug.Success
 }
@@ -157,7 +160,7 @@ func AddItem(target uint16, priceTxt, costTxt, stockTxt string) (errID int) {
 	Items[target].Price = price
 
 	i := 0
-	for ; i < 3; i++ {
+	for ; i < len(Items[target].Cost); i++ {
 		if Items[target].Cost[i] == cost {
 			Items[target].Quantity[i] += quan
 			break
@@ -169,7 +172,7 @@ func AddItem(target uint16, priceTxt, costTxt, stockTxt string) (errID int) {
 		}
 	}
 
-	if i == 3 {
+	if i == len(Items[target].Cost) {
 		return Debug.Maxed_Out_Stocks
 	}
 

@@ -30,7 +30,7 @@ func CreateSale(ID uint16, priceTxt, costTxt, stockTxt string, customer int) int
 }
 
 func DeleteEverything() {
-	Items = map[uint16]*Entry{}
+	Items = []Item{}
 	Sales = []Sale{}
 	Customers = []string{}
 }

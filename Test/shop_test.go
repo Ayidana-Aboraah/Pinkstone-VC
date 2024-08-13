@@ -473,11 +473,14 @@ func TestBuyingOverAllQuantities(t *testing.T) {
 }
 
 func TestOverBuying1QuantityWithOnly1Quantity(t *testing.T) {
+	resetTestItemsAndSales()
 	ResetTestCartAndQuantities()
+
+	id := uint16(3)
 
 	Database.Items = testItems
 	s := Database.Sale{
-		ID:       4,
+		ID:       id,
 		Price:    5,
 		Cost:     2,
 		Quantity: 5,
@@ -488,22 +491,22 @@ func TestOverBuying1QuantityWithOnly1Quantity(t *testing.T) {
 
 	expectedQuantities := [3]float32{-4, 0, 0}
 	for i, v := range expectedQuantities {
-		if Database.Items[4].Quantity[i] != v {
-			t.Logf("Quantity: %v", Database.Items[4].Quantity)
-			t.Errorf("Current and expected quantites don't match | have: %f, want: %f", Database.Items[4].Quantity[i], v)
+		if Database.Items[id].Quantity[i] != v {
+			t.Logf("Quantity: %v", Database.Items[id].Quantity)
+			t.Errorf("Current and expected quantites don't match | have: %f, want: %f", Database.Items[id].Quantity[i], v)
 		}
 	}
 
 	expectedCosts := [3]float32{2, 0, 0}
 	for i, v := range expectedCosts {
-		if Database.Items[4].Cost[i] != v {
+		if Database.Items[id].Cost[i] != v {
 			t.Logf("Cost: %v", Database.Items[4].Cost)
-			t.Errorf("Current and expected Cost don't match | have: %f, want: %f", Database.Items[4].Cost[i], v)
+			t.Errorf("Current and expected Cost don't match | have: %f, want: %f", Database.Items[id].Cost[i], v)
 		}
 	}
 
 	testAnswers := []Database.Sale{
-		{ID: 4, Price: 5, Cost: 2, Quantity: 5},
+		{ID: id, Price: 5, Cost: 2, Quantity: 5},
 	}
 
 	t.Log(len(Database.Sales))
@@ -615,7 +618,7 @@ func TestOverBuyingEmptyQuantity(t *testing.T) {
 
 func TestOverBuying2QuantityWith1Empty(t *testing.T) {
 	ResetTestCartAndQuantities()
-	Item := uint16(5)
+	Item := uint16(4)
 
 	Database.Items = testItems
 	s := Database.Sale{

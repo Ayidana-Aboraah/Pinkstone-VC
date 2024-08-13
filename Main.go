@@ -88,7 +88,7 @@ func mainMenu() fyne.CanvasObject {
 						if !b {
 							return
 						}
-						Database.Items = map[uint16]*Database.Entry{}
+						Database.Items = []Database.Item{}
 					}, w)
 
 				}),
@@ -98,7 +98,7 @@ func mainMenu() fyne.CanvasObject {
 							return
 						}
 						Database.Sales = []Database.Sale{}
-						Database.Items = map[uint16]*Database.Entry{}
+						Database.Items = []Database.Item{}
 						Database.Customers = []string{}
 					}, w)
 				}),

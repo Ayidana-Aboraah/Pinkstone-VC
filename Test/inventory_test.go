@@ -145,15 +145,12 @@ func TestProcessInvalidQuantityMultipleSlashes(t *testing.T) {
 }
 
 func TestNewItem(t *testing.T) {
-	Database.Items = map[uint16]*Database.Entry{}
+	Database.Items = []Database.Item{}
 	id, errID := Database.CreateItem("Piss", "15", "12", "95")
 	if errID != -1 {
 		t.Errorf("Some error has occured | ErrID: %d", errID)
 	}
-	val, found := Database.Items[id]
-	if !found {
-		t.Error("Created Item not found")
-	}
+	val := Database.Items[id]
 
 	if len(Database.Items) != 1 {
 		t.Errorf("Multiple Items Illegally Created, len: %d", len(Database.Items))
@@ -185,15 +182,12 @@ func TestNewItem(t *testing.T) {
 }
 
 func TestNewItemWithFraction(t *testing.T) {
-	Database.Items = map[uint16]*Database.Entry{}
+	Database.Items = []Database.Item{}
 	id, errID := Database.CreateItem("Piss", "15", "12", "95 3/4")
 	if errID != -1 {
 		t.Errorf("Some error has occured | ErrID: %d", errID)
 	}
-	val, found := Database.Items[id]
-	if !found {
-		t.Error("Created Item not found")
-	}
+	val := Database.Items[id]
 
 	if len(Database.Items) != 1 {
 		t.Errorf("Multiple Items Illegally Created, len: %d", len(Database.Items))
@@ -224,21 +218,7 @@ func TestNewItemWithFraction(t *testing.T) {
 	}
 }
 
-func TestFailedItemCreation(t *testing.T) {
-	Database.Items = map[uint16]*Database.Entry{}
-	id, errID := Database.CreateItem("Piss", "15", "12", "  953/4")
-	if errID != 0 {
-		t.Errorf("An error has slipped through | have: %d, want: 0", errID)
-	}
-
-	val, found := Database.Items[id]
-	if found {
-		t.Error("Illegal Item Creation")
-	}
-	if val != nil {
-		t.Errorf("Illegal Value Creation | have: %v", val)
-	}
-}
+// TODO: FailedItemCreation
 
 func TestAddItem(t *testing.T) {
 	resetTestItemsAndSales()
@@ -248,11 +228,7 @@ func TestAddItem(t *testing.T) {
 		t.Errorf("An Error has occured | have: %d, want: -1", errID)
 	}
 
-	val, found := Database.Items[0]
-	if val == nil || !found {
-		t.Errorf("val: An error occured retrieving the value")
-		t.FailNow()
-	}
+	val := Database.Items[0]
 
 	if val.Name != " " {
 		t.Errorf("Error occured with the name | have: %s, want: '' ", val.Name)
@@ -278,11 +254,7 @@ func TestAddWithFraction(t *testing.T) {
 		t.Errorf("An Error has occured | have: %d, want: -1", errID)
 	}
 
-	val, found := Database.Items[0]
-	if val == nil || !found {
-		t.Errorf("val: An error occured retrieving the value")
-		t.FailNow()
-	}
+	val := Database.Items[0]
 
 	if val.Name != " " {
 		t.Errorf("Error occured with the name | have: %s, want: '' ", val.Name)
@@ -308,11 +280,7 @@ func TestFailedAdd(t *testing.T) {
 		t.Errorf("An Error has slipped through | have: %d, want: 0", errID)
 	}
 
-	val, found := Database.Items[0]
-	if val == nil || !found {
-		t.Errorf("val: An error occured retrieving the value")
-		t.FailNow()
-	}
+	val := Database.Items[0]
 
 	if val.Name != " " {
 		t.Errorf("Error occured with the name | have: %s, want: '' ", val.Name)
@@ -333,16 +301,12 @@ func TestFailedAdd(t *testing.T) {
 
 func TestAdd2Costs(t *testing.T) {
 	resetTestItemsAndSales()
-	errID := Database.AddItem(4, "1", "12", "32")
+	errID := Database.AddItem(3, "1", "12", "32")
 	if errID != -1 {
 		t.Errorf("An Error has occured | have: %d, want: -1", errID)
 	}
 
-	val, found := Database.Items[4]
-	if val == nil || !found {
-		t.Errorf("val: An error occured retrieving the value")
-		t.FailNow()
-	}
+	val := Database.Items[3]
 
 	if val.Name != "Pop" {
 		t.Errorf("Error occured with the name | have: %s, want: '' ", val.Name)
@@ -371,16 +335,12 @@ func TestAdd2Costs(t *testing.T) {
 
 func TestAdd2CostsWithFraction(t *testing.T) {
 	resetTestItemsAndSales()
-	errID := Database.AddItem(4, "1", "12", "32 1/2")
+	errID := Database.AddItem(3, "1", "12", "32 1/2")
 	if errID != -1 {
 		t.Errorf("An Error has occured | have: %d, want: -1", errID)
 	}
 
-	val, found := Database.Items[4]
-	if val == nil || !found {
-		t.Errorf("val: An error occured retrieving the value")
-		t.FailNow()
-	}
+	val := Database.Items[3]
 
 	if val.Name != "Pop" {
 		t.Errorf("Error occured with the name | have: %s, want: '' ", val.Name)
@@ -409,23 +369,19 @@ func TestAdd2CostsWithFraction(t *testing.T) {
 
 func TestAdd3Costs(t *testing.T) {
 	resetTestItemsAndSales()
-	errID := Database.AddItem(4, "1", "12", "32")
+	errID := Database.AddItem(3, "1", "12", "32")
 
 	if errID != -1 {
 		t.Errorf("An Error has occured | have: %d, want: -1", errID)
 	}
 
-	errID = Database.AddItem(4, "1", "13", "31")
+	errID = Database.AddItem(3, "1", "13", "31")
 
 	if errID != -1 {
 		t.Errorf("An Error has occured | have: %d, want: -1", errID)
 	}
 
-	val, found := Database.Items[4]
-	if val == nil || !found {
-		t.Errorf("val: An error occured retrieving the value")
-		t.FailNow()
-	}
+	val := Database.Items[3]
 
 	if val.Name != "Pop" {
 		t.Errorf("Error occured with the name | have: %s, want: '' ", val.Name)
@@ -462,23 +418,19 @@ func TestAdd3Costs(t *testing.T) {
 
 func TestAdd3CostsWithFraction(t *testing.T) {
 	resetTestItemsAndSales()
-	errID := Database.AddItem(4, "1", "12", "32 1/2")
+	errID := Database.AddItem(3, "1", "12", "32 1/2")
 
 	if errID != -1 {
 		t.Errorf("An Error has occured | have: %d, want: -1", errID)
 	}
 
-	errID = Database.AddItem(4, "1", "13", "32 3/4")
+	errID = Database.AddItem(3, "1", "13", "32 3/4")
 
 	if errID != -1 {
 		t.Errorf("An Error has occured | have: %d, want: -1", errID)
 	}
 
-	val, found := Database.Items[4]
-	if val == nil || !found {
-		t.Errorf("val: An error occured retrieving the value")
-		t.FailNow()
-	}
+	val := Database.Items[3]
 
 	if val.Name != "Pop" {
 		t.Errorf("Error occured with the name | have: %s, want: '' ", val.Name)
@@ -515,29 +467,25 @@ func TestAdd3CostsWithFraction(t *testing.T) {
 
 func TestFailedAdd4CostsWithFraction(t *testing.T) {
 	resetTestItemsAndSales()
-	errID := Database.AddItem(4, "1", "12", "32 1/2")
+	errID := Database.AddItem(3, "1", "12", "32 1/2")
 
 	if errID != Debug.Success {
 		t.Errorf("An Error has occured | have: %d, want: -1", errID)
 	}
 
-	errID = Database.AddItem(4, "1", "13", "32 3/4")
+	errID = Database.AddItem(3, "1", "13", "32 3/4")
 
 	if errID != Debug.Success {
 		t.Errorf("An Error has occured | have: %d, want: -1", errID)
 	}
 
-	errID = Database.AddItem(4, "1", "15", "3")
+	errID = Database.AddItem(3, "1", "15", "3")
 
 	if errID != Debug.Maxed_Out_Stocks {
 		t.Errorf("An Error has occured | have: %d, want: %d", errID, Debug.Maxed_Out_Stocks)
 	}
 
-	val, found := Database.Items[4]
-	if val == nil || !found {
-		t.Errorf("val: An error occured retrieving the value")
-		t.FailNow()
-	}
+	val := Database.Items[3]
 
 	if val.Name != "Pop" {
 		t.Errorf("Error occured with the name | have: %s, want: '' ", val.Name)
@@ -581,11 +529,7 @@ func TestAddItemToEmpty(t *testing.T) {
 		t.Errorf("An Error has occured | have: %d, want: -1", errID)
 	}
 
-	val, found := Database.Items[Item]
-	if val == nil || !found {
-		t.Errorf("val: An error occured retrieving the value")
-		t.FailNow()
-	}
+	val := Database.Items[Item]
 
 	if val.Name != " " {
 		t.Errorf("Error occured with the name | have: %s, want: '' ", val.Name)

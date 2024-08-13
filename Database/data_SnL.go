@@ -71,9 +71,9 @@ func save_kv() (result []byte) {
 	names := ""
 	var i int32
 
-	for k, v := range Items {
+	for id, v := range Items {
 		// ID[2], Price [4], Cost[4*3], Quantity[4*3]
-		order.PutUint16(sect[i:i+2], k)
+		order.PutUint16(sect[i:i+2], uint16(id))
 
 		order.PutUint32(sect[i+2:i+6], math.Float32bits(v.Price))
 
@@ -107,7 +107,7 @@ func load_kv(buf []byte) {
 	c := 0
 	for i := 0; i < len(sides[0])/kvSize; i++ {
 
-		Items[order.Uint16(buf[c:c+2])] = &Entry{
+		Items[order.Uint16(buf[c:c+2])] = Item{
 			Name:     names[i],
 			Price:    math.Float32frombits(order.Uint32(buf[c+2 : c+6])),
 			Cost:     [3]float32{math.Float32frombits(order.Uint32(buf[c+6 : c+10])), math.Float32frombits(order.Uint32(buf[c+10 : c+14])), math.Float32frombits(order.Uint32(buf[c+14 : c+18]))},

@@ -32,7 +32,7 @@ func TestRemoveSale(t *testing.T) {
 
 func TestRemoveSale3(t *testing.T) {
 	resetTestItemsAndSales()
-	Item := uint16(8)
+	Item := uint16(7)
 	Database.Items = testItems
 	Database.Sales = []Database.Sale{
 		{ID: Item, Cost: 2, Quantity: 15},
@@ -129,9 +129,9 @@ func TestSearchingInventoryEmpty(t *testing.T) {
 	for k, v := range testItems {
 		found := false
 		for i, name := range names {
-			if v.Name == name && k == IDs[i] {
+			if v.Name == name && uint16(k) == IDs[i] {
 				found = true
-			} else if k == IDs[i] {
+			} else if uint16(k) == IDs[i] {
 				t.Errorf("ID and Name don't share the same ID | have: %d & %s, want: %d & %s", IDs[i], name, k, v.Name)
 			} else if v.Name == name {
 				t.Errorf("ID and Name don't share the same ID | have: %d & %s, want: %d & %s", IDs[i], name, k, v.Name)
@@ -154,7 +154,7 @@ func TestSearchingInventory(t *testing.T) {
 		t.Errorf("Len of IDs & Names != | names: %d, IDs: %d", len(names), len(IDs))
 	}
 
-	expecrtedIDs := [3]uint16{1, 2, 5}
+	expecrtedIDs := [3]uint16{1, 2, 4}
 	expectedNames := [3]string{
 		"Viva",
 		"Val",
@@ -205,7 +205,7 @@ func TestSearchingInventoryWithTrailingSpace(t *testing.T) {
 		t.Errorf("Len of IDs & Names != | names: %d, IDs: %d", len(names), len(IDs))
 	}
 
-	expecrtedIDs := [3]uint16{1, 2, 5}
+	expecrtedIDs := [3]uint16{1, 2, 4}
 	expectedNames := [3]string{
 		"Viva",
 		"Val",
@@ -243,7 +243,7 @@ func TestSearchingInventoryWithLeadingSpace(t *testing.T) {
 		t.Errorf("Len of IDs & Names != | names: %d, IDs: %d", len(names), len(IDs))
 	}
 
-	expecrtedIDs := [3]uint16{1, 2, 5}
+	expecrtedIDs := [3]uint16{1, 2, 4}
 	expectedNames := [3]string{
 		"Viva",
 		"Val",
@@ -285,14 +285,14 @@ func TestSearchingInventoryWithSpace(t *testing.T) {
 		t.Errorf("Name is not equal to it's expected value | have: %s, want: Pop Daddy", names[0])
 	}
 
-	if IDs[0] != 7 {
+	if IDs[0] != 6 {
 		t.Errorf("ID is not equal to it's expected value | have: %d, want: 7", IDs[0])
 	}
 }
 
 func TestRemoveItem(t *testing.T) {
 	resetTestItemsAndSales()
-	expectedLen := len(testItems) - 1
+	expectedLen := len(testItems)
 	unknown.RemoveAndUpdate(&Database.Items[6].Name, Database.CleanUpDeadItems)
 	list := Database.ConvertItemKeys()
 	if len(Database.Items) != expectedLen || len(list) != expectedLen {
@@ -331,10 +331,7 @@ func TestOrderItemKeys(t *testing.T) {
 	}
 
 	for i, v := range list {
-		val, found := Database.Items[uint16(v)]
-		if !found || val == nil {
-			t.Errorf("It seems the stored ID isn't real | have: %d", v)
-		}
+		val := Database.Items[uint16(v)]
 
 		if checkList[i] != val.Name {
 			t.Log(list)

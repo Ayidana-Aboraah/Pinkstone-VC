@@ -118,3 +118,23 @@ func TestSaveBackUp(t *testing.T) {
 		}
 	}
 }
+
+// Fuzz_Testing Binary Patching Save Files
+func FuzzBinaryPatchSavingItems(f *testing.F) {
+	resetTestItemsAndSales()
+
+	for i, testItem := range testItems {
+		f.Add(i, testItem.Price, testItem.Cost[0], testItem.Cost[1], testItem.Cost[2], testItem.Quantity[0], testItem.Quantity[1], testItem.Quantity[2], testItem.Name)
+	}
+
+	Database.Items = make([]Database.Item, 255)
+
+	f.Fuzz(func(t *testing.T, i uint8, price, cost, cost2, cost3, quantity, quantity2, quantity3 float32, name string) {
+		Database.Items[i] = Database.Item{Price: price, Cost: [3]float32{cost, cost2, cost3}, Quantity: [3]float32{quantity, quantity2, quantity3}, Name: name}
+		Database.SaveData()
+		// overwrite line with data
+		// load the entire document
+		// check if the id is valid and if it matches the data
+		// check if the values are valid
+	})
+}

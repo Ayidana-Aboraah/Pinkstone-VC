@@ -1,20 +1,15 @@
 package Test
 
-import (
-	"BronzeHermes/Database"
-	"time"
-)
+// var timestamp = time.Now().Unix()
 
-var timestamp = time.Now().Unix()
-
-var testCart2 = []Database.Sale{ // Use 6 since that's the one that has proper data
-	{ID: 6, Price: 12, Cost: 5, Quantity: 2, Timestamp: timestamp, Customer: 1},
-	{ID: 6, Price: 13, Cost: 6, Quantity: 3, Timestamp: timestamp, Customer: 1},
-	{ID: 6, Price: 14, Cost: 7, Quantity: 6, Timestamp: timestamp, Customer: 0},
-	{ID: 6, Price: 15, Cost: 8, Quantity: 7, Timestamp: timestamp, Customer: 1},
-	{ID: 6, Price: 16, Cost: 9, Quantity: 12, Timestamp: timestamp, Customer: 0},
-	{ID: 6, Price: 16, Cost: 9, Quantity: 14, Timestamp: timestamp, Customer: 1},
-}
+// var testCart2 = []Database.Sale{ // Use 6 since that's the one that has proper data
+// 	{ID: 6, Price: 12, Cost: 5, Quantity: 2, Timestamp: timestamp, Customer: 1},
+// 	{ID: 6, Price: 13, Cost: 6, Quantity: 3, Timestamp: timestamp, Customer: 1},
+// 	{ID: 6, Price: 14, Cost: 7, Quantity: 6, Timestamp: timestamp, Customer: 0},
+// 	{ID: 6, Price: 15, Cost: 8, Quantity: 7, Timestamp: timestamp, Customer: 1},
+// 	{ID: 6, Price: 16, Cost: 9, Quantity: 12, Timestamp: timestamp, Customer: 0},
+// 	{ID: 6, Price: 16, Cost: 9, Quantity: 14, Timestamp: timestamp, Customer: 1},
+// }
 
 // func TestReportDay(t *testing.T) {
 // 	Database.Sales = testCart2

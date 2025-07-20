@@ -1,6 +1,8 @@
 package Debug
 
 import (
+	"io"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/dialog"
 )
@@ -30,7 +32,7 @@ func HandleKnownError(id int, condition bool, w fyne.Window) bool {
 }
 
 func ShowError(state string, err error, w fyne.Window) bool {
-	if err != nil {
+	if err != nil && err != io.EOF {
 		dialog.ShowInformation("Oops", "Error while"+state+"\nError: "+err.Error(), w)
 		return true
 	}

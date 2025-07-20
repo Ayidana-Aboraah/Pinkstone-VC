@@ -37,9 +37,9 @@ func ItemsMenu(w fyne.Window) fyne.CanvasObject {
 		return container.NewBorder(nil, nil, nil, nil, widget.NewLabel("N"))
 	}, func(item binding.DataItem, obj fyne.CanvasObject) {
 		val, _ := item.(binding.Int).Get()
-		i, ok := Items[uint16(val)]
-		if ok {
-			obj.(*fyne.Container).Objects[0].(*widget.Label).SetText(i.Name)
+		if val > -1 && val < len(Items) {
+			obj.(*fyne.Container).Objects[0].(*widget.Label).SetText(Items[uint16(val)].Name)
+
 		}
 	})
 
@@ -123,7 +123,7 @@ func ItemsMenu(w fyne.Window) fyne.CanvasObject {
 					}
 					target = int(ID)
 
-					Debug.ShowError("Saving Data", SaveData(), w)
+					Debug.ShowError("Saving Data", SaveData(false), w)
 
 					InventoryData.Set(ConvertItemKeys())
 					updateInventoryDisplay(ID)
@@ -150,7 +150,7 @@ func ItemsMenu(w fyne.Window) fyne.CanvasObject {
 						if Debug.HandleKnownError(errID, errID != Debug.Success, w) {
 							return
 						}
-						Debug.ShowError("Saing Data", SaveData(), w)
+						Debug.ShowError("Saing Data", SaveData(false), w)
 						updateInventoryDisplay(uint16(target))
 					}, w)
 
@@ -182,7 +182,7 @@ func ItemsMenu(w fyne.Window) fyne.CanvasObject {
 						return
 					}
 
-					Debug.ShowError("Saving Data", SaveData(), w)
+					Debug.ShowError("Saving Data", SaveData(false), w)
 					updateInventoryDisplay(uint16(target))
 				}, w)
 			}),
@@ -203,13 +203,13 @@ func ItemsMenu(w fyne.Window) fyne.CanvasObject {
 						target = -1
 					})
 
-					Debug.ShowError("Saving Data", SaveData(), w)
+					Debug.ShowError("Saving Data", SaveData(false), w)
 				}, w)
 			}),
 		),
 
 		container.NewVSplit(
-			container.NewMax(inventoryList),
+			container.NewStack(inventoryList),
 
 			widget.NewButton("Search", func() {
 				searchBar := UI.NewSearchBar("Item Name Here...", SearchInventory)

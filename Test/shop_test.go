@@ -9,7 +9,7 @@ import (
 var testCart []Database.Sale // Use 6 since that's the one that has proper data
 
 func ResetTestCartAndQuantities() {
-	resetTestItemsAndSales()
+	resetDatabase()
 	testCart = []Database.Sale{ // Use 6 since that's the one that has proper data
 		{ID: 6, Price: 12, Cost: 2, Quantity: 2},
 		{ID: 6, Price: 13, Cost: 2, Quantity: 3},

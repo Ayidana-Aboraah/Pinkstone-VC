@@ -8,7 +8,7 @@ import (
 )
 
 func TestRemoveSale(t *testing.T) {
-	resetTestItemsAndSales()
+	resetDatabase()
 	Database.Items = testItems
 	Database.Sales = []Database.Sale{
 		{ID: 6, Cost: 2, Quantity: 15},
@@ -31,7 +31,7 @@ func TestRemoveSale(t *testing.T) {
 }
 
 func TestRemoveSale3(t *testing.T) {
-	resetTestItemsAndSales()
+	resetDatabase()
 	Item := uint16(8)
 	Database.Items = testItems
 	Database.Sales = []Database.Sale{
@@ -55,7 +55,7 @@ func TestRemoveSale3(t *testing.T) {
 }
 
 func TestRemoveSale2(t *testing.T) {
-	resetTestItemsAndSales()
+	resetDatabase()
 	Database.Items = testItems
 	Database.Sales = []Database.Sale{
 		{ID: 6, Cost: 3, Quantity: 15},
@@ -77,7 +77,7 @@ func TestRemoveSale2(t *testing.T) {
 }
 
 func TestAddingDamages(t *testing.T) {
-	resetTestItemsAndSales()
+	resetDatabase()
 
 	answer := Database.Sale{
 		ID:        6,
@@ -103,7 +103,7 @@ func TestAddingDamages(t *testing.T) {
 }
 
 func TestFailedAddingDamages(t *testing.T) {
-	resetTestItemsAndSales()
+	resetDatabase()
 
 	errID := Database.AddDamages(6, "-12.4.23.")
 	if errID != 0 {
@@ -117,7 +117,7 @@ func TestFailedAddingDamages(t *testing.T) {
 }
 
 func TestSearchingInventoryEmpty(t *testing.T) {
-	resetTestItemsAndSales()
+	resetDatabase()
 	names, IDs := Database.SearchInventory("")
 	if len(names) != len(testItems) {
 		t.Errorf("Search Results !valid | have: %d, want: %d", len(names), len(testItems))
@@ -144,7 +144,7 @@ func TestSearchingInventoryEmpty(t *testing.T) {
 }
 
 func TestSearchingInventory(t *testing.T) {
-	resetTestItemsAndSales()
+	resetDatabase()
 	names, IDs := Database.SearchInventory("V")
 	if len(names) != 3 {
 		t.Errorf("Search Results !valid | have: %d, want: 3", len(names))
@@ -182,7 +182,7 @@ func TestSearchingInventory(t *testing.T) {
 }
 
 func TestFailedSearchingInventory(t *testing.T) {
-	resetTestItemsAndSales()
+	resetDatabase()
 	names, IDs := Database.SearchInventory("PEEEPEE")
 	if len(names) != 0 {
 		t.Errorf("Search Results !valid | have: %d, want: 0", len(names))
@@ -195,7 +195,7 @@ func TestFailedSearchingInventory(t *testing.T) {
 }
 
 func TestSearchingInventoryWithTrailingSpace(t *testing.T) {
-	resetTestItemsAndSales()
+	resetDatabase()
 	names, IDs := Database.SearchInventory("V  ")
 	if len(names) != 3 {
 		t.Errorf("Search Results !valid | have: %d, want: 3", len(names))
@@ -233,7 +233,7 @@ func TestSearchingInventoryWithTrailingSpace(t *testing.T) {
 }
 
 func TestSearchingInventoryWithLeadingSpace(t *testing.T) {
-	resetTestItemsAndSales()
+	resetDatabase()
 	names, IDs := Database.SearchInventory("   V")
 	if len(names) != 3 {
 		t.Errorf("Search Results !valid | have: %d, want: 3", len(names))
@@ -271,7 +271,7 @@ func TestSearchingInventoryWithLeadingSpace(t *testing.T) {
 }
 
 func TestSearchingInventoryWithSpace(t *testing.T) {
-	resetTestItemsAndSales()
+	resetDatabase()
 	names, IDs := Database.SearchInventory("Pop D")
 	if len(names) != 1 {
 		t.Errorf("Search Results !valid | have: %d, want: 1", len(names))
@@ -291,7 +291,7 @@ func TestSearchingInventoryWithSpace(t *testing.T) {
 }
 
 func TestRemoveItem(t *testing.T) {
-	resetTestItemsAndSales()
+	resetDatabase()
 	expectedLen := len(testItems) - 1
 	unknown.RemoveAndUpdate(&Database.Items[6].Name, Database.CleanUpDeadItems)
 	list := Database.ConvertItemKeys()
@@ -301,7 +301,7 @@ func TestRemoveItem(t *testing.T) {
 }
 
 func TestFailedRemove(t *testing.T) {
-	resetTestItemsAndSales()
+	resetDatabase()
 	unknown.RemoveAndUpdate(&Database.Items[6].Name, func() {
 		Database.AddDamages(6, "12")
 		Database.CleanUpDeadItems()
@@ -313,7 +313,7 @@ func TestFailedRemove(t *testing.T) {
 }
 
 func TestOrderItemKeys(t *testing.T) {
-	resetTestItemsAndSales()
+	resetDatabase()
 	list := Database.ConvertItemKeys()
 	checkList := []string{
 		" ",

@@ -128,7 +128,7 @@ func TestMissingTotal(t *testing.T) {
 }
 
 func TestAddingIndividual(t *testing.T) {
-	resetTestItemsAndSales()
+	resetDatabase()
 	s := Database.Sale{ID: 6, Price: 5, Cost: 5, Quantity: 1}
 	cart := []Database.Sale{}
 	cart, errID := Database.AddToCart(s, cart)
@@ -147,7 +147,7 @@ func TestAddingIndividual(t *testing.T) {
 }
 
 func TestAddingToItemInCart(t *testing.T) {
-	resetTestItemsAndSales()
+	resetDatabase()
 	s := Database.Sale{ID: 6, Price: 5, Cost: 5, Quantity: 1}
 	cart := []Database.Sale{
 		{ID: 6, Price: 5, Cost: 5, Quantity: 1},
@@ -170,7 +170,7 @@ func TestAddingToItemInCart(t *testing.T) {
 }
 
 func TestAddingMoreToCart(t *testing.T) {
-	resetTestItemsAndSales()
+	resetDatabase()
 	answer := []Database.Sale{
 		{ID: 6, Price: 5, Cost: 5, Quantity: 1},
 		{ID: 6, Price: 6, Cost: 5, Quantity: 1},
@@ -194,7 +194,7 @@ func TestAddingMoreToCart(t *testing.T) {
 }
 
 func TestIllegalAdding(t *testing.T) {
-	resetTestItemsAndSales()
+	resetDatabase()
 	Database.Items[6].Quantity[0] = 0.0
 	s := Database.Sale{ID: 6, Price: 5, Cost: 5, Quantity: 1}
 	cart := []Database.Sale{}
@@ -215,7 +215,7 @@ func TestIllegalAdding(t *testing.T) {
 }
 
 func TestIllegalAdding2(t *testing.T) {
-	resetTestItemsAndSales()
+	resetDatabase()
 	Database.Items[6].Quantity[0] = -100.0
 	s := Database.Sale{ID: 6, Price: 5, Cost: 5, Quantity: 1}
 	cart := []Database.Sale{}

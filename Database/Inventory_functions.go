@@ -8,24 +8,24 @@ import (
 	"strings"
 )
 
-func CleanUpDeadItems() {
-	for k := range Items {
-		if Items[k].Name[0] == byte(216) {
-			found := false
-			for _, x := range Sales {
-				if x.ID == k {
-					found = true
-					break
-				}
-			}
-			if !found {
-				delete(Items, k)
-			}
-		}
-	}
-}
+// func CleanUpDeadItems() {
+// 	for ID := range Items {
+// 		if Items[ID].Name[0] == byte(216) {
+// 			found := false
+// 			for _, x := range Sales {
+// 				if x.ID == ID {
+// 					found = true
+// 					break
+// 				}
+// 			}
+// 			if !found {
+// 				DeadIDsQueue = append(DeadIDsQueue, ID)
+// 			}
+// 		}
+// 	}
+// }
 
-func SearchInventory(input string) (Names []string, IDs []uint16) {
+func SearchInventory(input string) (Names []string, IDs []int) {
 	if input == "" {
 		for i, v := range Items {
 			IDs = append(IDs, i)
@@ -59,26 +59,19 @@ func ConvertItemKeys() (inter []int) {
 	})
 
 	return
-}
-
-// func orderItemKeys(list []int) (out []int) {
-// 	for _, v := range list {
-// 		init_out_len := len(out)
-
-// 		for i, o := range out {
-// 			if v > o {
-// 				// insert into array
-// 				out = append(out[:i+1], out[i:]...)
-// 				out[i] = v
-// 				break
+} // 		if Items[ID].Name[0] == byte(216) {
+// 			found := false
+// 			for _, x := range Sales {
+// 				if x.ID == ID {
+// 					found = true
+// 					break
+// 				}
+// 			}
+// 			if !found {
+// 				DeadIDsQueue = append(DeadIDsQueue, ID)
 // 			}
 // 		}
-
-// 		if init_out_len == len(out) {
-// 			out = append(out, v)
-// 		}
 // 	}
-// 	return
 // }
 
 func ProcessQuantity(n string) (quantity float32, errID int) {
@@ -114,7 +107,7 @@ func ProcessQuantity(n string) (quantity float32, errID int) {
 	return quantity, Debug.Success
 }
 
-func CreateItem(name, priceTxt, costTxt, stockTxt string) (ID uint16, errID int) {
+func CreateItem(name, priceTxt, costTxt, stockTxt string) (ID int, errID int) {
 	quantity, err := ProcessQuantity(stockTxt)
 	if err != Debug.Success {
 		errID = err
@@ -127,19 +120,14 @@ func CreateItem(name, priceTxt, costTxt, stockTxt string) (ID uint16, errID int)
 	}
 
 	// Check for an open slot
-	ID = uint16(len(Items))
-	v, found := Items[ID]
-
-	for found && v != nil {
-		v, found = Items[ID]
-		if !found || v == nil {
-			break
-		}
-		ID += 1
+	if len(DeadIDsQueue) == 0 {
+		ID = len(Items)
+	} else {
+		ID = DeadIDsQueue[0]
+		DeadIDsQueue = DeadIDsQueue[1:]
 	}
 
-	Items[ID] = &Entry{Price: price, Name: name, Quantity: [3]float32{quantity, 0, 0}, Cost: [3]float32{cost, 0, 0}}
-	// fmt.Println("!Found, Adding: ", Items[ID]) // LOG
+	Items[ID] = Entry{Price: price, Name: name, Quantity: [3]float32{quantity, 0, 0}, Cost: [3]float32{cost, 0, 0}}
 	return ID, Debug.Success
 }
 
@@ -156,8 +144,7 @@ func AddItem(target uint16, priceTxt, costTxt, stockTxt string) (errID int) {
 
 	Items[target].Price = price
 
-	i := 0
-	for ; i < 3; i++ {
+	for i := 0; i < len(Items[target].Quantity); i++ {
 		if Items[target].Cost[i] == cost {
 			Items[target].Quantity[i] += quan
 			break
@@ -167,10 +154,6 @@ func AddItem(target uint16, priceTxt, costTxt, stockTxt string) (errID int) {
 			Items[target].Cost[i] = cost
 			break
 		}
-	}
-
-	if i == 3 {
-		return Debug.Maxed_Out_Stocks
 	}
 
 	return Debug.Success

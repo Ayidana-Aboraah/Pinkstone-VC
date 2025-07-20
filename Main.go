@@ -26,7 +26,7 @@ func main() {
 	a := app.NewWithID("PINKSTONE")
 	// go Graph.StartServer()
 
-	Database.DataInit()
+	Database.Init(false)
 
 	// TODO: Access USB
 	// TODO: Connect to Printer
@@ -42,15 +42,15 @@ func CreateWindow(a fyne.App) {
 		func() {
 			Graph.StopSever()
 			Database.CleanUpDeadItems()
-			Database.SaveData()
-			Database.SaveBackUp()
+			Database.SaveData(false)
+			Database.SaveData(true)
 			if printer.Active {
 				printer.Close()
 			}
 		},
 	)
 
-	Debug.ShowError("Loading Data", Database.LoadData(), w)
+	Debug.ShowError("Loading Data", Database.LoadData(false), w)
 
 	w.SetContent(container.NewVBox(container.NewAppTabs(
 		container.NewTabItem("Main", mainMenu()),
@@ -94,7 +94,7 @@ func mainMenu() fyne.CanvasObject {
 			), w)
 		}),
 		widget.NewButton("Save Backup Data", func() {
-			go Debug.ShowError("Backing up Data", Database.SaveBackUp(), w)
+			go Debug.ShowError("Backing up Data", Database.SaveData(true), w)
 		}),
 
 		widget.NewButton("Load Backup Data", func() {
@@ -102,7 +102,7 @@ func mainMenu() fyne.CanvasObject {
 				if !b {
 					return
 				}
-				Debug.ShowError("Loading Backup Data", Database.LoadBackUp(), w)
+				Debug.ShowError("Loading Backup Data", Database.LoadData(true), w)
 				dialog.ShowInformation("Loaded", "Back Up Loaded", w)
 			}, w)
 		}),
@@ -227,7 +227,7 @@ func shoppingMenu() fyne.CanvasObject {
 
 						title.SetText("Cart Total: 0.00")
 
-						Debug.ShowError("Saving Data", Database.SaveData(), w)
+						Debug.ShowError("Saving Data", Database.SaveData(false), w)
 
 						dialog.ShowCustomConfirm("Complete", "Print", "Done", container.NewVBox(
 							widget.NewLabelWithStyle("PINKSTONE TRADING", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
@@ -361,7 +361,7 @@ func reportMenu() fyne.CanvasObject {
 			}
 
 			Database.RemoveFromSales(id)
-			Debug.ShowError("Saving Data", Database.SaveData(), w)
+			Debug.ShowError("Saving Data", Database.SaveData(false), w)
 			reportData.Set(Database.ConvertCart(Database.Sales))
 			updateReport()
 			reportList.Refresh()

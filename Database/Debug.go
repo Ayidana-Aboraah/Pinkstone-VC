@@ -1,36 +1,36 @@
 package Database
 
 import (
-	"BronzeHermes/Debug"
+	"BronzeHermes/Helpers"
 	"time"
 )
 
-func CreateSale(ID uint16, priceTxt, costTxt, stockTxt string, customer int) int {
+func CreateSale(ID uint, priceTxt, costTxt, stockTxt string, customer uint) int {
 
 	quan, err := ProcessQuantity(stockTxt)
-	if err != Debug.Success {
+	if err != Helpers.Success {
 		return err
 	}
 
-	price, cost, _, err := ConvertString(priceTxt, costTxt, "")
-	if err != Debug.Success {
-		return err
+	result := Helpers.ParseToFloat(priceTxt, costTxt)
+	if result == nil {
+		return Helpers.Invalid_Input
 	}
 
 	Sales = append(Sales, Sale{
 		ID:        ID,
-		Price:     price,
-		Cost:      cost,
+		Price:     result[0],
+		Cost:      result[1],
 		Quantity:  quan,
-		Customer:  uint16(customer),
+		Customer:  customer,
 		Timestamp: time.Now().Local().Unix(),
 	})
 
-	return Debug.Success
+	return Helpers.Success
 }
 
 func DeleteEverything() {
-	Items = map[uint16]*Entry{}
+	Items = []Entry{}
 	Sales = []Sale{}
 	Customers = []string{}
 }

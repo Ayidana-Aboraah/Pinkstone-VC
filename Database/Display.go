@@ -1,9 +1,8 @@
 package Database
 
 import (
-	"BronzeHermes/Debug"
+	"BronzeHermes/Helpers"
 	"BronzeHermes/UI"
-	unknown "BronzeHermes/Unknown"
 	"fmt"
 	"strconv"
 
@@ -31,7 +30,7 @@ func ItemsMenu(w fyne.Window) fyne.CanvasObject {
 	totalCost := widget.NewLabel("Total Cost")
 
 	InventoryData = binding.NewIntList()
-	InventoryData.Set(ConvertItemKeys())
+	InventoryData.Set(ConvertItems())
 
 	inventoryList := widget.NewListWithData(InventoryData, func() fyne.CanvasObject {
 		return container.NewBorder(nil, nil, nil, nil, widget.NewLabel("N"))
@@ -39,11 +38,10 @@ func ItemsMenu(w fyne.Window) fyne.CanvasObject {
 		val, _ := item.(binding.Int).Get()
 		if val > -1 && val < len(Items) {
 			obj.(*fyne.Container).Objects[0].(*widget.Label).SetText(Items[uint16(val)].Name)
-
 		}
 	})
 
-	RefreshInventory = func() { InventoryData.Set(ConvertItemKeys()) }
+	RefreshInventory = func() { InventoryData.Set(ConvertItems()) }
 
 	target := -1
 
@@ -76,7 +74,7 @@ func ItemsMenu(w fyne.Window) fyne.CanvasObject {
 
 		costLabel.SetText(txt[:len(txt)-1])
 
-		var costs float32
+		var costs float64
 		for i, v := range Items[uint16(id)].Cost {
 			costs += v * Items[uint16(id)].Quantity[i]
 		}
@@ -118,14 +116,14 @@ func ItemsMenu(w fyne.Window) fyne.CanvasObject {
 					}
 
 					ID, errID := CreateItem(nameEntry.Text, priceEntry.Text, costEntry.Text, invenEntry.Text)
-					if Debug.HandleKnownError(errID, errID != Debug.Success, w) {
+					if Helpers.HandleKnownError(errID, errID != Helpers.Success, w) {
 						return
 					}
 					target = int(ID)
 
-					Debug.ShowError("Saving Data", SaveData(false), w)
+					Helpers.ShowError("Saving Data", SaveData(false), w)
 
-					InventoryData.Set(ConvertItemKeys())
+					InventoryData.Set(ConvertItems())
 					updateInventoryDisplay(ID)
 					inventoryList.Refresh()
 				}, w)
@@ -136,7 +134,7 @@ func ItemsMenu(w fyne.Window) fyne.CanvasObject {
 					return
 				}
 
-				dialog.ShowConfirm("Are You sure?", "Are you sure "+Items[uint16(target)].Name+" is damaged?", func(b bool) {
+				dialog.ShowConfirm("Are You sure?", "Are you sure "+Items[target].Name+" is damaged?", func(b bool) {
 					if !b {
 						return
 					}
@@ -146,11 +144,11 @@ func ItemsMenu(w fyne.Window) fyne.CanvasObject {
 						if !b {
 							return
 						}
-						errID := AddDamages(uint16(target), entry.Text)
-						if Debug.HandleKnownError(errID, errID != Debug.Success, w) {
+						errID := AddDamages(uint(target), entry.Text)
+						if Helpers.HandleKnownError(errID, errID != Helpers.Success, w) {
 							return
 						}
-						Debug.ShowError("Saing Data", SaveData(false), w)
+						Helpers.ShowError("Saing Data", SaveData(false), w)
 						updateInventoryDisplay(uint16(target))
 					}, w)
 
@@ -177,12 +175,12 @@ func ItemsMenu(w fyne.Window) fyne.CanvasObject {
 						return
 					}
 
-					errID := AddItem(uint16(target), priceEntry.Text, costEntry.Text, invenEntry.Text)
-					if Debug.HandleKnownError(errID, errID != Debug.Success, w) {
+					errID := AddItem(uint(target), priceEntry.Text, costEntry.Text, invenEntry.Text)
+					if Helpers.HandleKnownError(errID, errID != Helpers.Success, w) {
 						return
 					}
 
-					Debug.ShowError("Saving Data", SaveData(false), w)
+					Helpers.ShowError("Saving Data", SaveData(false), w)
 					updateInventoryDisplay(uint16(target))
 				}, w)
 			}),
@@ -196,21 +194,19 @@ func ItemsMenu(w fyne.Window) fyne.CanvasObject {
 						return
 					}
 
-					unknown.RemoveAndUpdate(&Items[uint16(target)].Name, func() {
-						CleanUpDeadItems()
-						InventoryData.Set(ConvertItemKeys())
+					Helpers.RemoveAndUpdate(&Items[uint16(target)].Name, func() {
+						InventoryData.Set(ConvertItems())
 						inventoryList.Refresh()
 						target = -1
 					})
 
-					Debug.ShowError("Saving Data", SaveData(false), w)
+					Helpers.ShowError("Saving Data", SaveData(false), w)
 				}, w)
 			}),
 		),
 
 		container.NewVSplit(
 			container.NewStack(inventoryList),
-
 			widget.NewButton("Search", func() {
 				searchBar := UI.NewSearchBar("Item Name Here...", SearchInventory)
 
@@ -221,7 +217,7 @@ func ItemsMenu(w fyne.Window) fyne.CanvasObject {
 
 					id := searchBar.Result()
 
-					if Debug.HandleKnownError(0, id < 0, w) {
+					if Helpers.HandleKnownError(0, id < 0, w) {
 						return
 					}
 					target = id

@@ -25,7 +25,7 @@ func TestBuyingNormal(t *testing.T) {
 	ResetTestCartAndQuantities()
 	Item := uint16(6)
 	Database.Items = testItems
-	Database.BuyCart([]Database.Sale{testCart[0]}, 0)
+	Database.Buy([]Database.Sale{testCart[0]}, 0)
 
 	test_time := time.Now().Unix()
 
@@ -84,7 +84,7 @@ func TestBuyingAllOfQuantity0(t *testing.T) {
 	Item := uint16(6)
 	Database.Items = testItems
 	t.Log(Database.Sales)
-	Database.BuyCart([]Database.Sale{testCart[1]}, 0)
+	Database.Buy([]Database.Sale{testCart[1]}, 0)
 
 	test_time := time.Now().Unix()
 
@@ -147,7 +147,7 @@ func TestBuying2Quantities(t *testing.T) {
 
 	Item := uint16(6)
 	Database.Items = testItems
-	Database.BuyCart([]Database.Sale{testCart[2]}, 0)
+	Database.Buy([]Database.Sale{testCart[2]}, 0)
 
 	test_time := time.Now().Unix()
 
@@ -211,7 +211,7 @@ func TestBuyingAllQuantities0n1(t *testing.T) {
 
 	Item := uint16(6)
 	Database.Items = testItems
-	Database.BuyCart([]Database.Sale{testCart[3]}, 0)
+	Database.Buy([]Database.Sale{testCart[3]}, 0)
 
 	test_time := time.Now().Unix()
 
@@ -277,7 +277,7 @@ func TestBuyingInto3rdQuantity(t *testing.T) {
 	Item := uint16(6)
 
 	Database.Items = testItems
-	Database.BuyCart([]Database.Sale{testCart[4]}, 0)
+	Database.Buy([]Database.Sale{testCart[4]}, 0)
 
 	test_time := time.Now().Unix()
 
@@ -344,7 +344,7 @@ func TestBuyingAllQuantities(t *testing.T) {
 
 	Item := uint16(6)
 	Database.Items = testItems
-	Database.BuyCart([]Database.Sale{testCart[5]}, 0)
+	Database.Buy([]Database.Sale{testCart[5]}, 0)
 
 	test_time := time.Now().Unix()
 
@@ -410,7 +410,7 @@ func TestBuyingOverAllQuantities(t *testing.T) {
 	ResetTestCartAndQuantities()
 
 	Database.Items = testItems
-	Database.BuyCart([]Database.Sale{testCart[6]}, 0)
+	Database.Buy([]Database.Sale{testCart[6]}, 0)
 
 	test_time := time.Now().Unix()
 
@@ -482,7 +482,7 @@ func TestOverBuying1QuantityWithOnly1Quantity(t *testing.T) {
 		Cost:     2,
 		Quantity: 5,
 	}
-	Database.BuyCart([]Database.Sale{s}, 0)
+	Database.Buy([]Database.Sale{s}, 0)
 
 	test_time := time.Now().Unix()
 
@@ -553,7 +553,7 @@ func TestOverBuyingEmptyQuantity(t *testing.T) {
 		Cost:     0,
 		Quantity: 5,
 	}
-	Database.BuyCart([]Database.Sale{s}, 0)
+	Database.Buy([]Database.Sale{s}, 0)
 
 	expectedQuantities := [3]float32{-5, 0, 0}
 	for i, v := range expectedQuantities {
@@ -624,7 +624,7 @@ func TestOverBuying2QuantityWith1Empty(t *testing.T) {
 		Cost:     0,
 		Quantity: 7,
 	}
-	Database.BuyCart([]Database.Sale{s}, 0)
+	Database.Buy([]Database.Sale{s}, 0)
 
 	test_time := time.Now().Unix()
 

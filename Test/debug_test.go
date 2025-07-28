@@ -2,7 +2,7 @@ package Test
 
 // import (
 // 	"BronzeHermes/Database"
-// 	"BronzeHermes/Debug"
+// 	"BronzeHermes/Helpers"
 // 	"testing"
 // 	"time"
 // )
@@ -15,7 +15,7 @@ package Test
 
 // 	errID := Database.CreateSale(1, "12", "20", "30", 3) // push to Database.Sales
 
-// 	if errID != Debug.Success {
+// 	if errID != Helpers.Success {
 // 		t.Errorf("An error with ID: %d has occured", errID)
 // 	}
 
@@ -66,7 +66,7 @@ package Test
 
 // 	errID := Database.CreateSale(1, "12", "20", "30 7/8", 3) // push to Database.Sales
 
-// 	if errID != Debug.Success {
+// 	if errID != Helpers.Success {
 // 		t.Errorf("An error with ID: %d has occured", errID)
 // 	}
 

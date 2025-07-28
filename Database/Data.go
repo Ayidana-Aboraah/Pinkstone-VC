@@ -11,31 +11,23 @@ import (
 )
 
 type Entry struct {
-	Price    float32
-	Cost     [3]float32
-	Quantity [3]float32
+	Price    float64
+	Cost     []float64
+	Quantity []float64
 	Name     string
 }
 
 type Sale struct {
-	Customer              uint16 // 0 is reserved for Damages
-	ID                    uint16
-	Price, Cost, Quantity float32
+	Customer              uint // 0 is reserved for Damages
+	ID                    uint
+	Price, Cost, Quantity float64
 	Timestamp             int64
 }
 
-// var Items = map[uint16]*Entry{}
 var Items []Entry
 var DeadIDsQueue []int
 var Sales []Sale
-
 var Customers = []string{}
-
-const (
-	ONCE uint8 = iota
-	MONTHLY
-	YEARLY
-)
 
 var file_names = [...]string{
 	"Items.red",
@@ -45,10 +37,6 @@ var file_names = [...]string{
 	"Backup_Report.red",
 	"Backup_Customers.red",
 }
-
-// func Init() {
-
-// }
 
 func Init(test bool) {
 	// Shared mutable state of doom and destruction
@@ -103,9 +91,6 @@ func Load(reader io.Reader, output any) error {
 
 func SaveData(backup bool) error {
 
-	var file fyne.URIWriteCloser
-	var err error
-
 	var fileNames []string
 	if backup {
 		fileNames = file_names[3:]
@@ -126,7 +111,7 @@ func SaveData(backup bool) error {
 		fmt.Println(name)
 		fmt.Println(data[i])
 
-		file, err = fyne.CurrentApp().Storage().Save(name)
+		file, err := fyne.CurrentApp().Storage().Save(name)
 		if err != nil && err != io.EOF {
 			return err
 		}
@@ -138,14 +123,10 @@ func SaveData(backup bool) error {
 		}
 	}
 
-	fmt.Println("\n")
-
 	return nil
 }
 
 func LoadData(backup bool) error {
-	var file fyne.URIReadCloser
-	var err error
 	var fileNames []string
 	if backup {
 		fileNames = file_names[3:]
@@ -165,7 +146,7 @@ func LoadData(backup bool) error {
 	for i, name := range fileNames {
 		fmt.Println(name)
 
-		file, err = fyne.CurrentApp().Storage().Open(name)
+		file, err := fyne.CurrentApp().Storage().Open(name)
 		if err != nil && err != io.EOF {
 			return err
 		}
@@ -176,7 +157,6 @@ func LoadData(backup bool) error {
 			return err
 		}
 	}
-	fmt.Println("\n")
 
 	return nil
 }

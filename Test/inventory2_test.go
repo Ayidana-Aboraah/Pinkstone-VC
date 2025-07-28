@@ -2,7 +2,7 @@ package Test
 
 import (
 	"BronzeHermes/Database"
-	unknown "BronzeHermes/Unknown"
+	Helpers "BronzeHermes/Helpers"
 	"testing"
 	"time"
 )
@@ -293,8 +293,8 @@ func TestSearchingInventoryWithSpace(t *testing.T) {
 func TestRemoveItem(t *testing.T) {
 	resetDatabase()
 	expectedLen := len(testItems) - 1
-	unknown.RemoveAndUpdate(&Database.Items[6].Name, Database.CleanUpDeadItems)
-	list := Database.ConvertItemKeys()
+	Helpers.RemoveAndUpdate(&Database.Items[6].Name, Database.CleanUpDeadItems)
+	list := Database.ConvertItems()
 	if len(Database.Items) != expectedLen || len(list) != expectedLen {
 		t.Errorf("Item not Removed | Items Len: %d, List of Keys: %d, Expected Length: %d", len(Database.Items), len(list), expectedLen)
 	}
@@ -302,7 +302,7 @@ func TestRemoveItem(t *testing.T) {
 
 func TestFailedRemove(t *testing.T) {
 	resetDatabase()
-	unknown.RemoveAndUpdate(&Database.Items[6].Name, func() {
+	Helpers.RemoveAndUpdate(&Database.Items[6].Name, func() {
 		Database.AddDamages(6, "12")
 		Database.CleanUpDeadItems()
 	})
@@ -314,7 +314,7 @@ func TestFailedRemove(t *testing.T) {
 
 func TestOrderItemKeys(t *testing.T) {
 	resetDatabase()
-	list := Database.ConvertItemKeys()
+	list := Database.ConvertItems()
 	checkList := []string{
 		" ",
 		"Bila",

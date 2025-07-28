@@ -1,4 +1,4 @@
-package Debug
+package Helpers
 
 import (
 	"io"

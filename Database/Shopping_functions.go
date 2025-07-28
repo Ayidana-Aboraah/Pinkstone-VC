@@ -1,7 +1,7 @@
 package Database
 
 import (
-	"BronzeHermes/Debug"
+	"BronzeHermes/Helpers"
 	"fmt"
 	"strconv"
 	"strings"
@@ -28,44 +28,47 @@ func SearchCustomers(input string) (Names []string, IDs []uint16) {
 	return
 }
 
-func AddDamages(target uint16, quantityTxt string) int {
+func AddDamages(target uint, quantityTxt string) int {
 	quantity, err := ProcessQuantity(quantityTxt)
-	if err != Debug.Success {
-		return Debug.Invalid_Input
+	if err != Helpers.Success {
+		return Helpers.Invalid_Input
 	}
 
 	s := Sale{
 		ID:        target,
 		Price:     0,
 		Cost:      Items[target].Cost[0],
-		Quantity:  float32(quantity),
+		Quantity:  quantity,
 		Timestamp: time.Now().Local().Unix(),
 	}
 
-	BuyCart([]Sale{s}, 0)
-	return Debug.Success
+	Buy([]Sale{s}, 0)
+	return Helpers.Success
 }
 
-func MakeReceipt(cart []Sale, customer string) (out string) {
+var VodaPhoneNumber string
+var MOMO_Num string
 
-	out = time.Now().Local().String()
-	out += "\nLoc: Santasi\nTel/Vodacash: 0506695927\nTel/MOMO: 0558324302\nMerchant ID: 868954\nCustomer: " + customer + "\n"
-	// TODO: Maybe save the Voda & MOMO, along with the merchant ID as variable to be accessed by the controller
+// var MerchantID string
+
+const recieptTemplate string = "%s\n" + "\nLoc: Santasi\nTel/Vodacash: %s\nTel/MOMO: %s\nMerchant ID: 868954\nCustomer: %s\n" + "\n%s" + "Total: %1.1f\n" + "ALL SALES ARE FINAL\nThank you, please do come again\nSoftware Developed By Ayidana Aboraah\naboraahayidana@gmail.com\n"
+
+func MakeReceipt(cart []Sale, customer string) string {
+
+	var sales string
+
 	for _, v := range cart {
-		out += fmt.Sprintf("\n%s x%1.2f for ₵%1.2f\n", Items[v.ID].Name, v.Quantity, v.Price)
+		sales += fmt.Sprintf("\n%s x%1.2f for ₵%1.2f\n", Items[v.ID].Name, v.Quantity, v.Price)
 	}
 
-	out += fmt.Sprintf("Total: %1.1f\n", GetCartTotal(cart))
-	out += "ALL SALES ARE FINAL\nThank you, please do come again\nSoftware Developed By Ayidana Aboraah\naboraahayidana@gmail.com\n"
-
-	return
+	return fmt.Sprintf(recieptTemplate, time.Now().Local().String(), customer, VodaPhoneNumber, MOMO_Num, sales, Total(cart))
 }
 
-func ProcessNewItemData(bargin, stockTxt string, s *Sale) int {
+func ProcessNewItemData(bargin, stockTxt string, id uint) (s Sale, err int) {
 	if stockTxt != "" {
 		quantity, errID := ProcessQuantity(stockTxt)
-		if errID != Debug.Success {
-			return errID
+		if errID != Helpers.Success {
+			return s, errID
 		}
 		s.Quantity = quantity
 	}
@@ -73,72 +76,56 @@ func ProcessNewItemData(bargin, stockTxt string, s *Sale) int {
 	if bargin != "" {
 		f, err := strconv.ParseFloat(bargin, 32)
 		if err != nil {
-			return Debug.Invalid_Input
+			return s, Helpers.Invalid_Input
 		}
-		s.Price = float32(f) / s.Quantity
+		s.Price = f / s.Quantity
 		s.Cost *= s.Quantity
 	}
 
-	return Debug.Success
+	return s, Helpers.Success
 }
 
-func ShiftQuantity(ID uint16) {
-	Items[ID].Quantity[0] = Items[ID].Quantity[1]
-	Items[ID].Quantity[1] = Items[ID].Quantity[2]
-	Items[ID].Quantity[2] = 0
-
-	if Items[ID].Cost[1] > 0 {
-		Items[ID].Cost[0] = Items[ID].Cost[1]
-		Items[ID].Cost[1] = Items[ID].Cost[2]
-		Items[ID].Cost[2] = 0
+func Adjust(ID uint) {
+	if Items[ID].Quantity[0] <= 0 && len(Items[ID].Quantity) > 1 {
+		Items[ID].Quantity = Items[ID].Quantity[1:]
+		Items[ID].Cost = Items[ID].Cost[1:]
 	}
 }
 
-func AdjustStock(ID uint16) {
-	for Items[ID].Quantity[0] <= 0 && Items[ID].Cost[1] > 0 {
-		ShiftQuantity(ID)
-	}
-}
+func Buy(ShoppingCart []Sale, customer uint) []Sale {
+	for _, sale := range ShoppingCart {
 
-func BuyCart(ShoppingCart []Sale, customer uint16) []Sale {
-	for _, v := range ShoppingCart {
+		sale.Timestamp = time.Now().Local().Unix()
+		sale.Customer = customer
+		sale.Cost = Items[sale.ID].Cost[0]
 
-		v.Timestamp = time.Now().Local().Unix()
-		v.Customer = customer
+		for Items[sale.ID].Quantity[0]-sale.Quantity <= 0 && len(Items[sale.ID].Quantity) > 1 {
+			sCopy := sale
 
-		for i := range Items[v.ID].Quantity {
+			sCopy.Quantity = Items[sale.ID].Quantity[0]
+			Sales = append(Sales, sCopy)
 
-			v.Cost = Items[v.ID].Cost[i]
-			Items[v.ID].Quantity[i] -= v.Quantity
+			Adjust(sale.ID)
 
-			if Items[v.ID].Quantity[i] >= 0 || i == 2 || Items[v.ID].Cost[i+1] == 0 {
-				Sales = append(Sales, v)
-				break
-			}
-
-			diff := Items[v.ID].Quantity[i] * -1
-
-			v.Quantity -= diff
-
-			Sales = append(Sales, v)
-
-			v.Quantity = diff
+			sale.Quantity -= Items[sale.ID].Quantity[0]
+			sale.Cost = Items[sale.ID].Cost[0]
 		}
 
-		AdjustStock(v.ID)
+		Sales = append(Sales, sale)
+		Items[sale.ID].Quantity[0] -= sale.Quantity
 	}
 	return ShoppingCart[:0]
 }
 
 func AddToCart(item Sale, ShoppingCart []Sale) (out []Sale, errID int) {
-	errID = Debug.Success
+	errID = Helpers.Success
 
 	if Items[item.ID].Quantity[0] <= 0 {
-		errID = Debug.Empty_Quantity_Warning
+		errID = Helpers.Empty_Quantity_Warning
 	}
 
-	for i, v := range ShoppingCart {
-		if v.ID == item.ID && v.Price == item.Price {
+	for i, cartItem := range ShoppingCart {
+		if cartItem.ID == item.ID && cartItem.Price == item.Price {
 			ShoppingCart[i].Quantity += item.Quantity
 			return ShoppingCart, errID
 		}
@@ -147,7 +134,7 @@ func AddToCart(item Sale, ShoppingCart []Sale) (out []Sale, errID int) {
 	return append(ShoppingCart, item), errID
 }
 
-func DecreaseFromCart(item int, ShoppingCart []Sale) []Sale {
+func DecreaseCart(item int, ShoppingCart []Sale) []Sale {
 
 	if ShoppingCart[item].Quantity-1 > 0 {
 		ShoppingCart[item].Quantity -= 1
@@ -159,33 +146,21 @@ func DecreaseFromCart(item int, ShoppingCart []Sale) []Sale {
 	return ShoppingCart
 }
 
-func GetCartTotal(ShoppingCart []Sale) (total float32) {
+func Total(ShoppingCart []Sale) (total float64) {
 	for _, v := range ShoppingCart {
-		total += v.Price * float32(v.Quantity)
+		total += v.Price * v.Quantity
 	}
 	return
 }
 
-func ConvertCart(shoppingCart []Sale) (intercart []interface{}) {
+func Convert(shoppingCart []Sale) (intercart []interface{}) {
 	for i := range shoppingCart {
 		intercart = append(intercart, shoppingCart[i])
 	}
 	return
 }
 
-func ConvertString(Price, Cost, Quantity string) (price float32, cost float32, quantity float32, errID int) {
-	p, errA := strconv.ParseFloat(Price, 32)
-	c, errB := strconv.ParseFloat(Cost, 32)
-	q, errC := strconv.ParseFloat(Quantity, 32)
-	errID = Debug.Success
-
-	if errA != nil || errB != nil || (errC != nil && Quantity != "") {
-		errID = Debug.Invalid_Input
-	}
-	return float32(p), float32(c), float32(q), errID
-}
-
-func NewItem(id uint16) (result Sale) {
+func SaleItem(id uint) (result Sale) {
 	vals := Items[id]
 
 	result.ID = id

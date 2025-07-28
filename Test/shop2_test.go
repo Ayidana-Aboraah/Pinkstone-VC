@@ -2,7 +2,7 @@ package Test
 
 import (
 	"BronzeHermes/Database"
-	"BronzeHermes/Debug"
+	"BronzeHermes/Helpers"
 	"testing"
 )
 
@@ -34,9 +34,9 @@ func TestProcessingItemWithBargin(t *testing.T) {
 	s := Database.Sale{Price: 5, Cost: 5, Quantity: 1}
 	err := Database.ProcessNewItemData("10", "", &s)
 	switch err {
-	case Debug.Invalid_Input:
+	case Helpers.Invalid_Input:
 		t.Error("Invalid Input passed into ProcessNewItemData")
-	case Debug.Success:
+	case Helpers.Success:
 		// Check that teh proper transformation
 		if s.Quantity != 1 {
 			t.Errorf("Illegal Quantity Modification, want: 1, have: %f", s.Quantity)
@@ -199,8 +199,8 @@ func TestIllegalAdding(t *testing.T) {
 	s := Database.Sale{ID: 6, Price: 5, Cost: 5, Quantity: 1}
 	cart := []Database.Sale{}
 	cart, errID := Database.AddToCart(s, cart)
-	if errID != Debug.Empty_Quantity_Warning {
-		t.Errorf("An Error has somehow slipped through | have: %d, want: %d", errID, Debug.Empty_Quantity_Warning)
+	if errID != Helpers.Empty_Quantity_Warning {
+		t.Errorf("An Error has somehow slipped through | have: %d, want: %d", errID, Helpers.Empty_Quantity_Warning)
 	}
 
 	if len(cart) != 1 {
@@ -220,8 +220,8 @@ func TestIllegalAdding2(t *testing.T) {
 	s := Database.Sale{ID: 6, Price: 5, Cost: 5, Quantity: 1}
 	cart := []Database.Sale{}
 	cart, errID := Database.AddToCart(s, cart)
-	if errID != Debug.Empty_Quantity_Warning {
-		t.Errorf("An Error has somehow slipped through | have: %d, want: %d", errID, Debug.Empty_Quantity_Warning)
+	if errID != Helpers.Empty_Quantity_Warning {
+		t.Errorf("An Error has somehow slipped through | have: %d, want: %d", errID, Helpers.Empty_Quantity_Warning)
 	}
 
 	if len(cart) != 1 {
@@ -240,7 +240,7 @@ func TestDeductItemFromCart(t *testing.T) {
 		{Price: 5, Cost: 5, Quantity: 3},
 	}
 
-	cart = Database.DecreaseFromCart(0, cart)
+	cart = Database.DecreaseCart(0, cart)
 
 	if cart[0].Quantity != 2 {
 		t.Errorf("Error reducing quantity from item in cart | have: %f, want: 2.0", cart[0].Quantity)
@@ -256,7 +256,7 @@ func TestItemRemovalFromCart(t *testing.T) {
 		{Price: 5, Cost: 5, Quantity: 1},
 	}
 
-	cart = Database.DecreaseFromCart(0, cart)
+	cart = Database.DecreaseCart(0, cart)
 
 	if len(cart) != 0 {
 		t.Errorf("An Erorr occured deleting an item from cart | have: %v", len(cart))
@@ -264,7 +264,7 @@ func TestItemRemovalFromCart(t *testing.T) {
 }
 
 func TestCartTotal(t *testing.T) {
-	total := Database.GetCartTotal(testSales)
+	total := Database.Total(testSales)
 	if total != 30 {
 		t.Log(total)
 		t.Error("Some Sort of addition error in GetCartTotal")

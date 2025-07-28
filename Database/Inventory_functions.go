@@ -1,29 +1,11 @@
 package Database
 
 import (
-	"BronzeHermes/Debug"
+	"BronzeHermes/Helpers"
 	"cmp"
 	"slices"
-	"strconv"
 	"strings"
 )
-
-// func CleanUpDeadItems() {
-// 	for ID := range Items {
-// 		if Items[ID].Name[0] == byte(216) {
-// 			found := false
-// 			for _, x := range Sales {
-// 				if x.ID == ID {
-// 					found = true
-// 					break
-// 				}
-// 			}
-// 			if !found {
-// 				DeadIDsQueue = append(DeadIDsQueue, ID)
-// 			}
-// 		}
-// 	}
-// }
 
 func SearchInventory(input string) (Names []string, IDs []int) {
 	if input == "" {
@@ -46,8 +28,7 @@ func SearchInventory(input string) (Names []string, IDs []int) {
 	return
 }
 
-func ConvertItemKeys() (inter []int) {
-	// var pop []int
+func ConvertItems() (inter []int) {
 	for k := range Items {
 		if Items[k].Name[0] != byte(216) {
 			inter = append(inter, int(k))
@@ -59,102 +40,84 @@ func ConvertItemKeys() (inter []int) {
 	})
 
 	return
-} // 		if Items[ID].Name[0] == byte(216) {
-// 			found := false
-// 			for _, x := range Sales {
-// 				if x.ID == ID {
-// 					found = true
-// 					break
-// 				}
-// 			}
-// 			if !found {
-// 				DeadIDsQueue = append(DeadIDsQueue, ID)
-// 			}
-// 		}
-// 	}
-// }
+}
 
-func ProcessQuantity(n string) (quantity float32, errID int) {
+func ProcessQuantity(text string) (quantity float64, errID int) {
+	const (
+		whole = iota
+		numerator
+		denominator
+	)
 
-	raw := strings.SplitN(n, " ", 2)
-	a, b, found := strings.Cut(raw[len(raw)-1], "/")
-
-	if len(raw) == 2 && found {
-		numerator, denominator, whole, err := ConvertString(a, b, raw[0])
-		if err != Debug.Success {
-			errID = Debug.Invalid_Input
-			return
-		}
-
-		quantity = whole + (numerator / denominator)
-	} else if len(raw) == 1 && found {
-		num, den, _, err := ConvertString(a, b, "")
-		if err != Debug.Success {
-			errID = Debug.Invalid_Input
-
-			return
-		}
-		quantity = num / den
-	} else {
-		v, err := strconv.ParseFloat(raw[0], 32)
-		if err != nil {
-			errID = Debug.Invalid_Input
-
-			return
-		}
-		quantity = float32(v)
+	// NOTE: Bunch of weird cases that can come from this, idk what to do about it
+	a := strings.Replace(text, "/", " ", 1)
+	b := strings.Split(a, " ")
+	fraction := Helpers.ParseToFloat(b...)
+	if fraction == nil {
+		return 0, Helpers.Invalid_Input
 	}
-	return quantity, Debug.Success
+
+	switch len(fraction) {
+	case 3:
+		quantity = fraction[whole] + (fraction[numerator] / fraction[denominator])
+	case 2:
+		quantity = fraction[numerator] / fraction[denominator]
+	case 1:
+		quantity = fraction[whole]
+	}
+
+	return quantity, Helpers.Success
 }
 
 func CreateItem(name, priceTxt, costTxt, stockTxt string) (ID int, errID int) {
-	quantity, err := ProcessQuantity(stockTxt)
-	if err != Debug.Success {
-		errID = err
-		return
+
+	res := Helpers.ParseToFloat(priceTxt, costTxt)
+	if res == nil {
+		return 0, Helpers.Invalid_Input
 	}
 
-	price, cost, _, err := ConvertString(priceTxt, costTxt, "")
-	if err != Debug.Success {
-		return 0, Debug.Invalid_Input
+	quantity, err := ProcessQuantity(stockTxt)
+	if err != Helpers.Success {
+		return 0, err
 	}
 
 	// Check for an open slot
 	if len(DeadIDsQueue) == 0 {
 		ID = len(Items)
+		Items = append(Items, Entry{})
 	} else {
 		ID = DeadIDsQueue[0]
 		DeadIDsQueue = DeadIDsQueue[1:]
 	}
 
-	Items[ID] = Entry{Price: price, Name: name, Quantity: [3]float32{quantity, 0, 0}, Cost: [3]float32{cost, 0, 0}}
-	return ID, Debug.Success
+	Items[ID] = Entry{Price: res[0], Name: name, Quantity: []float64{quantity, 0, 0}, Cost: []float64{res[1], 0, 0}}
+	return ID, Helpers.Success
 }
 
-func AddItem(target uint16, priceTxt, costTxt, stockTxt string) (errID int) {
+func AddItem(target uint, priceTxt, costTxt, stockTxt string) (errID int) {
 	quan, err := ProcessQuantity(stockTxt)
-	if err != Debug.Success {
+	if err != Helpers.Success {
 		return err
 	}
 
-	price, cost, _, err := ConvertString(priceTxt, costTxt, "")
-	if err != Debug.Success {
-		return err
+	res := Helpers.ParseToFloat(priceTxt, costTxt)
+	if res == nil {
+		return Helpers.Invalid_Input
 	}
 
-	Items[target].Price = price
+	Items[target].Price = res[0]
 
 	for i := 0; i < len(Items[target].Quantity); i++ {
-		if Items[target].Cost[i] == cost {
+		if Items[target].Cost[i] == res[1] {
 			Items[target].Quantity[i] += quan
 			break
 		}
 		if Items[target].Quantity[i] <= 0 {
 			Items[target].Quantity[i] = quan
-			Items[target].Cost[i] = cost
+			Items[target].Cost[i] = res[1]
 			break
 		}
 	}
 
-	return Debug.Success
+	return Helpers.Success
 }

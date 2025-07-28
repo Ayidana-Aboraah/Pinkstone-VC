@@ -2,8 +2,8 @@ package main
 
 import (
 	"BronzeHermes/Database"
-	"BronzeHermes/Debug"
 	"BronzeHermes/Graph"
+	"BronzeHermes/Helpers"
 	"BronzeHermes/Printer"
 	"BronzeHermes/UI"
 	"fmt"
@@ -50,7 +50,7 @@ func CreateWindow(a fyne.App) {
 		},
 	)
 
-	Debug.ShowError("Loading Data", Database.LoadData(false), w)
+	Helpers.ShowError("Loading Data", Database.LoadData(false), w)
 
 	w.SetContent(container.NewVBox(container.NewAppTabs(
 		container.NewTabItem("Main", mainMenu()),
@@ -94,7 +94,7 @@ func mainMenu() fyne.CanvasObject {
 			), w)
 		}),
 		widget.NewButton("Save Backup Data", func() {
-			go Debug.ShowError("Backing up Data", Database.SaveData(true), w)
+			go Helpers.ShowError("Backing up Data", Database.SaveData(true), w)
 		}),
 
 		widget.NewButton("Load Backup Data", func() {
@@ -102,14 +102,14 @@ func mainMenu() fyne.CanvasObject {
 				if !b {
 					return
 				}
-				Debug.ShowError("Loading Backup Data", Database.LoadData(true), w)
+				Helpers.ShowError("Loading Backup Data", Database.LoadData(true), w)
 				dialog.ShowInformation("Loaded", "Back Up Loaded", w)
 			}, w)
 		}),
 
 		widget.NewButton("Connect Printer", func() {
 			devices, idxes, err := Printer.FindUSBDevices()
-			Debug.ShowError("Looking for USB Devices", err, w)
+			Helpers.ShowError("Looking for USB Devices", err, w)
 
 			devListData := binding.NewIntList()
 			devListData.Set(idxes)
@@ -133,7 +133,7 @@ func mainMenu() fyne.CanvasObject {
 
 						p, e := Printer.Init(devices[id])
 
-						if Debug.ShowError("Selecting "+devices[id].Product, e, w) {
+						if Helpers.ShowError("Selecting "+devices[id].Product, e, w) {
 							return
 						}
 
@@ -186,9 +186,9 @@ func shoppingMenu() fyne.CanvasObject {
 		val := shoppingCart[id]
 		text.SetText(fmt.Sprintf("%s ₵%1.2f x%1.2f -> ₵%1.2f", Database.Items[val.ID].Name, val.Price, val.Quantity, val.Price*val.Quantity))
 		btn.OnTapped = func() {
-			shoppingCart = Database.DecreaseFromCart(id, shoppingCart)
-			cartData.Set(Database.ConvertCart(shoppingCart))
-			title.SetText(fmt.Sprintf("Cart Total: %1.2f", Database.GetCartTotal(shoppingCart)))
+			shoppingCart = Database.DecreaseCart(id, shoppingCart)
+			cartData.Set(shoppingCart)
+			title.SetText(fmt.Sprintf("Cart Total: %1.2f", Database.Total(shoppingCart)))
 			text.SetText(Database.Items[val.ID].Name + " x" + fmt.Sprint(val.Quantity))
 			shoppingList.Refresh()
 		}
@@ -196,8 +196,8 @@ func shoppingMenu() fyne.CanvasObject {
 
 	shoppingList.OnSelected = func(id widget.ListItemID) {
 		shoppingCart[id].Quantity++
-		cartData.Set(Database.ConvertCart(shoppingCart))
-		title.SetText(fmt.Sprintf("Cart Total: %1.2f", Database.GetCartTotal(shoppingCart)))
+		cartData.Set(Database.Convert(shoppingCart))
+		title.SetText(fmt.Sprintf("Cart Total: %1.2f", Database.Total(shoppingCart)))
 		shoppingList.Unselect(id)
 	}
 
@@ -222,12 +222,12 @@ func shoppingMenu() fyne.CanvasObject {
 						})
 
 						receipt := Database.MakeReceipt(shoppingCart, customerEntry.Text)
-						shoppingCart = Database.BuyCart(shoppingCart, uint16(i))
-						cartData.Set(Database.ConvertCart(shoppingCart))
+						shoppingCart = Database.Buy(shoppingCart, uint16(i))
+						cartData.Set(Database.Convert(shoppingCart))
 
 						title.SetText("Cart Total: 0.00")
 
-						Debug.ShowError("Saving Data", Database.SaveData(false), w)
+						Helpers.ShowError("Saving Data", Database.SaveData(false), w)
 
 						dialog.ShowCustomConfirm("Complete", "Print", "Done", container.NewVBox(
 							widget.NewLabelWithStyle("PINKSTONE TRADING", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
@@ -243,7 +243,7 @@ func shoppingMenu() fyne.CanvasObject {
 			widget.NewButton("Clear Cart", func() {
 				cartData.Set([]interface{}{})
 				shoppingCart = shoppingCart[:0]
-				title.SetText(fmt.Sprintf("Cart Total: %1.2f", Database.GetCartTotal(shoppingCart)))
+				title.SetText(fmt.Sprintf("Cart Total: %1.2f", Database.Total(shoppingCart)))
 			}),
 
 			widget.NewButton("New Item", func() {
@@ -256,7 +256,7 @@ func shoppingMenu() fyne.CanvasObject {
 
 					id := searchBar.Result()
 
-					if Debug.HandleKnownError(0, id < 0, w) {
+					if Helpers.HandleKnownError(0, id < 0, w) {
 						return
 					}
 
@@ -278,16 +278,16 @@ func shoppingMenu() fyne.CanvasObject {
 							s := Database.NewItem(uint16(id))
 
 							id := Database.ProcessNewItemData(barginEntry.Text, quantityEntry.Text, &s)
-							if Debug.HandleKnownError(id, id != -1, w) {
+							if Helpers.HandleKnownError(id, id != -1, w) {
 								menu.Show()
 							}
 
 							ShoppingCart, errID := Database.AddToCart(s, shoppingCart)
-							Debug.HandleKnownError(errID, errID != Debug.Success, w)
+							Helpers.HandleKnownError(errID, errID != Helpers.Success, w)
 
 							shoppingCart = ShoppingCart
-							cartData.Set(Database.ConvertCart(shoppingCart))
-							title.SetText(fmt.Sprintf("Cart Total: %1.2f", Database.GetCartTotal(shoppingCart)))
+							cartData.Set(Database.Convert(shoppingCart))
+							title.SetText(fmt.Sprintf("Cart Total: %1.2f", Database.Total(shoppingCart)))
 
 							shoppingList.Refresh()
 							shoppingList.ScrollToBottom()
@@ -320,10 +320,10 @@ func reportMenu() fyne.CanvasObject {
 	customerSearch := UI.NewSearchBar("Customer Name Here...", Database.SearchCustomers)
 
 	reportData := binding.NewUntypedList()
-	reportData.Set(Database.ConvertCart(Database.Sales))
+	reportData.Set(Database.Convert(Database.Sales))
 
 	RefreshReport = func() {
-		reportData.Set(Database.ConvertCart(Database.Sales))
+		reportData.Set(Database.Convert(Database.Sales))
 	}
 
 	reportList := widget.NewListWithData(reportData, func() fyne.CanvasObject {
@@ -361,8 +361,8 @@ func reportMenu() fyne.CanvasObject {
 			}
 
 			Database.RemoveFromSales(id)
-			Debug.ShowError("Saving Data", Database.SaveData(false), w)
-			reportData.Set(Database.ConvertCart(Database.Sales))
+			Helpers.ShowError("Saving Data", Database.SaveData(false), w)
+			reportData.Set(Database.Convert(Database.Sales))
 			updateReport()
 			reportList.Refresh()
 			fmt.Printf("Refunded item")
@@ -403,7 +403,7 @@ func reportMenu() fyne.CanvasObject {
 					var day int
 
 					if len(raw) > 1 {
-						month, _ = strconv.Atoi(raw[1]) // NOTE: Error handling may be needed here, unknown for now
+						month, _ = strconv.Atoi(raw[1]) // NOTE: Error handling may be needed here, Helpers for now
 						variant = Database.MONTHLY
 					}
 
@@ -436,7 +436,7 @@ func reportMenu() fyne.CanvasObject {
 					}
 				}
 
-				reportData.Set(Database.ConvertCart(found))
+				reportData.Set(Database.Convert(found))
 				reportList.Refresh()
 			}),
 		)),
@@ -491,12 +491,12 @@ var updateStatsGraphs func()
 // 		switch currentGraphType {
 // 		case 0:
 // 			Graph.Labels, Graph.LineInputs, _ = Database.GetLine(dateEntry.Text, dataType, itemSearch.Result(), customerSearch.Result())
-// 			// if Debug.HandleKnownError(errID, errID != Debug.Success, w) {
+// 			// if Helpers.HandleKnownError(errID, errID != Helpers.Success, w) {
 // 			// 	return
 // 			// }
 // 		case 1:
 // 			Graph.Labels, Graph.Inputs, _ = Database.GetPie(dateEntry.Text, dataType, itemSearch.Result(), customerSearch.Result())
-// 			// if Debug.HandleKnownError(errID, errID != Debug.Success, w) {
+// 			// if Helpers.HandleKnownError(errID, errID != Helpers.Success, w) {
 // 			// 	return
 // 			// }
 // 		}

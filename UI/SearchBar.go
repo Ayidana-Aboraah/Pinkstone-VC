@@ -8,9 +8,9 @@ import (
 )
 
 type SearchBar struct {
-	search func(input string) ([]string, []uint16)
+	search func(input string) ([]string, []int)
 	names  []string
-	idxs   []uint16
+	idxs   []int
 	widget.SelectEntry
 }
 
@@ -18,7 +18,7 @@ func (n *SearchBar) Keyboard() mobile.KeyboardType {
 	return mobile.DefaultKeyboard
 }
 
-func NewSearchBar(placeHolder string, search func(string) ([]string, []uint16)) *SearchBar {
+func NewSearchBar(placeHolder string, search func(string) ([]string, []int)) *SearchBar {
 	e := &SearchBar{}
 	e.ExtendBaseWidget(e)
 	e.PlaceHolder = placeHolder

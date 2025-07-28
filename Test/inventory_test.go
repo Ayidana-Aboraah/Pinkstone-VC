@@ -51,7 +51,7 @@ var testCustomer = []string{
 
 // func TestProcessQuantity(t *testing.T) {
 // 	quantity, errID := Database.ProcessQuantity("15")
-// 	if errID != Debug.Success {
+// 	if errID != Helpers.Success {
 // 		t.Errorf("Some error has occured, have: %d", errID)
 // 	}
 
@@ -62,7 +62,7 @@ var testCustomer = []string{
 
 // func TestProcessQuantityWithError(t *testing.T) {
 // 	quantity, errID := Database.ProcessQuantity("-12-42-321")
-// 	if errID != Debug.Invalid_Input {
+// 	if errID != Helpers.Invalid_Input {
 // 		t.Errorf("err not caught or wrong error passed, have: %d", errID)
 // 	}
 
@@ -73,7 +73,7 @@ var testCustomer = []string{
 
 // func TestProcessFractionQuantity(t *testing.T) {
 // 	quantity, errID := Database.ProcessQuantity(" 1/2")
-// 	if errID != Debug.Success {
+// 	if errID != Helpers.Success {
 // 		t.Errorf("Some error has occured, have: %d", errID)
 // 	}
 
@@ -84,7 +84,7 @@ var testCustomer = []string{
 
 // func TestProcessFractionQuantityNoSpace(t *testing.T) {
 // 	quantity, errID := Database.ProcessQuantity("1/2")
-// 	if errID != Debug.Success {
+// 	if errID != Helpers.Success {
 // 		t.Errorf("Some error has occured, have: %d", errID)
 // 	}
 
@@ -510,20 +510,20 @@ var testCustomer = []string{
 // 	resetDatabase()
 // 	errID := Database.AddItem(4, "1", "12", "32 1/2")
 
-// 	if errID != Debug.Success {
+// 	if errID != Helpers.Success {
 // 		t.Errorf("An Error has occured | have: %d, want: -1", errID)
 // 	}
 
 // 	errID = Database.AddItem(4, "1", "13", "32 3/4")
 
-// 	if errID != Debug.Success {
+// 	if errID != Helpers.Success {
 // 		t.Errorf("An Error has occured | have: %d, want: -1", errID)
 // 	}
 
 // 	errID = Database.AddItem(4, "1", "15", "3")
 
-// 	if errID != Debug.Maxed_Out_Stocks {
-// 		t.Errorf("An Error has occured | have: %d, want: %d", errID, Debug.Maxed_Out_Stocks)
+// 	if errID != Helpers.Maxed_Out_Stocks {
+// 		t.Errorf("An Error has occured | have: %d, want: %d", errID, Helpers.Maxed_Out_Stocks)
 // 	}
 
 // 	val, found := Database.Items[4]

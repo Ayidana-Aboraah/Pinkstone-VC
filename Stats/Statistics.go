@@ -1,11 +1,18 @@
-package Database
+package Stats
 
 import (
+	"BronzeHermes/Database"
 	"fmt"
 	"time"
 )
 
-func CompileReport(selection uint8, date []int) (string, [4]float32) {
+const (
+	ONCE uint8 = iota
+	MONTHLY
+	YEARLY
+)
+
+func CompileReport(selection uint8, date []int) (string, [4]float64) {
 	// For Date: 0 = day, 1 = month, 2 = year, 3 = now
 
 	if len(date) == 0 {
@@ -13,10 +20,10 @@ func CompileReport(selection uint8, date []int) (string, [4]float32) {
 		date = []int{day, int(month), year}
 	}
 
-	var item_sales [3]float32
-	var damages float32
+	var item_sales [3]float64
+	var damages float64
 
-	for _, v := range Sales {
+	for _, v := range Database.Sales {
 		vt := time.Unix(v.Timestamp, 0)
 
 		if vt.Year() != date[YEARLY] {
@@ -46,47 +53,47 @@ func CompileReport(selection uint8, date []int) (string, [4]float32) {
 		-item_sales[1], // Cost
 		-damages,       // Damages
 		item_sales[2],  // Report Total
-	), [4]float32{item_sales[0], -item_sales[1], -damages, item_sales[2]}
+	), [4]float64{item_sales[0], -item_sales[1], -damages, item_sales[2]}
 }
 
 func RemoveFromSales(index int) {
 
-	if Items[Sales[index].ID].Quantity[0] <= 0 {
-		Items[Sales[index].ID].Cost[0] = Sales[index].Cost
-		Items[Sales[index].ID].Quantity[0] = Sales[index].Quantity
+	if Database.Items[Database.Sales[index].ID].Quantity[0] <= 0 {
+		Database.Items[Database.Sales[index].ID].Cost[0] = Database.Sales[index].Cost
+		Database.Items[Database.Sales[index].ID].Quantity[0] = Database.Sales[index].Quantity
 	} else {
-		for i, v := range Items[Sales[index].ID].Cost {
-			if v == 0 || v == Sales[index].Cost {
-				Items[Sales[index].ID].Cost[i] = Sales[index].Cost
-				Items[Sales[index].ID].Quantity[i] += Sales[index].Quantity
+		for i, v := range Database.Items[Database.Sales[index].ID].Cost {
+			if v == 0 || v == Database.Sales[index].Cost {
+				Database.Items[Database.Sales[index].ID].Cost[i] = Database.Sales[index].Cost
+				Database.Items[Database.Sales[index].ID].Quantity[i] += Database.Sales[index].Quantity
 				break
 			}
 		}
 	}
 
-	Sales[index] = Sales[len(Sales)-1]
-	Sales = Sales[:len(Sales)-1]
+	Database.Sales[index] = Database.Sales[len(Database.Sales)-1]
+	Database.Sales = Database.Sales[:len(Database.Sales)-1]
 }
 
 // func GetLine(selection string, dataType, itemFilter, customerFilter int) ([]string, [][]float32, int) {
 // 	if selection == "" {
-// 		return nil, nil, Debug.Need_More_Info
+// 		return nil, nil, Helpers.Need_More_Info
 // 	}
 
 // 	raw := strings.Split(selection, "-")
 
 // 	if len(raw) < 2 {
-// 		return nil, nil, Debug.Need_More_Info
+// 		return nil, nil, Helpers.Need_More_Info
 // 	}
 
 // 	year, err := strconv.Atoi(raw[0][1:])
 // 	if err != nil {
-// 		return nil, nil, Debug.Invalid_Input
+// 		return nil, nil, Helpers.Invalid_Input
 // 	}
 
 // 	month, err := strconv.Atoi(raw[1])
 // 	if err != nil {
-// 		return nil, nil, Debug.Invalid_Input
+// 		return nil, nil, Helpers.Invalid_Input
 // 	}
 
 // 	date := []uint8{
@@ -137,17 +144,17 @@ func RemoveFromSales(index int) {
 // 	}
 // 	fmt.Println("Line: ", names, sales)
 
-// 	return names, sales, Debug.Success
+// 	return names, sales, Helpers.Success
 // }
 
 // func GetPie(selection string, dataType, itemFilter, customerFilter int) ([]string, []float32, int) {
 
 // 	if selection == "" {
-// 		return nil, nil, Debug.Need_More_Info
+// 		return nil, nil, Helpers.Need_More_Info
 // 	}
 
-// 	date, errID := unknown.ProcessDate2(selection)
-// 	if errID != Debug.Success {
+// 	date, errID := Helpers.ProcessDate2(selection)
+// 	if errID != Helpers.Success {
 // 		return nil, nil, errID
 // 	}
 
@@ -186,5 +193,5 @@ func RemoveFromSales(index int) {
 // 		}
 // 	}
 // 	fmt.Println("Pie: ", names, sales)
-// 	return names, sales, Debug.Success
+// 	return names, sales, Helpers.Success
 // }
